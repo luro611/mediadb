@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB /") }} <a href="{{ base }}/add">{{ _("Hinzufügen") }}</a> {{ _("/ Tabelle importieren") }}</p><h1>{{ _("Tabelle *importieren*") }}</h1>
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MediaDB /") }} <a href="{{ base }}/add">{{ _("Hinzufügen") }}</a> {{ _("/ Tabelle importieren") }}</p><h1>{{ _("Tabelle *importieren*") }}</h1>
 {% macro clabel(c) %}{{c.barcode or _('ohne Barcode')}} · {{(c.date or '')[:4] or '–'}} · {{c.country or '–'}} · {{c.label or _('ohne Label')}} · {{c.format}}{% if c.tracks %} {{ _("· § Titel", c.tracks) }}{% endif %}{% if c.status and c.status!='Official' %} · {{c.status}}{% endif %}{% endmacro %}
 {% if job.state=='idle' %}
 <p class="intro">{{ _("Hast du deine CDs bisher in einer Tabelle geführt? Lade die Datei hoch (.xlsx, .ods oder .csv). Es genügen") }} <strong>{{ _("Interpret und Albumtitel") }}</strong>{{ _(", ein Barcode hilft zusätzlich. Alles Weitere – Label, Jahr, Titelliste, Cover, Genre – holt die App bei MusicBrainz. Vor dem Speichern siehst du eine Vorschau, es wird nichts ohne dein „Übernehmen“ angelegt.") }}</p>

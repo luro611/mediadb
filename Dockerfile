@@ -1,5 +1,5 @@
 FROM python:3.12-slim
-LABEL org.opencontainers.image.title="MusikDB" \
+LABEL org.opencontainers.image.title="MediaDB" \
       org.opencontainers.image.description="Private Musikdatenbank fürs Heimnetz (CDs und Audiodateien)" \
       org.opencontainers.image.licenses="GPL-3.0-or-later"
 ENV PYTHONUNBUFFERED=1 PORT=8000 DATA_DIR=/app/data

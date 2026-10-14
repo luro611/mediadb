@@ -1,7 +1,7 @@
 # Mac (OrbStack/Docker Desktop): Musik von externen Laufwerken und aus dem Benutzerordner lesbar.
 # Für Proxmox/Linux siehe docker-compose.homelab.yml und docs/BETRIEB.md.
 services:
-  musikdb:
+  mediadb:
     build: .
     ports:
       - "8000:8000"

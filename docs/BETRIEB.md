@@ -1,6 +1,6 @@
 # Betrieb im Homelab
 
-MusikDB ist für das **eigene Heimnetz** gedacht: ein Haushalt, eine kleine Datenbank auf dem eigenen Rechner oder Server. Die App gehört nicht frei ins Internet (siehe unten).
+MediaDB ist für das **eigene Heimnetz** gedacht: ein Haushalt, eine kleine Datenbank auf dem eigenen Rechner oder Server. Die App gehört nicht frei ins Internet (siehe unten).
 
 ## Varianten
 
@@ -18,8 +18,8 @@ MusikDB ist für das **eigene Heimnetz** gedacht: ein Haushalt, eine kleine Date
    `apt install git`
 3. Projekt holen und starten:
    ```
-   git clone https://codeberg.org/BENUTZERNAME/musikdb.git
-   cd musikdb
+   git clone https://codeberg.org/BENUTZERNAME/mediadb.git
+   cd mediadb
    cp .env.example .env        # MB_USER_AGENT mit eigener E-Mail-Adresse eintragen
    docker compose -f docker-compose.homelab.yml up -d --build
    ```
@@ -31,7 +31,7 @@ Musik einbinden: Den Musikordner (z. B. vom NAS) zuerst in den LXC einhängen (P
 
 Mit Git (Quellcode von Codeberg):
 ```
-cd musikdb
+cd mediadb
 git pull
 docker compose -f docker-compose.homelab.yml up -d --build
 ```
@@ -47,7 +47,7 @@ Der Ordner `data` (Datenbank, Cover, Einstellungen) bleibt bei beiden Wegen unbe
 ## Sicherung
 
 Alles Wichtige liegt in `data/`:
-- `musik.db`: die Datenbank (ab 1.2; vorher `musikdb.db`, wird beim ersten Start automatisch umbenannt, eine Kopie landet in `data/backup/`)
+- `musik.db`: die Datenbank (früher `musikdb.db`, wird beim ersten Start automatisch umbenannt, eine Kopie landet in `data/backup/`)
 - `covers/`: die Cover-Bilder
 - `settings.json`, `secret.key`: Einstellungen und Schlüssel für die Anmeldung
 
@@ -87,12 +87,12 @@ docker login codeberg.org
 # bauen und hochladen (Version aus der Datei VERSION)
 V=$(cat VERSION)
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t codeberg.org/BENUTZERNAME/musikdb:$V \
-  -t codeberg.org/BENUTZERNAME/musikdb:latest \
+  -t codeberg.org/BENUTZERNAME/mediadb:$V \
+  -t codeberg.org/BENUTZERNAME/mediadb:latest \
   --push .
 ```
 
-Danach erscheint das Image im Codeberg-Profil unter *Pakete*. Nutzer tragen in `docker-compose.homelab.yml` die Zeile `image: codeberg.org/BENUTZERNAME/musikdb:latest` ein.
+Danach erscheint das Image im Codeberg-Profil unter *Pakete*. Nutzer tragen in `docker-compose.homelab.yml` die Zeile `image: codeberg.org/BENUTZERNAME/mediadb:latest` ein.
 
 ## Home Assistant (geplant)
 

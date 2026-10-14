@@ -1,6 +1,6 @@
 # Sprachen und Übersetzungen
 
-MusikDB gibt es auf **Deutsch** (Quellsprache), **Englisch**, **Französisch** und **Spanisch**. Die Sprache wählst du oben rechts neben „Theme“.
+MediaDB gibt es auf **Deutsch** (Quellsprache), **Englisch**, **Französisch** und **Spanisch**. Die Sprache wählst du oben rechts neben „Theme“.
 
 ## Wie es funktioniert
 - Jeder sichtbare Text steht in den Vorlagen als `{{ _("Deutscher Text") }}`.

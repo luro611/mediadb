@@ -1,5 +1,5 @@
 {% extends 'base.html' %}{% block content %}
-<p class="eyebrow">{{ _("MusikDB /") }} <a href="{{ base }}/add">{{ _("Hinzufügen") }}</a> {{ _("/ Audio") }}</p><h1>{{ _("Audio-*Import*") }}</h1>
+<p class="eyebrow">{{ _("MediaDB /") }} <a href="{{ base }}/add">{{ _("Hinzufügen") }}</a> {{ _("/ Audio") }}</p><h1>{{ _("Audio-*Import*") }}</h1>
 <p class="intro">{{ _("Wähle den Ordner mit deiner Musik (z. B. auf dem externen Laufwerk). Erst wird nur gelesen und abgeglichen; gespeichert wird erst, wenn du unten auf „Übernehmen“ klickst. Es gibt keine Doppelten: Gehört ein Album zu einer vorhandenen CD, wird dort nur „+ digital“ samt Dateiformat vermerkt.") }}</p>
 
 {% if job.state in ('scanning','applying') %}

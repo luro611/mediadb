@@ -1,6 +1,6 @@
-# MusikDB – Ausführliche Anleitung (Version 1.0)
+# MediaDB – Ausführliche Anleitung
 
-MusikDB ist eine **private Musikdatenbank für den eigenen Rechner**. Du erfasst deine CDs (per Barcode, Künstlersuche, Tabelle oder von Hand) und deine Musikdateien (MP3, M4A, FLAC …). Die App ergänzt Titellisten, Cover und Genres aus freien Internetquellen und zeigt alles in einer Weboberfläche im Browser. Die Daten bleiben bei dir.
+MediaDB ist eine **private Musikdatenbank für den eigenen Rechner**. Du erfasst deine CDs (per Barcode, Künstlersuche, Tabelle oder von Hand) und deine Musikdateien (MP3, M4A, FLAC …). Die App ergänzt Titellisten, Cover und Genres aus freien Internetquellen und zeigt alles in einer Weboberfläche im Browser. Die Daten bleiben bei dir.
 
 ## 1. Was die App kann
 
@@ -50,7 +50,7 @@ Stoppen: `docker compose down`. Neu bauen nach einem Update: `docker compose up 
 ## 3. Einstellungen in `.env`
 | Eintrag | Bedeutung |
 |---|---|
-| `MB_USER_AGENT` | Pflicht. Name und E-Mail, z. B. `MusikDB/1.0 (du@example.com)` |
+| `MB_USER_AGENT` | Pflicht. Name und E-Mail, z. B. `MediaDB/1.0 (du@example.com)` |
 | `DISCOGS_TOKEN` | Optional. Kostenloser Token (discogs.com → Einstellungen → Entwickler). Schaltet die Discogs-Suche frei. |
 | `COVER_WEB` | `1` (Standard) oder `0`. Bei `0` werden keine Cover von iTunes/Deezer geholt (siehe Rechtliches). |
 | `APP_PASSWORD` | Optional. Passwort für die Anmeldung; leer = keine Anmeldung. |
@@ -77,7 +77,7 @@ Hauptquelle ist **MusicBrainz** (Daten) mit dem **Cover Art Archive** (Bilder). 
 
 ## 6. Grenzen
 - Kein Mehrbenutzerbetrieb, keine Anmeldung; gedacht für einen lokalen Rechner. Nicht ins offene Internet stellen.
-- Nur Musik (CDs, Audiodateien). Filme und Serien folgen in Version 2 (siehe ROADMAP.md).
+- Nur Musik (CDs, Audiodateien). Filme und Serien folgen in den nächsten Versionen (siehe ROADMAP.md).
 - Gelöschte oder verschobene Audiodateien werden nicht automatisch bereinigt.
 - Cover von iTunes/Deezer sind rechtlich eine Grauzone und lassen sich mit `COVER_WEB=0` abschalten.
 - Sehr alte, seltene oder nur lokal veröffentlichte Alben fehlen manchmal bei MusicBrainz; dann hilft Discogs oder die Handerfassung.

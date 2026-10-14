@@ -1,5 +1,5 @@
 """Datenbankdateien: Musik, Filme und Serien bekommen je eine eigene SQLite-Datei im Datenordner.
-Ab 1.2 heisst die Musikdatenbank musik.db; eine alte musikdb.db wird beim ersten Start einmalig umbenannt,
+Seit MediaDB 1.0 (vorher MusikDB) heisst die Musikdatenbank musik.db; eine alte musikdb.db wird beim ersten Start einmalig umbenannt,
 vorher wird eine Sicherungskopie in data/backup/ angelegt."""
 import logging, os, shutil
 from datetime import datetime
@@ -26,11 +26,11 @@ def migrate_legacy(data_dir):
     bdir = data_dir / 'backup'
     bdir.mkdir(exist_ok=True)
     stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-    shutil.copy2(old, bdir / f'musikdb-vor-1.2-{stamp}.db')
+    shutil.copy2(old, bdir / f'musikdb-vor-mediadb-{stamp}.db')
     for suf in _SIDECARS:
         side = Path(str(old) + suf)
         if side.exists():
-            shutil.copy2(side, bdir / f'musikdb-vor-1.2-{stamp}.db{suf}')
+            shutil.copy2(side, bdir / f'musikdb-vor-mediadb-{stamp}.db{suf}')
     os.replace(old, new)
     for suf in _SIDECARS:
         side = Path(str(old) + suf)

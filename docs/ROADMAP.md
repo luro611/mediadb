@@ -1,16 +1,16 @@
 # Roadmap
 
-## Version 1.0 (fertig)
-Musik: CDs und Audiodateien, MusicBrainz, Cover, Genres, Import/Export, Audio-Import, Discogs als Zweitquelle.
+## MediaDB 1.0 (fertig, bisher MusikDB 1.0–1.2)
+Musik und Fundament: CDs und Audiodateien, MusicBrainz, Cover, Genres, Import/Export, Audio-Import, Discogs als Zweitquelle.
 
 ## Festgelegte Reihenfolge
-1. ✅ **1.2 Fundament (fertig):** Datenbank in drei Dateien vorbereiten (`musik.db`, später `filme.db`, `serien.db`; bestehende `musikdb.db` wird automatisch übernommen), Volltextsuche (FTS5) mit Index, Einstellungen für Datenordner, Port und Unterpfad (für Home Assistant Ingress), sichere Voreinstellung (nur lokal/Heimnetz), optionale Anmeldung vorbereitet, Docker-Image für amd64 und arm64. Noch offen daraus: Konten für mehrere Personen (bisher ein gemeinsames Passwort).
-2. **2.0 Filme:** eigener Bereich mit eigener Datenbank.
-3. **2.1 Serien:** eigener Bereich mit Staffeln und Folgen.
+1. ✅ **Fundament (fertig, in MediaDB 1.0):** Datenbank in drei Dateien vorbereiten (`musik.db`, später `filme.db`, `serien.db`; bestehende `musikdb.db` wird automatisch übernommen), Volltextsuche (FTS5) mit Index, Einstellungen für Datenordner, Port und Unterpfad (für Home Assistant Ingress), sichere Voreinstellung (nur lokal/Heimnetz), optionale Anmeldung vorbereitet, Docker-Image für amd64 und arm64. Noch offen daraus: Konten für mehrere Personen (bisher ein gemeinsames Passwort).
+2. **1.1 Filme:** eigener Bereich mit eigener Datenbank.
+3. **1.2 Serien:** eigener Bereich mit Staffeln und Folgen.
 4. **Veröffentlichung auf Codeberg:** Quellcode und Docker-Image in der Codeberg-Registry; Update im LXC per `docker compose pull` und `docker compose up -d`.
 5. **Home-Assistant-Add-on:** eigenes kleines Repository, verweist auf das Docker-Image.
 
-## Version 2: Filme und Serien (offene Punkte)
+## Filme und Serien (offene Punkte)
 Offene Entscheidungen vor dem Start:
 1. ~~Ein Programm für alle Medien oder getrennte Bereiche?~~ **Entschieden:** getrennte Bereiche mit je eigener Datenbank (Musik, Filme, Serien).
 2. **Datenquellen** für Filme/Serien, Bedingungen vorher lesen und in DATENQUELLEN_UND_RECHT.md aufnehmen. Kandidaten: TMDB (kostenloser API-Schlüssel, verlangt Quellenhinweis, Nutzung für nichtkommerzielle Zwecke), TheTVDB, OMDb, Wikidata. Bis dahin gilt: nichts davon ist geprüft.

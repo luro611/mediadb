@@ -1,11 +1,11 @@
 # Homelab (Proxmox-LXC, Linux-Server, NAS). Start:  docker compose -f docker-compose.homelab.yml up -d --build
 # Anleitung: docs/BETRIEB.md
 services:
-  musikdb:
+  mediadb:
     build: .
     # Sobald es ein fertiges Image auf Codeberg gibt, statt "build: ." diese Zeile verwenden
     # (Update dann mit: docker compose -f docker-compose.homelab.yml pull && docker compose -f docker-compose.homelab.yml up -d):
-    # image: codeberg.org/BENUTZERNAME/musikdb:latest
+    # image: codeberg.org/BENUTZERNAME/mediadb:latest
     ports:
       - "8000:8000"
     env_file:

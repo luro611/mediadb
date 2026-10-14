@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB /") }} <a href="{{ base }}/media/{{item.id}}">{{item.title}}</a> / <a href="{{ base }}/media/{{item.id}}/match">{{ _("Ausgabe suchen") }}</a></p><h1>{{ _("Von *Discogs* übernehmen") }}</h1>
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MediaDB /") }} <a href="{{ base }}/media/{{item.id}}">{{item.title}}</a> / <a href="{{ base }}/media/{{item.id}}/match">{{ _("Ausgabe suchen") }}</a></p><h1>{{ _("Von *Discogs* übernehmen") }}</h1>
 {% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
 <form method="get" class="card"><input name="ref" value="{{ref}}" placeholder="{{ _('Discogs-Link oder Nummer') }}" style="width:100%"><button>{{ _("Vorschau") }}</button></form>
 {% if p %}<form method="post" action="{{ base }}/media/{{item.id}}/discogs/apply" class="card"><div class="albhead"><strong>{{p.artist}}</strong> – {{p.title}}</div>

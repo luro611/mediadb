@@ -20,7 +20,7 @@ from functools import partial
 
 BASE=Path(__file__).resolve().parent.parent
 DATA=Path(os.getenv('DATA_DIR',BASE/'data')); DATA.mkdir(exist_ok=True); (DATA/'covers').mkdir(exist_ok=True)
-DB_URL=storage.music_db_url(DATA,os.getenv('DATABASE_URL','').strip())  # ab 1.2: data/musik.db (alte musikdb.db wird uebernommen)
+DB_URL=storage.music_db_url(DATA,os.getenv('DATABASE_URL','').strip())  # seit MediaDB 1.0: data/musik.db (alte musikdb.db wird uebernommen)
 IS_SQLITE=DB_URL.startswith('sqlite')
 engine=create_engine(DB_URL, connect_args={'check_same_thread':False,'timeout':15} if IS_SQLITE else {})
 Session=sessionmaker(bind=engine); Base=declarative_base()
@@ -45,7 +45,7 @@ def _search_index_update(session,flush_ctx):
  ids.discard(None)
  if ids: search.refresh(session.connection(),ids)
 SEC=sec.Settings(DATA)
-app=FastAPI(title='MusikDB'); app.add_middleware(sec.Gate,settings=SEC); app.mount('/static',StaticFiles(directory=str(BASE/'static')),name='static'); app.mount('/covers',StaticFiles(directory=str(DATA/'covers')),name='covers'); templates=Jinja2Templates(directory=str(BASE/'app/templates'))
+app=FastAPI(title='MediaDB'); app.add_middleware(sec.Gate,settings=SEC); app.mount('/static',StaticFiles(directory=str(BASE/'static')),name='static'); app.mount('/covers',StaticFiles(directory=str(DATA/'covers')),name='covers'); templates=Jinja2Templates(directory=str(BASE/'app/templates'))
 lock=threading.Lock(); last_mb=0.0
 templates.env.globals['asset_v']=int((BASE/'static'/'style.css').stat().st_mtime)
 
@@ -70,7 +70,7 @@ def mb_get(url):
   wait=1-(time.time()-last_mb)
   if wait>0: time.sleep(wait)
   try:
-   h={'User-Agent':os.getenv('MB_USER_AGENT','MusikDB/1.0 (contact@example.invalid)')}; x=requests.get(url,headers=h,timeout=12); last_mb=time.time(); x.raise_for_status(); return x.json(),None
+   h={'User-Agent':os.getenv('MB_USER_AGENT','MediaDB/1.0 (contact@example.invalid)')}; x=requests.get(url,headers=h,timeout=12); last_mb=time.time(); x.raise_for_status(); return x.json(),None
   except Exception as e: last_mb=time.time(); return None,str(e)
 def norm_bc(x): return re.sub(r'\D','',str(x or '')).lstrip('0')
 STATUS_RANK={'official':0,'promotion':1,'bootleg':3,'pseudo-release':4}
@@ -143,7 +143,7 @@ def save_item(data,s):
  for t in data.get('tracks',[]): s.add(Track(medium_id=item.id,**{k:v for k,v in t.items() if k in Track.__table__.columns.keys() and k not in ('id','medium_id')}))
  s.commit(); return item
 
-CAA_HEADERS={'User-Agent':os.getenv('MB_USER_AGENT','MusikDB/1.0 (contact@example.invalid)')}
+CAA_HEADERS={'User-Agent':os.getenv('MB_USER_AGENT','MediaDB/1.0 (contact@example.invalid)')}
 def download_cover(item_id, release_mbid='', release_group_mbid='', extra=()):
  """Holt das Frontcover vom Cover Art Archive: erst Release, dann Release-Group, dann weitere Kandidaten. Gibt Dateiname oder None zurueck."""
  pairs=[]
@@ -468,7 +468,7 @@ def save_settings(d):
  except Exception: logging.exception('Einstellungen konnten nicht gespeichert werden')
 def get_lang(request):
  """Sprache: Cookie des Browsers, sonst die gespeicherte Voreinstellung (data/settings.json), sonst Deutsch."""
- c=request.cookies.get('musikdb_lang') if request else None
+ c=(request.cookies.get('mediadb_lang') or request.cookies.get('musikdb_lang')) if request else None  # musikdb_lang: bis MusikDB 1.2
  if c in i18n.LANGS: return c
  l=load_settings().get('lang')
  return l if l in i18n.LANGS else i18n.DEFAULT
@@ -481,7 +481,7 @@ def set_lang(request:Request,code:str,next:str='/'):
  next=sec.strip_base(next,sec.get_base(request))
  if not next.startswith('/') or next.startswith('//') or '\\' in next: next='/'
  d=load_settings(); d['lang']=code; save_settings(d)
- r=RedirectResponse(next,303); r.set_cookie('musikdb_lang',code,max_age=60*60*24*365*5,samesite='lax'); return r
+ r=RedirectResponse(next,303); r.set_cookie('mediadb_lang',code,max_age=60*60*24*365*5,samesite='lax'); return r
 @app.get('/healthz')
 def healthz(): return {'ok':True}
 def _safe_next(n):
@@ -679,7 +679,7 @@ def discogs_get(path,params=None):
         wait=(1.0 if DISCOGS_TOKEN else 2.5)-(time.time()-last_dc)
         if wait>0: time.sleep(wait)
         try:
-            h={'User-Agent':os.getenv('MB_USER_AGENT','MusikDB/1.0 (contact@example.invalid)')}
+            h={'User-Agent':os.getenv('MB_USER_AGENT','MediaDB/1.0 (contact@example.invalid)')}
             if DISCOGS_TOKEN: h['Authorization']=f'Discogs token={DISCOGS_TOKEN}'
             r=requests.get('https://api.discogs.com'+path,params=params,headers=h,timeout=15); last_dc=time.time(); r.raise_for_status(); return r.json(),None
         except Exception as e: last_dc=time.time(); return None,str(e)
@@ -732,7 +732,7 @@ def apply_discogs(item,s,rid):
         for url in (p['image'],p['thumb']):
             if not url: continue
             try:
-                h={'User-Agent':os.getenv('MB_USER_AGENT','MusikDB/1.0 (contact@example.invalid)')}
+                h={'User-Agent':os.getenv('MB_USER_AGENT','MediaDB/1.0 (contact@example.invalid)')}
                 if DISCOGS_TOKEN: h['Authorization']=f'Discogs token={DISCOGS_TOKEN}'
                 r=requests.get(url,headers=h,timeout=15)
                 if r.status_code==200 and r.headers.get('Content-Type','').startswith('image/') and len(r.content)>500:
@@ -1101,7 +1101,7 @@ def build_ods(header,rows):
   if v=='': return '<table:table-cell/>'
   return '<table:table-cell office:value-type="string">'+''.join(f'<text:p>{xml_escape(l)}</text:p>' for l in v.split('\n'))+'</table:table-cell>'
  body=''.join('<table:table-row>'+''.join(cell(v) for v in r)+'</table:table-row>' for r in [header]+rows)
- content=('<?xml version="1.0" encoding="UTF-8"?><office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" office:version="1.2"><office:body><office:spreadsheet><table:table table:name="MusikDB">'+body+'</table:table></office:spreadsheet></office:body></office:document-content>')
+ content=('<?xml version="1.0" encoding="UTF-8"?><office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" office:version="1.2"><office:body><office:spreadsheet><table:table table:name="MediaDB">'+body+'</table:table></office:spreadsheet></office:body></office:document-content>')
  manifest='<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2"><manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.spreadsheet"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/></manifest:manifest>'
  out=BytesIO()
  with zipfile.ZipFile(out,'w') as z:
@@ -1114,20 +1114,20 @@ def build_markdown(view,lang='de'):
  elif view=='digital': stmt=stmt.where(Medium.ownership=='digital')
  items=sorted(s.scalars(stmt).all(),key=lambda x:(au.norm_full(x.artist),x.release_date or x.year or '9999',x.title or ''))
  def c(v): return _txt(v if v is not None else '').replace('|','\\|').replace('\n',' ').strip()
- T=partial(i18n.tr_text,lang); lines=['# MusikDB','',T('§ Einträge, Stand §',len(items),f'{datetime.now():%d.%m.%Y}'),'','| '+' | '.join(T(h) for _,h in MD_FIELDS)+' |','|'+'|'.join(['---']*len(MD_FIELDS))+'|']
+ T=partial(i18n.tr_text,lang); lines=['# MediaDB','',T('§ Einträge, Stand §',len(items),f'{datetime.now():%d.%m.%Y}'),'','| '+' | '.join(T(h) for _,h in MD_FIELDS)+' |','|'+'|'.join(['---']*len(MD_FIELDS))+'|']
  for x in items: lines.append('| '+' | '.join(c(T(OWN_SHORT.get(x.ownership or 'cd','CD')) if f=='ownership' else getattr(x,f)) for f,_ in MD_FIELDS)+' |')
  s.close(); return '\n'.join(lines)+'\n'
 @app.get('/export.xlsx')
 @app.get('/export/download')
 def export(request:Request,view:str='all',format:str='xlsx'):
  view=view if view in ('cd','digital') else 'all'
- if format=='md': return StreamingResponse(iter([build_markdown(view,get_lang(request)).encode('utf-8')]),media_type='text/markdown; charset=utf-8',headers={'Content-Disposition':'attachment; filename=musikdb.md'})
+ if format=='md': return StreamingResponse(iter([build_markdown(view,get_lang(request)).encode('utf-8')]),media_type='text/markdown; charset=utf-8',headers={'Content-Disposition':'attachment; filename=mediadb-musik.md'})
  rows=export_rows(view)
  if format=='csv':
   buf=StringIO(); w=csv.writer(buf,delimiter=';',quoting=csv.QUOTE_MINIMAL,lineterminator='\r\n'); w.writerow(EXCEL_FIELDS)
   for r in rows: w.writerow([_txt(v) for v in r])
-  return StreamingResponse(iter([buf.getvalue().encode('utf-8-sig')]),media_type='text/csv; charset=utf-8',headers={'Content-Disposition':'attachment; filename=musikdb.csv'})
- if format=='ods': return StreamingResponse(build_ods(EXCEL_FIELDS,[[_txt(v) for v in r] for r in rows]),media_type='application/vnd.oasis.opendocument.spreadsheet',headers={'Content-Disposition':'attachment; filename=musikdb.ods'})
- wb=Workbook(); ws=wb.active; ws.title='MusikDB'; ws.append(EXCEL_FIELDS)
+  return StreamingResponse(iter([buf.getvalue().encode('utf-8-sig')]),media_type='text/csv; charset=utf-8',headers={'Content-Disposition':'attachment; filename=mediadb-musik.csv'})
+ if format=='ods': return StreamingResponse(build_ods(EXCEL_FIELDS,[[_txt(v) for v in r] for r in rows]),media_type='application/vnd.oasis.opendocument.spreadsheet',headers={'Content-Disposition':'attachment; filename=mediadb-musik.ods'})
+ wb=Workbook(); ws=wb.active; ws.title='MediaDB'; ws.append(EXCEL_FIELDS)
  for r in rows: ws.append(r)
- out=BytesIO(); wb.save(out); out.seek(0); return StreamingResponse(out,media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',headers={'Content-Disposition':'attachment; filename=musikdb.xlsx'})
+ out=BytesIO(); wb.save(out); out.seek(0); return StreamingResponse(out,media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',headers={'Content-Disposition':'attachment; filename=mediadb-musik.xlsx'})

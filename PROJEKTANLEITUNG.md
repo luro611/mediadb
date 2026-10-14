@@ -1,10 +1,10 @@
-# MusikDB – Projektanleitung
+# MediaDB – Projektanleitung
 
 Diese Datei ist das Gedächtnis des Projekts. Wenn ein Chat abbricht oder neu begonnen wird:
-**diese Datei und `musikdb.zip` hochladen**, mehr braucht es nicht.
+**diese Datei und `mediadb.zip` hochladen**, mehr braucht es nicht.
 
 ## Worum es geht
-Private Medien-Datenbank (Hobbyprojekt, ein Nutzer, Mac). Im Moment: CD- und Musikdateien-Verwaltung (Version 1).
+Private Medien-Datenbank **MediaDB** (Hobbyprojekt, bis Oktober 2026 „MusikDB“). Im Moment: CD- und Musikdateien-Verwaltung; Filme und Serien folgen als eigene Bereiche mit eigenen Datenbanken. Läuft auf dem Mac (OrbStack) und im Homelab (Proxmox-LXC), Veröffentlichung auf Codeberg und mit Projektseite auf einer Subdomain von lurohome.de geplant.
 Läuft unter OrbStack/Docker auf dem Mac, Oberfläche im Browser unter http://localhost:8000.
 
 ## Entscheidungen (nicht neu diskutieren)
@@ -15,6 +15,7 @@ Läuft unter OrbStack/Docker auf dem Mac, Oberfläche im Browser unter http://lo
 - Digitale Dateien sind formatoffen (MP3, M4A, FLAC und künftig weitere); „digital“ ist der Oberbegriff.
 - Die **physisch vorhandene CD hat Vorrang**. Es gibt eine eigene Ansicht „Vorhandene CDs“.
 - Eine Neuauflage/Remaster mit Zusatztiteln ist eine **eigene Ausgabe** (eigener Eintrag).
+- Name: **MediaDB** (international; früher MusikDB). Versionszählung neu ab 1.0.0.
 - Kein GitHub. Codeberg: Veröffentlichung geplant (Quellcode ohne Daten, siehe `docs/DATENQUELLEN_UND_RECHT.md`).
 - Datenquellen: MusicBrainz (Barcode-Suche), Cover vom Cover Art Archive; optional Discogs; iTunes/Deezer nur als Cover-Ausweichquelle (abschaltbar mit `COVER_WEB=0`).
 
@@ -25,7 +26,7 @@ Python, FastAPI, Jinja2-Vorlagen, SQLAlchemy, SQLite, openpyxl (Excel), requests
 - `app/audio.py` – Audio-Import ohne Datenbank (Ordner, Tags, Abgleich); `app/main.py` – übrige Logik: Datenmodell, Routen, MusicBrainz, Cover, Import/Export
 - `app/templates/` – `base`, `scan`, `candidates` (Trefferauswahl), `manual` (Erfassen + Bearbeiten), `list` (Sammlung), `detail`, `import`, `audio`
 - `static/style.css`, `static/fonts/` – Aussehen
-- `data/musik.db` – die Datenbank (bis 1.1 `musikdb.db`, wird automatisch umbenannt, Kopie in `data/backup/`), `data/covers/` – die Cover-Bilder (**das sind deine Daten**); `data/secret.key` – Schlüssel für die Anmeldung
+- `data/musik.db` – die Datenbank (bis MusikDB 1.1 `musikdb.db`, wird automatisch umbenannt, Kopie in `data/backup/`), `data/covers/` – die Cover-Bilder (**das sind deine Daten**); `data/secret.key` – Schlüssel für die Anmeldung
 - `app/storage.py` – Datenbankdateien (musik/filme/serien) und Umbenennung; `app/search.py` – Volltextsuche; `app/security.py` – Unterpfad, Heimnetz-Sperre, Anmeldung
 - `docker-compose.homelab.yml`, `docs/BETRIEB.md` – Betrieb unter Proxmox/Linux, Codeberg-Image, Zugriffsschutz
 - `Dockerfile`, `docker-compose.yml`, `requirements.txt`, `.env` (aus `.env.example` kopiert; dort die eigene E-Mail bei `MB_USER_AGENT` eintragen)
@@ -83,13 +84,13 @@ Den ganzen Ordner `data` regelmäßig kopieren (Datenbank + Cover). Vor größer
 - Erfasste Dateien stehen in der Tabelle `audio_files`; ein erneuter Lauf zeigt nur neue Dateien.
 - macOS: Beim ersten Zugriff auf das externe Laufwerk ggf. in Systemeinstellungen → Datenschutz & Sicherheit → Dateien und Ordner bzw. Vollständiger Festplattenzugriff OrbStack erlauben.
 
-## Mehrsprachigkeit (seit 1.1.0)
+## Mehrsprachigkeit (seit MusikDB 1.1.0)
 - Quellsprache ist Deutsch. In den Vorlagen steht jeder sichtbare Text als `{{ _("Deutscher Text") }}`; ein `§` ist ein Platzhalter für eingesetzte Werte (`{{ _("§ Titel", n) }}`); `*Wort*` wird zu `<em>Wort</em>` (nur Überschriften). Für JavaScript-Texte `_t(...)|tojson`.
 - Übersetzungen: `app/locales/en.json`, `fr.json`, `es.json` (Schlüssel = deutscher Text). Fehlt ein Eintrag, erscheint der deutsche Text. Programm (Python)-Meldungen bleiben deutsche Sätze und werden in den Vorlagen mit `_(message)` übersetzt; Muster mit `§` erkennen auch zusammengesetzte Sätze.
-- Auswahl: Cookie `musikdb_lang` und `data/settings.json` (Route `/lang/<code>`). `ctx(request, ...)` liefert `_`, `_t`, `lang` an jede Vorlage. Alle Seiten müssen über `ctx` gerendert werden.
+- Auswahl: Cookie `mediadb_lang` und `data/settings.json` (Route `/lang/<code>`). `ctx(request, ...)` liefert `_`, `_t`, `lang` an jede Vorlage. Alle Seiten müssen über `ctx` gerendert werden.
 - Nach jeder Textänderung: `python3 tools/check_translations.py`. Neue Python-Meldungen zusätzlich in `EXTRA` dieses Skripts und in die drei JSON-Dateien eintragen.
 
-## Fundament (seit 1.2)
+## Fundament (seit MediaDB 1.0)
 - **Suche:** Volltextindex `search_media_v1` (SQLite FTS5, Trigramme): ein Suchtext pro Eintrag aus Albumfeldern, Titeln und Titel-Interpreten. Wird bei jeder Änderung über ein SQLAlchemy-Ereignis (`after_flush`) in derselben Transaktion nachgezogen; beim Start neu aufgebaut, wenn die Anzahl nicht passt. Suchwörter ab 3 Zeichen gehen über den Index (auch Teilwörter), kürzere per LIKE. Neue durchsuchbare Felder: in `search.FIELDS` eintragen und den Tabellennamen hochzählen (`search_media_v2`), dann wird neu aufgebaut. Massenänderungen mit `query.update()`/`delete()` umgehen das Ereignis.
 - **Indizes:** Liste `INDEXES` in `main.py`, werden beim Start angelegt.
 - **Unterpfad:** Alle Links in Vorlagen beginnen mit `{{ base }}`; Weiterleitungen (`RedirectResponse('/…')`) ergänzt die Middleware selbst. In Vorlagen also nie `href="/…"` ohne `{{ base }}` schreiben; Python-Code schreibt Pfade weiterhin ohne Unterpfad.
@@ -97,8 +98,8 @@ Den ganzen Ordner `data` regelmäßig kopieren (Datenbank + Cover). Vor größer
 - Gemeinsame Konten für Familien (mehrere Nutzer) sind noch nicht gebaut; bisher ein gemeinsames Passwort.
 
 ## Stand und nächste Schritte
-- **Version 1.0 (Musik) ist fertig** (Git-Stand `v1.0.0`), **1.1.0** bringt die Mehrsprachigkeit (Deutsch, Englisch, Französisch, Spanisch), **1.2.0** das Fundament (eigene Datenbankdatei, Volltextsuche, Unterpfad, Zugriffsschutz, Homelab-Betrieb). Nutzer- und Rechtsdokumentation: `docs/ANLEITUNG.md`, `docs/DATENQUELLEN_UND_RECHT.md`.
-- Als Nächstes, festgelegte Reihenfolge (Details in `docs/ROADMAP.md`): ~~1.2 Fundament~~ (erledigt) → **2.0 Filme** → **2.1 Serien** → Veröffentlichung auf Codeberg → Home-Assistant-Add-on.
+- **MediaDB 1.0.0** (Git-Stand `v1.0.0`): Musik komplett plus Fundament (eigene Datenbankdatei, Volltextsuche, Unterpfad, Zugriffsschutz, Homelab-Betrieb). Vorgeschichte als MusikDB: Git-Stände `musikdb-v1.0.0`, `musikdb-v1.1.0` (Mehrsprachigkeit), `musikdb-v1.2.0`. Nutzer- und Rechtsdokumentation: `docs/ANLEITUNG.md`, `docs/DATENQUELLEN_UND_RECHT.md`.
+- Als Nächstes, festgelegte Reihenfolge (Details in `docs/ROADMAP.md`): ~~Fundament~~ (erledigt) → **1.1 Filme** → **1.2 Serien** → Veröffentlichung auf Codeberg und Projektseite (statische Seite, z. B. Codeberg Pages, Subdomain von lurohome.de) → Home-Assistant-Add-on.
 - Weitere Optionen in `.env`: `DISCOGS_TOKEN`, `COVER_WEB`.
 
 ## Erfahrungen (hilft einer neuen Sitzung)
@@ -109,4 +110,4 @@ Den ganzen Ordner `data` regelmäßig kopieren (Datenbank + Cover). Vor größer
 - Die Sandbox, in der Claude arbeitet, kann FastAPI/SQLAlchemy nicht installieren (pypi.org gesperrt; Starlette, Jinja2 und sqlite3 sind vorhanden, damit lassen sich Middleware, Vorlagen und Suchindex einzeln testen) und die App deshalb nicht starten: Fehler zeigen sich erst bei dir. Bei einem Fehler immer die letzten Zeilen von `docker compose logs --tail 60` mitschicken.
 
 ## Erste Nachricht in einem neuen Chat (Vorlage)
-> Ich arbeite an meiner MusikDB (Anleitung und Zip hängen an). Stand: siehe Anleitung. Als Nächstes möchte ich: …
+> Ich arbeite an meiner MediaDB (Anleitung und Zip hängen an). Stand: siehe Anleitung. Als Nächstes möchte ich: …

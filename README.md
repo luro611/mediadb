@@ -1,4 +1,4 @@
-# MusikDB
+# MediaDB
 
 Private Musikdatenbank für den eigenen Rechner: CDs und Musikdateien verwalten, Titellisten, Cover und Genres automatisch aus MusicBrainz ergänzen. Läuft lokal im Docker-Container (Mac, Linux, Proxmox-LXC), Bedienung im Browser. Die Daten bleiben bei dir.
 
@@ -18,7 +18,7 @@ Dann `http://localhost:8000` öffnen. Daten liegen in `data/` (Datenbank und Cov
 - [Ausführliche Anleitung](docs/ANLEITUNG.md): Funktionen, Installation, Abläufe, Fehlersuche
 - [Datenquellen und Rechtliches](docs/DATENQUELLEN_UND_RECHT.md): welche Dienste genutzt werden, Bedingungen, was bei Weitergabe zu beachten ist
 - [Betrieb im Homelab](docs/BETRIEB.md): Proxmox-LXC, Updates, Sicherung, Zugriffsschutz
-- [Roadmap](docs/ROADMAP.md): Version 2 (Filme und Serien)
+- [Roadmap](docs/ROADMAP.md): nächste Versionen mit Filmen und Serien
 - [Übersetzungen](docs/SPRACHEN.md): Sprachen ergänzen oder verbessern
 - [Projektanleitung](PROJEKTANLEITUNG.md): technische Entscheidungen und Stand, für die Weiterentwicklung
 - [Änderungen](CHANGELOG.md)

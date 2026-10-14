@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 _PREFIX_OK = re.compile(r'^(/[A-Za-z0-9._~\-]+)+$')
-COOKIE = 'musikdb_auth'
+COOKIE = 'mediadb_auth'
 MAX_AGE = 60 * 60 * 24 * 30
 OPEN_PATHS = ('/login', '/static/', '/healthz')
 
@@ -113,7 +113,7 @@ def _cookie(headers, name):
     return None
 
 
-_BLOCKED = ('<!doctype html><meta charset="utf-8"><title>MusikDB</title><body style="font-family:sans-serif;max-width:40em;margin:3em auto">'
+_BLOCKED = ('<!doctype html><meta charset="utf-8"><title>MediaDB</title><body style="font-family:sans-serif;max-width:40em;margin:3em auto">'
             '<h1>Kein Zugriff aus dem Internet</h1><p>Diese App ist nur für das eigene Heimnetz gedacht. '
             'Zugriffe von öffentlichen Adressen sind gesperrt.</p>'
             '<h1 lang="en">No access from the internet</h1><p lang="en">This app is meant for your home network only. '
