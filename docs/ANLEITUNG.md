@@ -37,11 +37,13 @@ Voraussetzung: **Docker**, auf dem Mac z. B. **OrbStack** oder Docker Desktop.
 4. `docker compose up --build`
 5. Im Browser `http://localhost:8000` öffnen.
 
+**Proxmox-LXC, Linux-Server, NAS:** eigene Anleitung in [BETRIEB.md](BETRIEB.md) (mit `docker-compose.homelab.yml`, Updates, Sicherung, Zugriffsschutz).
+
 Stoppen: `docker compose down`. Neu bauen nach einem Update: `docker compose up --build`. Fehler ansehen: `docker compose logs --tail 60`.
 
-**Daten:** Datenbank und Cover liegen im Ordner `data/`. Das sind **deine Daten**: sichern, bei Updates nie überschreiben.
+**Daten:** Datenbank (`musik.db`) und Cover liegen im Ordner `data/`. Das sind **deine Daten**: sichern, bei Updates nie überschreiben.
 
-**Update einspielen:** neue Dateien über das Projekt kopieren (`app`, `static`, `docker-compose.yml`, `requirements.txt`), `data/` und `.env` nicht anfassen, dann `docker compose down` und `docker compose up --build`, im Browser Cmd+Shift+R (Windows/Linux Strg+Shift+R).
+**Update einspielen:** neue Dateien über das Projekt kopieren (`app`, `static`, `docker-compose.yml`, `Dockerfile`, `requirements.txt`), `data/` und `.env` nicht anfassen, dann `docker compose down` und `docker compose up --build`, im Browser Cmd+Shift+R (Windows/Linux Strg+Shift+R).
 
 **Musikordner sichtbar machen:** `docker-compose.yml` bindet auf dem Mac `/Volumes` (externe Laufwerke) und den Benutzerordner nur lesend ein. Beim ersten Zugriff muss macOS ggf. erlauben: Systemeinstellungen → Datenschutz & Sicherheit → Dateien und Ordner bzw. Vollständiger Festplattenzugriff für OrbStack. Unter Linux/Windows die Pfade in `docker-compose.yml` anpassen.
 
@@ -51,6 +53,9 @@ Stoppen: `docker compose down`. Neu bauen nach einem Update: `docker compose up 
 | `MB_USER_AGENT` | Pflicht. Name und E-Mail, z. B. `MusikDB/1.0 (du@example.com)` |
 | `DISCOGS_TOKEN` | Optional. Kostenloser Token (discogs.com → Einstellungen → Entwickler). Schaltet die Discogs-Suche frei. |
 | `COVER_WEB` | `1` (Standard) oder `0`. Bei `0` werden keine Cover von iTunes/Deezer geholt (siehe Rechtliches). |
+| `APP_PASSWORD` | Optional. Passwort für die Anmeldung; leer = keine Anmeldung. |
+| `ALLOW_PUBLIC` | `0` (Standard): nur Heimnetz. `1` erlaubt Zugriffe aus dem Internet (nicht empfohlen). |
+| `BASE_PATH` | Nur hinter einem Reverse Proxy mit Unteradresse. Details in [BETRIEB.md](BETRIEB.md). |
 
 ## 4. Die wichtigsten Abläufe
 

@@ -323,5 +323,12 @@
 "– lesbare Übersichtstabelle (Interpret, Titel, Jahr, Genre, Besitz, Barcode …), nach Interpret sortiert; ohne Titellisten": "– readable overview table (artist, title, year, genre, ownership, barcode …), sorted by artist; without track lists",
 "– nicht vorhanden –": "– not available –",
 "← Alle Interpreten": "← All artists",
-"⬆ eine Ebene hoch": "⬆ one level up"
+"⬆ eine Ebene hoch": "⬆ one level up",
+"MusikDB / Anmeldung": "MusikDB / Sign in",
+"*Anmelden*": "*Sign in*",
+"Diese Sammlung ist mit einem Passwort geschützt.": "This collection is protected by a password.",
+"Falsches Passwort.": "Wrong password.",
+"Passwort": "Password",
+"Anmelden": "Sign in",
+"Abmelden": "Sign out"
 }

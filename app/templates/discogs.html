@@ -1,11 +1,11 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB /") }} <a href="/media/{{item.id}}">{{item.title}}</a> / <a href="/media/{{item.id}}/match">{{ _("Ausgabe suchen") }}</a></p><h1>{{ _("Von *Discogs* übernehmen") }}</h1>
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB /") }} <a href="{{ base }}/media/{{item.id}}">{{item.title}}</a> / <a href="{{ base }}/media/{{item.id}}/match">{{ _("Ausgabe suchen") }}</a></p><h1>{{ _("Von *Discogs* übernehmen") }}</h1>
 {% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
 <form method="get" class="card"><input name="ref" value="{{ref}}" placeholder="{{ _('Discogs-Link oder Nummer') }}" style="width:100%"><button>{{ _("Vorschau") }}</button></form>
-{% if p %}<form method="post" action="/media/{{item.id}}/discogs/apply" class="card"><div class="albhead"><strong>{{p.artist}}</strong> – {{p.title}}</div>
+{% if p %}<form method="post" action="{{ base }}/media/{{item.id}}/discogs/apply" class="card"><div class="albhead"><strong>{{p.artist}}</strong> – {{p.title}}</div>
 <p class="muted">{{p.year or '–'}} · {{p.country or '–'}} · {{p.label or _('ohne Label')}}{% if p.catalog_number %} ({{p.catalog_number}}){% endif %} · {{p.format}}{% if p.barcode %} {{ _("· Barcode §", p.barcode) }}{% endif %}</p>
 <p class="muted">{{ _("Genre: §", p.genre or '–') }}{% if p.styles %} {{ _("· Styles: §", p.styles) }}{% endif %}</p>
 {% if p.thumb %}<img class="thumb big" src="{{p.thumb}}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">{% endif %}
 <ol>{% for t in p.tracks %}<li>{{t.title}}{% if t.duration %} ({{t.duration}}){% endif %}</li>{% endfor %}</ol>
 <p class="muted">{{ _("Übernommen werden nur leere Felder, die Titelliste (falls keine da ist) und das Cover (falls keins da ist). Bereits Eingetragenes bleibt.") }}</p>
 <input type="hidden" name="rid" value="{{p.id}}"><button>{{ _("Ja, bei „§“ übernehmen", item.title) }}</button></form>{% endif %}
-{% if p %}<p class="muted" style="font-size:12px">{{ _("Data provided by") }} <a href="https://www.discogs.com/release/{{p.id}}" target="_blank" rel="noopener">{{ _("Discogs") }}</a>{{ _(". This application uses Discogs' API but is not affiliated with, sponsored or endorsed by Discogs.") }}</p>{% endif %}<p><a href="/media/{{item.id}}/match">{{ _("Zurück") }}</a></p>{% endblock %}
+{% if p %}<p class="muted" style="font-size:12px">{{ _("Data provided by") }} <a href="https://www.discogs.com/release/{{p.id}}" target="_blank" rel="noopener">{{ _("Discogs") }}</a>{{ _(". This application uses Discogs' API but is not affiliated with, sponsored or endorsed by Discogs.") }}</p>{% endif %}<p><a href="{{ base }}/media/{{item.id}}/match">{{ _("Zurück") }}</a></p>{% endblock %}

@@ -13,7 +13,9 @@ AUDIO_EXT = {'.mp3', '.m4a', '.flac', '.ogg', '.oga', '.opus', '.wav', '.aac', '
 
 # Ordner, die docker-compose.yml dem Container nur lesend freigibt:
 # (Pfad im Container, Anzeige auf dem Mac, Beschriftung)
-ROOTS = [('/host/volumes', '/Volumes', 'Externe Laufwerke'), ('/host/home', '~', 'Benutzerordner')]
+# (Pfad im Container, Anzeige, Beschreibung). /host/music ist fuer Homelab/Linux gedacht: dort den Musikordner
+# lesend einhaengen (siehe docker-compose.homelab.yml); erscheint nur, wenn es den Ordner gibt.
+ROOTS = [('/host/volumes', '/Volumes', 'Externe Laufwerke'), ('/host/home', '~', 'Benutzerordner'), ('/host/music', '/music', 'Musikordner')]
 
 
 # ---------------------------------------------------------------- Pfade
@@ -34,6 +36,8 @@ def to_container_path(p, host_home=''):
         return ROOTS[1][0] + p[1:]
     if p == '/Volumes' or p.startswith('/Volumes/'):
         return ROOTS[0][0] + p[len('/Volumes'):]
+    if p == '/music' or p.startswith('/music/'):
+        return ROOTS[2][0] + p[len('/music'):]
     hh = (host_home or '').rstrip('/')
     if hh and (p == hh or p.startswith(hh + '/')):
         return ROOTS[1][0] + p[len(hh):]

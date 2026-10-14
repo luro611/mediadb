@@ -1,3 +1,5 @@
+# Mac (OrbStack/Docker Desktop): Musik von externen Laufwerken und aus dem Benutzerordner lesbar.
+# Für Proxmox/Linux siehe docker-compose.homelab.yml und docs/BETRIEB.md.
 services:
   musikdb:
     build: .
@@ -6,7 +8,6 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=sqlite:////app/data/musikdb.db
       - HOST_HOME=${HOME}
     volumes:
       - ./data:/app/data

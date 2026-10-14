@@ -323,5 +323,12 @@
 "– lesbare Übersichtstabelle (Interpret, Titel, Jahr, Genre, Besitz, Barcode …), nach Interpret sortiert; ohne Titellisten": "– tableau d'ensemble lisible (artiste, titre, année, genre, possession, code-barres …), trié par artiste ; sans listes de titres",
 "– nicht vorhanden –": "– non disponible –",
 "← Alle Interpreten": "← Tous les artistes",
-"⬆ eine Ebene hoch": "⬆ remonter d'un niveau"
+"⬆ eine Ebene hoch": "⬆ remonter d'un niveau",
+"MusikDB / Anmeldung": "MusikDB / Connexion",
+"*Anmelden*": "*Se connecter*",
+"Diese Sammlung ist mit einem Passwort geschützt.": "Cette collection est protégée par un mot de passe.",
+"Falsches Passwort.": "Mot de passe incorrect.",
+"Passwort": "Mot de passe",
+"Anmelden": "Se connecter",
+"Abmelden": "Se déconnecter"
 }

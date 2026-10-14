@@ -323,5 +323,12 @@
 "– lesbare Übersichtstabelle (Interpret, Titel, Jahr, Genre, Besitz, Barcode …), nach Interpret sortiert; ohne Titellisten": "– tabla resumen legible (artista, título, año, género, posesión, código de barras …), ordenada por artista; sin listas de temas",
 "– nicht vorhanden –": "– no disponible –",
 "← Alle Interpreten": "← Todos los artistas",
-"⬆ eine Ebene hoch": "⬆ subir un nivel"
+"⬆ eine Ebene hoch": "⬆ subir un nivel",
+"MusikDB / Anmeldung": "MusikDB / Inicio de sesión",
+"*Anmelden*": "*Iniciar sesión*",
+"Diese Sammlung ist mit einem Passwort geschützt.": "Esta colección está protegida con una contraseña.",
+"Falsches Passwort.": "Contraseña incorrecta.",
+"Passwort": "Contraseña",
+"Anmelden": "Iniciar sesión",
+"Abmelden": "Cerrar sesión"
 }

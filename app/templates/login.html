@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB / Anmeldung") }}</p><h1>{{ _("*Anmelden*") }}</h1>
+<p class="intro">{{ _("Diese Sammlung ist mit einem Passwort geschützt.") }}</p>
+{% if error %}<div class="warn">{{ _("Falsches Passwort.") }}</div>{% endif %}
+<form method="post" action="{{ base }}/login" class="card"><input type="hidden" name="next" value="{{ next }}">
+<label>{{ _("Passwort") }}<input type="password" name="password" autocomplete="current-password" autofocus required></label>
+<button>{{ _("Anmelden") }}</button></form>{% endblock %}

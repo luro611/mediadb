@@ -25,7 +25,9 @@ Python, FastAPI, Jinja2-Vorlagen, SQLAlchemy, SQLite, openpyxl (Excel), requests
 - `app/audio.py` – Audio-Import ohne Datenbank (Ordner, Tags, Abgleich); `app/main.py` – übrige Logik: Datenmodell, Routen, MusicBrainz, Cover, Import/Export
 - `app/templates/` – `base`, `scan`, `candidates` (Trefferauswahl), `manual` (Erfassen + Bearbeiten), `list` (Sammlung), `detail`, `import`, `audio`
 - `static/style.css`, `static/fonts/` – Aussehen
-- `data/musikdb.db` – die Datenbank, `data/covers/` – die Cover-Bilder (**das sind deine Daten**)
+- `data/musik.db` – die Datenbank (bis 1.1 `musikdb.db`, wird automatisch umbenannt, Kopie in `data/backup/`), `data/covers/` – die Cover-Bilder (**das sind deine Daten**); `data/secret.key` – Schlüssel für die Anmeldung
+- `app/storage.py` – Datenbankdateien (musik/filme/serien) und Umbenennung; `app/search.py` – Volltextsuche; `app/security.py` – Unterpfad, Heimnetz-Sperre, Anmeldung
+- `docker-compose.homelab.yml`, `docs/BETRIEB.md` – Betrieb unter Proxmox/Linux, Codeberg-Image, Zugriffsschutz
 - `Dockerfile`, `docker-compose.yml`, `requirements.txt`, `.env` (aus `.env.example` kopiert; dort die eigene E-Mail bei `MB_USER_AGENT` eintragen)
 
 ## Starten, stoppen, neu bauen
@@ -35,7 +37,7 @@ Im Projektordner im Terminal:
 - Fehler ansehen: `docker compose logs --tail 60`
 
 ## Neue Version einspielen
-Zip entpacken, die geänderten Ordner (meist `app`, manchmal `static`) über die Projektdateien kopieren, den Ordner `data` **nie** überschreiben. Dann `docker compose down` und `docker compose up --build`, im Browser `Cmd + Shift + R`.
+Zip entpacken, die geänderten Ordner und Dateien (meist `app`, manchmal `static`, `docs`, `Dockerfile`, `docker-compose*.yml`) über die Projektdateien kopieren, den Ordner `data` und die Datei `.env` **nie** überschreiben. Unter Proxmox/Linux mit Git: siehe `docs/BETRIEB.md`. Dann `docker compose down` und `docker compose up --build`, im Browser `Cmd + Shift + R`.
 
 ## Sicherung
 Den ganzen Ordner `data` regelmäßig kopieren (Datenbank + Cover). Vor größeren Änderungen den gesamten Projektordner als Zip sichern.
@@ -87,9 +89,16 @@ Den ganzen Ordner `data` regelmäßig kopieren (Datenbank + Cover). Vor größer
 - Auswahl: Cookie `musikdb_lang` und `data/settings.json` (Route `/lang/<code>`). `ctx(request, ...)` liefert `_`, `_t`, `lang` an jede Vorlage. Alle Seiten müssen über `ctx` gerendert werden.
 - Nach jeder Textänderung: `python3 tools/check_translations.py`. Neue Python-Meldungen zusätzlich in `EXTRA` dieses Skripts und in die drei JSON-Dateien eintragen.
 
+## Fundament (seit 1.2)
+- **Suche:** Volltextindex `search_media_v1` (SQLite FTS5, Trigramme): ein Suchtext pro Eintrag aus Albumfeldern, Titeln und Titel-Interpreten. Wird bei jeder Änderung über ein SQLAlchemy-Ereignis (`after_flush`) in derselben Transaktion nachgezogen; beim Start neu aufgebaut, wenn die Anzahl nicht passt. Suchwörter ab 3 Zeichen gehen über den Index (auch Teilwörter), kürzere per LIKE. Neue durchsuchbare Felder: in `search.FIELDS` eintragen und den Tabellennamen hochzählen (`search_media_v2`), dann wird neu aufgebaut. Massenänderungen mit `query.update()`/`delete()` umgehen das Ereignis.
+- **Indizes:** Liste `INDEXES` in `main.py`, werden beim Start angelegt.
+- **Unterpfad:** Alle Links in Vorlagen beginnen mit `{{ base }}`; Weiterleitungen (`RedirectResponse('/…')`) ergänzt die Middleware selbst. In Vorlagen also nie `href="/…"` ohne `{{ base }}` schreiben; Python-Code schreibt Pfade weiterhin ohne Unterpfad.
+- **Zugriff:** `security.Gate` prüft zuerst die IP (öffentlich = 403, außer `ALLOW_PUBLIC=1`), dann bei gesetztem `APP_PASSWORD` das Cookie (HMAC, 30 Tage). Frei: `/login`, `/static/`, `/healthz`.
+- Gemeinsame Konten für Familien (mehrere Nutzer) sind noch nicht gebaut; bisher ein gemeinsames Passwort.
+
 ## Stand und nächste Schritte
-- **Version 1.0 (Musik) ist fertig** (Git-Stand `v1.0.0`), **1.1.0** bringt die Mehrsprachigkeit (Deutsch, Englisch, Französisch, Spanisch). Nutzer- und Rechtsdokumentation: `docs/ANLEITUNG.md`, `docs/DATENQUELLEN_UND_RECHT.md`.
-- Als Nächstes, festgelegte Reihenfolge (Details in `docs/ROADMAP.md`): **1.2 Fundament** → **2.0 Filme** → **2.1 Serien** → Veröffentlichung auf Codeberg → Home-Assistant-Add-on.
+- **Version 1.0 (Musik) ist fertig** (Git-Stand `v1.0.0`), **1.1.0** bringt die Mehrsprachigkeit (Deutsch, Englisch, Französisch, Spanisch), **1.2.0** das Fundament (eigene Datenbankdatei, Volltextsuche, Unterpfad, Zugriffsschutz, Homelab-Betrieb). Nutzer- und Rechtsdokumentation: `docs/ANLEITUNG.md`, `docs/DATENQUELLEN_UND_RECHT.md`.
+- Als Nächstes, festgelegte Reihenfolge (Details in `docs/ROADMAP.md`): ~~1.2 Fundament~~ (erledigt) → **2.0 Filme** → **2.1 Serien** → Veröffentlichung auf Codeberg → Home-Assistant-Add-on.
 - Weitere Optionen in `.env`: `DISCOGS_TOKEN`, `COVER_WEB`.
 
 ## Erfahrungen (hilft einer neuen Sitzung)
@@ -97,7 +106,7 @@ Den ganzen Ordner `data` regelmäßig kopieren (Datenbank + Cover). Vor größer
 - `TemplateResponse` nimmt `request` als ersten Parameter (neue Starlette-Version).
 - Datenbank-Sitzung offen halten, bis die Seite gerendert ist (sonst „DetachedInstanceError“ bei den Tracks).
 - Läuft der Container in einer Dauerschleife („exited with code 1 (restarting)“), steckt ein Fehler beim Start in `main.py`; die erste Fehlerzeile mit `Traceback` im Log nennt die Ursache. Mit Strg+C beenden, dann `docker compose down`.
-- Die Sandbox, in der Claude arbeitet, kann FastAPI/SQLAlchemy nicht installieren und die App deshalb nicht starten: Fehler zeigen sich erst bei dir. Bei einem Fehler immer die letzten Zeilen von `docker compose logs --tail 60` mitschicken.
+- Die Sandbox, in der Claude arbeitet, kann FastAPI/SQLAlchemy nicht installieren (pypi.org gesperrt; Starlette, Jinja2 und sqlite3 sind vorhanden, damit lassen sich Middleware, Vorlagen und Suchindex einzeln testen) und die App deshalb nicht starten: Fehler zeigen sich erst bei dir. Bei einem Fehler immer die letzten Zeilen von `docker compose logs --tail 60` mitschicken.
 
 ## Erste Nachricht in einem neuen Chat (Vorlage)
 > Ich arbeite an meiner MusikDB (Anleitung und Zip hängen an). Stand: siehe Anleitung. Als Nächstes möchte ich: …

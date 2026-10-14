@@ -7,3 +7,6 @@ data/*.db-*
 data/covers/*
 !data/covers/.gitkeep
 data/settings.json
+data/backup/
+data/secret.key
+*.zip

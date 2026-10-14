@@ -8,18 +8,21 @@ from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, select, or_, func, case, inspect, text
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, select, or_, func, case, inspect, text, event, literal_column
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from openpyxl import Workbook, load_workbook
 from io import BytesIO
 from . import audio as au
 from . import i18n
+from . import storage, search
+from . import security as sec
 from functools import partial
 
 BASE=Path(__file__).resolve().parent.parent
 DATA=Path(os.getenv('DATA_DIR',BASE/'data')); DATA.mkdir(exist_ok=True); (DATA/'covers').mkdir(exist_ok=True)
-DB_URL=os.getenv('DATABASE_URL',f'sqlite:///{DATA}/musikdb.db')
-engine=create_engine(DB_URL, connect_args={'check_same_thread':False} if DB_URL.startswith('sqlite') else {})
+DB_URL=storage.music_db_url(DATA,os.getenv('DATABASE_URL','').strip())  # ab 1.2: data/musik.db (alte musikdb.db wird uebernommen)
+IS_SQLITE=DB_URL.startswith('sqlite')
+engine=create_engine(DB_URL, connect_args={'check_same_thread':False,'timeout':15} if IS_SQLITE else {})
 Session=sessionmaker(bind=engine); Base=declarative_base()
 class Medium(Base):
  __tablename__='media'
@@ -30,7 +33,19 @@ class Track(Base):
 class AudioFile(Base):
  __tablename__='audio_files'; id=Column(Integer,primary_key=True); path=Column(String,unique=True,index=True); fmt=Column(String); artist=Column(String); album=Column(String); title=Column(String); track_no=Column(Integer); disc_no=Column(Integer); length_s=Column(Integer); medium_id=Column(Integer,ForeignKey('media.id'),index=True)
 Base.metadata.create_all(engine)
-app=FastAPI(title='MusikDB'); app.mount('/static',StaticFiles(directory=str(BASE/'static')),name='static'); app.mount('/covers',StaticFiles(directory=str(DATA/'covers')),name='covers'); templates=Jinja2Templates(directory=str(BASE/'app/templates'))
+@event.listens_for(Session,'after_flush')
+def _search_index_update(session,flush_ctx):
+ """Suchindex fuer geaenderte Eintraege nachziehen (gleiche Transaktion wie die Aenderung)."""
+ if not search.ENABLED: return
+ ids=set()
+ for o in list(session.new)+list(session.dirty)+list(session.deleted):
+  st=inspect(o)  # nur bereits geladene Werte lesen, nichts nachladen (geloeschte Zeilen!)
+  if isinstance(o,Medium): ids.add(st.dict.get('id') or (st.identity or (None,))[0])
+  elif isinstance(o,Track): ids.add(st.dict.get('medium_id'))
+ ids.discard(None)
+ if ids: search.refresh(session.connection(),ids)
+SEC=sec.Settings(DATA)
+app=FastAPI(title='MusikDB'); app.add_middleware(sec.Gate,settings=SEC); app.mount('/static',StaticFiles(directory=str(BASE/'static')),name='static'); app.mount('/covers',StaticFiles(directory=str(DATA/'covers')),name='covers'); templates=Jinja2Templates(directory=str(BASE/'app/templates'))
 lock=threading.Lock(); last_mb=0.0
 templates.env.globals['asset_v']=int((BASE/'static'/'style.css').stat().st_mtime)
 
@@ -338,6 +353,7 @@ def genre_all_worker():
  finally:
   REFRESH['running']=False; REFRESH['finished']=time.time(); s.close()
 
+INDEXES=[('ix_tracks_medium','tracks','medium_id'),('ix_media_artist','media','artist'),('ix_media_title','media','title'),('ix_media_genre','media','genre'),('ix_media_ownership','media','ownership'),('ix_media_source','media','source'),('ix_media_release','media','release_mbid'),('ix_media_rg','media','release_group_mbid'),('ix_audio_medium','audio_files','medium_id')]
 def migrate_schema():
  """Fehlende Spalten in bestehender Datenbank ergaenzen (z.B. release_date)."""
  have={c['name'] for c in inspect(engine).get_columns('media')}; added=[]
@@ -348,6 +364,8 @@ def migrate_schema():
   conn.execute(text("UPDATE media SET ownership='cd' WHERE ownership IS NULL OR ownership=''"))
   conn.execute(text("UPDATE media SET ownership='digital' WHERE ownership='mp3'"))
   conn.execute(text("UPDATE media SET ownership='cd_digital' WHERE ownership='cd_mp3'"))
+  for name,tbl,cols in INDEXES: conn.execute(text(f'CREATE INDEX IF NOT EXISTS {name} ON {tbl} ({cols})'))
+  if IS_SQLITE: search.setup(conn)
  if 'release_date' in added:
   s=Session()
   for x in s.scalars(select(Medium)).all():
@@ -456,13 +474,33 @@ def get_lang(request):
  return l if l in i18n.LANGS else i18n.DEFAULT
 def ctx(request,**kw):
  lang=get_lang(request)
- return {'request':request,'lang':lang,'langs':i18n.LANGS,'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),**kw}
+ return {'request':request,'lang':lang,'langs':i18n.LANGS,'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on,**kw}
 @app.get('/lang/{code}')
-def set_lang(code:str,next:str='/'):
+def set_lang(request:Request,code:str,next:str='/'):
  if code not in i18n.LANGS: code=i18n.DEFAULT
+ next=sec.strip_base(next,sec.get_base(request))
  if not next.startswith('/') or next.startswith('//') or '\\' in next: next='/'
  d=load_settings(); d['lang']=code; save_settings(d)
  r=RedirectResponse(next,303); r.set_cookie('musikdb_lang',code,max_age=60*60*24*365*5,samesite='lax'); return r
+@app.get('/healthz')
+def healthz(): return {'ok':True}
+def _safe_next(n):
+ n=n or '/media'
+ return n if n.startswith('/') and not n.startswith('//') and '\\' not in n else '/media'
+@app.get('/login',response_class=HTMLResponse)
+def login_page(request:Request,next:str='/media',error:str=''):
+ if not SEC.auth_on: return RedirectResponse(_safe_next(next),303)
+ return templates.TemplateResponse(request,'login.html',ctx(request,next=_safe_next(next),error=error,login_page=True))
+@app.post('/login')
+def login(request:Request,password:str=Form(''),next:str=Form('/media')):
+ nxt=_safe_next(next)
+ if not SEC.auth_on: return RedirectResponse(nxt,303)
+ if not SEC.password_ok(password):
+  time.sleep(1.5); return RedirectResponse('/login?'+urlencode({'next':nxt,'error':'1'}),303)
+ r=RedirectResponse(nxt,303); r.set_cookie(sec.COOKIE,SEC.make_token(),max_age=sec.MAX_AGE,httponly=True,samesite='lax'); return r
+@app.get('/logout')
+def logout():
+ r=RedirectResponse('/login' if SEC.auth_on else '/media',303); r.delete_cookie(sec.COOKIE); return r
 @app.get('/')
 def home(): return RedirectResponse('/media',303)
 @app.get('/add',response_class=HTMLResponse)
@@ -512,7 +550,10 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
  if artist: stmt=stmt.where(or_(Medium.artist.ilike(f'%{artist}%'),Medium.tracks.any(Track.artist.ilike(f'%{artist}%'))))
  for col,val in [(Medium.genre,genre),(Medium.year,year)]:
   if val: stmt=stmt.where(col.ilike(f'%{val}%'))
- for tok in q.split():
+ toks=q.split(); long_toks=[t for t in toks if len(t)>=search.MIN_LEN] if search.ENABLED else []
+ if long_toks: stmt=stmt.where(Medium.id.in_(select(literal_column('rowid')).select_from(text(search.TABLE)).where(text(f'{search.TABLE} MATCH :fts_q').bindparams(fts_q=search.match_expr(long_toks)))))
+ for tok in toks:
+  if tok in long_toks: continue
   like=f'%{tok}%'; stmt=stmt.where(or_(*[getattr(Medium,c).ilike(like) for c in ('title','artist','barcode','genre','tags','styles','label','catalog_number','notes','year','release_date','file_formats')],Medium.tracks.any(or_(Track.title.ilike(like),Track.artist.ilike(like)))))
  if view=='cd': stmt=stmt.where(Medium.ownership.in_(['cd','cd_digital']))
  elif view=='digital': stmt=stmt.where(Medium.ownership=='digital')

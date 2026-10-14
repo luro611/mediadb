@@ -1,28 +1,28 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB /") }} <a href="/add">{{ _("Hinzufügen") }}</a> {{ _("/ Tabelle importieren") }}</p><h1>{{ _("Tabelle *importieren*") }}</h1>
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB /") }} <a href="{{ base }}/add">{{ _("Hinzufügen") }}</a> {{ _("/ Tabelle importieren") }}</p><h1>{{ _("Tabelle *importieren*") }}</h1>
 {% macro clabel(c) %}{{c.barcode or _('ohne Barcode')}} · {{(c.date or '')[:4] or '–'}} · {{c.country or '–'}} · {{c.label or _('ohne Label')}} · {{c.format}}{% if c.tracks %} {{ _("· § Titel", c.tracks) }}{% endif %}{% if c.status and c.status!='Official' %} · {{c.status}}{% endif %}{% endmacro %}
 {% if job.state=='idle' %}
 <p class="intro">{{ _("Hast du deine CDs bisher in einer Tabelle geführt? Lade die Datei hoch (.xlsx, .ods oder .csv). Es genügen") }} <strong>{{ _("Interpret und Albumtitel") }}</strong>{{ _(", ein Barcode hilft zusätzlich. Alles Weitere – Label, Jahr, Titelliste, Cover, Genre – holt die App bei MusicBrainz. Vor dem Speichern siehst du eine Vorschau, es wird nichts ohne dein „Übernehmen“ angelegt.") }}</p>
-<form method="post" action="/import/upload" enctype="multipart/form-data" class="card"><input type="file" name="file" accept=".xlsx,.xlsm,.ods,.csv,.txt,.tsv" required><button>{{ _("Datei hochladen") }}</button></form>
+<form method="post" action="{{ base }}/import/upload" enctype="multipart/form-data" class="card"><input type="file" name="file" accept=".xlsx,.xlsm,.ods,.csv,.txt,.tsv" required><button>{{ _("Datei hochladen") }}</button></form>
 <p class="muted">{{ _("Eine Sicherungsdatei aus dem Export dieser App wird erkannt und mit allen Feldern wiederhergestellt.") }}</p>
 {% elif job.state=='error' %}
 <div class="warn"><strong>{{ _("Fehler:") }}</strong> {{ _(job.error) }}</div>
-<form method="post" action="/import/reset"><button>{{ _("Zurück") }}</button></form>
+<form method="post" action="{{ base }}/import/reset"><button>{{ _("Zurück") }}</button></form>
 {% elif job.state=='mapping' %}
 <p class="intro">{{ _("Datei „§“: § Zeilen. Prüfe, welche Spalte was enthält.", job.filename, job.rows|length) }}</p>
 {% if job.error %}<div class="warn">{{ _(job.error) }}</div>{% endif %}
 <div style="overflow-x:auto"><table><tr>{% for i in range(job.headers|length) %}<th>{{ 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i] if i<26 else i+1 }}</th>{% endfor %}</tr>{% for r in preview %}<tr>{% for c in r %}<td>{{c[:40]}}</td>{% endfor %}</tr>{% endfor %}</table></div>
-<form method="post" action="/import/match" class="card">
+<form method="post" action="{{ base }}/import/match" class="card">
 <label class="checkbox"><input type="checkbox" name="header" value="1" checked> {{ _("Die erste Zeile enthält Überschriften") }}</label>
 <div class="grid">{% for f in ['artist','title','barcode','year'] %}<label>{{ _(labels[f]) }}<select name="col_{{f}}"><option value="">{{ _("– nicht vorhanden –") }}</option>{% for c in cols %}<option value="{{c.i}}"{% if job.mapping.get(f)==c.i %} selected{% endif %}>{{c.label}}</option>{% endfor %}</select></label>{% endfor %}</div>
 <button>{{ _("Abgleichen (Probelauf)") }}</button></form>
-<form method="post" action="/import/reset"><button style="background:transparent;color:var(--ink);border-color:var(--line)">{{ _("Abbrechen") }}</button></form>
+<form method="post" action="{{ base }}/import/reset"><button style="background:transparent;color:var(--ink);border-color:var(--line)">{{ _("Abbrechen") }}</button></form>
 {% elif job.state in ('matching','applying') %}
 <div class="card"><h3>{{ _('Gleiche mit MusicBrainz ab …') if job.state=='matching' else _('Speichere …') }}</h3><p id="pt">{{ _("§ von § Zeilen", job.done, job.total or '…') }}</p><progress id="pb" max="{{job.total or 1}}" value="{{job.done}}" style="width:100%"></progress>
 <p class="muted">{{ _("MusicBrainz erlaubt eine Anfrage pro Sekunde, bei vielen Zeilen dauert das einige Minuten. Der Fortschritt aktualisiert sich still, am Ende lädt die Seite einmal neu.") }}</p></div>
-<script>(function(){var TXT={{ _t("§ von § Zeilen","%D","%T")|tojson }};var st="{{ job.state }}",T=document.getElementById("pt"),P=document.getElementById("pb");function poll(){fetch("/import/status").then(function(r){return r.json()}).then(function(d){if(d.state!==st){location.reload();return}T.textContent=TXT.replace("%D",d.done).replace("%T",d.total||"…");P.max=d.total||1;P.value=d.done;setTimeout(poll,1500)}).catch(function(){setTimeout(poll,4000)})}setTimeout(poll,1500)})()</script>
+<script>(function(){var TXT={{ _t("§ von § Zeilen","%D","%T")|tojson }};var st="{{ job.state }}",T=document.getElementById("pt"),P=document.getElementById("pb");function poll(){fetch("{{ base }}/import/status").then(function(r){return r.json()}).then(function(d){if(d.state!==st){location.reload();return}T.textContent=TXT.replace("%D",d.done).replace("%T",d.total||"…");P.max=d.total||1;P.value=d.done;setTimeout(poll,1500)}).catch(function(){setTimeout(poll,4000)})}setTimeout(poll,1500)})()</script>
 {% elif job.state=='done' %}
 <div class="ok"><h3>{{ _("Fertig") }}</h3><p>{{ _("§ CDs mit MusicBrainz-Daten angelegt, § einfache Einträge (nur Interpret und Titel), § übersprungen. Cover und Genre werden jetzt im Hintergrund nachgeladen.", job.result.new, job.result.plain, job.result.skipped) }}</p></div>
-<div class="actions"><a href="/media">{{ _("Zur Sammlung") }}</a><form method="post" action="/import/reset"><button>{{ _("Weitere Datei importieren") }}</button></form></div>
+<div class="actions"><a href="{{ base }}/media">{{ _("Zur Sammlung") }}</a><form method="post" action="{{ base }}/import/reset"><button>{{ _("Weitere Datei importieren") }}</button></form></div>
 {% elif job.state=='ready' %}
 {% macro row(it) %}<div class="card albumrow"><div class="albhead"><strong>{{it.artist or '?'}}</strong> – {{it.title or '?'}}{% if it.barcode %} <span class="badge">{{it.barcode}}</span>{% endif %}</div>
 {% if it.note %}<p class="muted">{{ _(it.note) }}</p>{% endif %}
@@ -32,7 +32,7 @@
 <label class="checkbox"><input type="radio" name="d_{{it.idx}}" value="skip"{% if it.default=='skip' %} checked{% endif %}> {{ _("Überspringen") }}</label></div>{% endmacro %}
 {% set n_new = groups.found|length + groups.full|length + groups.nf|length %}
 <div class="card"><strong>{{ _("§ Zeilen geprüft:", job['items']|length) }}</strong> {{ _("§ bei MusicBrainz gefunden, § aus Sicherung, § unsicher, § nicht gefunden, § schon vorhanden, § unbrauchbar. Gespeichert wird erst bei „Übernehmen“.", groups.found|length, groups.full|length, groups.unsure|length, groups.nf|length, groups.exists|length, groups.skip|length) }}</div>
-<form method="post" action="/import/apply">
+<form method="post" action="{{ base }}/import/apply">
 {% if groups.unsure %}<h3>{{ _("Bitte prüfen (§)", groups.unsure|length) }}</h3>{% for it in groups.unsure %}{{ row(it) }}{% endfor %}{% endif %}
 {% if groups.nf %}<h3>{{ _("Nicht bei MusicBrainz gefunden (§)", groups.nf|length) }}</h3><p class="muted">{{ _("Standard: nur mit Interpret und Titel anlegen. Du kannst sie später in der Sammlung bearbeiten.") }}</p>{% for it in groups.nf %}{{ row(it) }}{% endfor %}{% endif %}
 {% if groups.found %}<h3>{{ _("Gefunden (§)", groups.found|length) }}</h3><p class="muted">{{ _("Ohne Barcode in der Datei wählt die App die älteste offizielle CD-Ausgabe. Bei Bedarf wähle eine andere Ausgabe.") }}</p><details><summary class="muted">{{ _("Liste anzeigen") }}</summary>{% for it in groups.found %}{{ row(it) }}{% endfor %}</details>{% endif %}
@@ -40,5 +40,5 @@
 {% if groups.exists %}<h3>{{ _("Schon vorhanden (§)", groups.exists|length) }}</h3><details><summary class="muted">{{ _("Liste anzeigen") }}</summary>{% for it in groups.exists %}<p>{{it.artist}} – {{it.title}} <span class="muted">{{ _(it.note) }}</span></p>{% endfor %}</details>{% endif %}
 {% if groups.skip %}<details><summary class="muted">{{ _("Unbrauchbare Zeilen (§)", groups.skip|length) }}</summary>{% for it in groups.skip %}<p>{{ _("Zeile §: §", it.idx+1, it.note) }}</p>{% endfor %}</details>{% endif %}
 <div class="actions"><button>{{ _("Übernehmen") }}</button></div></form>
-<form method="post" action="/import/reset" class="actions"><button style="background:transparent;color:var(--ink);border-color:var(--line)">{{ _("Verwerfen") }}</button></form>
+<form method="post" action="{{ base }}/import/reset" class="actions"><button style="background:transparent;color:var(--ink);border-color:var(--line)">{{ _("Verwerfen") }}</button></form>
 {% endif %}{% endblock %}

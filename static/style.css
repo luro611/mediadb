@@ -1,11 +1,11 @@
-@font-face{font-family:Instrument;src:url('/static/fonts/InstrumentSerif-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:Instrument;src:url('/static/fonts/InstrumentSerif-Italic.ttf') format('truetype');font-weight:400;font-style:italic;font-display:swap}
-@font-face{font-family:Inter;src:url('/static/fonts/Inter-Variable.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
-@font-face{font-family:Inter;src:url('/static/fonts/Inter-VariableItalic.ttf') format('truetype');font-weight:100 900;font-style:italic;font-display:swap}
-@font-face{font-family:GeistMono;src:url('/static/fonts/GeistMono-Variable.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
-@font-face{font-family:GeistMono;src:url('/static/fonts/GeistMono-VariableItalic.ttf') format('truetype');font-weight:100 900;font-style:italic;font-display:swap}
-@font-face{font-family:Archivo;src:url('/static/fonts/Archivo-Variable.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
-@font-face{font-family:Archivo;src:url('/static/fonts/Archivo-VariableItalic.ttf') format('truetype');font-weight:100 900;font-style:italic;font-display:swap}
+@font-face{font-family:Instrument;src:url('fonts/InstrumentSerif-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:Instrument;src:url('fonts/InstrumentSerif-Italic.ttf') format('truetype');font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:Inter;src:url('fonts/Inter-Variable.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:Inter;src:url('fonts/Inter-VariableItalic.ttf') format('truetype');font-weight:100 900;font-style:italic;font-display:swap}
+@font-face{font-family:GeistMono;src:url('fonts/GeistMono-Variable.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:GeistMono;src:url('fonts/GeistMono-VariableItalic.ttf') format('truetype');font-weight:100 900;font-style:italic;font-display:swap}
+@font-face{font-family:Archivo;src:url('fonts/Archivo-Variable.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:Archivo;src:url('fonts/Archivo-VariableItalic.ttf') format('truetype');font-weight:100 900;font-style:italic;font-display:swap}
 :root{color-scheme:light;--bg:#f5f2ed;--surface:#fffdf9;--ink:#242321;--muted:#77736c;--line:#d9d3ca;--accent:#c75d3b;--accent-strong:#a7472c;--soft:#eee8df;--shadow:0 18px 50px rgba(49,38,28,.08)}
 :root[data-theme=dark]{color-scheme:dark;--bg:#1d1b1a;--surface:#282523;--ink:#f6f0e8;--muted:#b8aea4;--line:#49413b;--accent:#e47a55;--accent-strong:#f09a76;--soft:#352e2a;--shadow:0 18px 50px rgba(0,0,0,.22)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter, sans-serif;font-size:15px;line-height:1.6}body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;background-image:radial-gradient(var(--line) .6px,transparent .6px);background-size:18px 18px;mask-image:linear-gradient(to bottom,black,transparent 75%)}

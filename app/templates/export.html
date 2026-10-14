@@ -1,6 +1,6 @@
 {% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB / Sicherung") }}</p><h1>{{ _("Sammlung *exportieren*") }}</h1>
 <p class="intro">{{ _("Erstellt eine Datei mit deiner Sammlung, z. B. als Sicherung oder zum Weiterverarbeiten. Es werden § Einträge gespeichert; die Datei entsteht erst nach deinem Klick und landet im Download-Ordner.", n) }}</p>
-<form method="get" action="/export/download" class="card">
+<form method="get" action="{{ base }}/export/download" class="card">
 <h3>{{ _("1. Dateiformat") }}</h3>
 <label class="checkbox"><input type="radio" name="format" value="xlsx" checked> <span><strong>{{ _("Excel (.xlsx)") }}</strong> {{ _("– für Microsoft Excel, auch in LibreOffice und Numbers lesbar") }}</span></label>
 <label class="checkbox"><input type="radio" name="format" value="ods"> <span><strong>{{ _("OpenDocument-Tabelle (.ods)") }}</strong> {{ _("– freies Format, öffnet LibreOffice und OpenOffice direkt") }}</span></label>

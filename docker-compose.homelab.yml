@@ -1,0 +1,17 @@
+# Homelab (Proxmox-LXC, Linux-Server, NAS). Start:  docker compose -f docker-compose.homelab.yml up -d --build
+# Anleitung: docs/BETRIEB.md
+services:
+  musikdb:
+    build: .
+    # Sobald es ein fertiges Image auf Codeberg gibt, statt "build: ." diese Zeile verwenden
+    # (Update dann mit: docker compose -f docker-compose.homelab.yml pull && docker compose -f docker-compose.homelab.yml up -d):
+    # image: codeberg.org/BENUTZERNAME/musikdb:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      # Optional: Musikordner nur lesend einhängen; erscheint im Audio-Import als /music
+      # - /pfad/zur/musik:/host/music:ro
+    restart: unless-stopped
