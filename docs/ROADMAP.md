@@ -3,9 +3,16 @@
 ## Version 1.0 (fertig)
 Musik: CDs und Audiodateien, MusicBrainz, Cover, Genres, Import/Export, Audio-Import, Discogs als Zweitquelle.
 
-## Version 2: Filme und Serien (Ideen, noch nichts entschieden)
+## Festgelegte Reihenfolge
+1. **1.2 Fundament:** Datenbank in drei Dateien vorbereiten (`musik.db`, später `filme.db`, `serien.db`; bestehende `musikdb.db` wird automatisch übernommen), Volltextsuche (FTS5) mit Index, Einstellungen für Datenordner, Port und Unterpfad (für Home Assistant Ingress), sichere Voreinstellung (nur lokal/Heimnetz), optionale Anmeldung vorbereitet, Docker-Image für amd64 und arm64.
+2. **2.0 Filme:** eigener Bereich mit eigener Datenbank.
+3. **2.1 Serien:** eigener Bereich mit Staffeln und Folgen.
+4. **Veröffentlichung auf Codeberg:** Quellcode und Docker-Image in der Codeberg-Registry; Update im LXC per `docker compose pull` und `docker compose up -d`.
+5. **Home-Assistant-Add-on:** eigenes kleines Repository, verweist auf das Docker-Image.
+
+## Version 2: Filme und Serien (offene Punkte)
 Offene Entscheidungen vor dem Start:
-1. **Ein Programm für alle Medien** (Tabelle `media` um einen Medientyp erweitern) oder getrennte Bereiche? Vorschlag: eine Datenbank, Feld `media_type` (music / film / series), gemeinsame Sammlungsansicht mit Reitern.
+1. ~~Ein Programm für alle Medien oder getrennte Bereiche?~~ **Entschieden:** getrennte Bereiche mit je eigener Datenbank (Musik, Filme, Serien).
 2. **Datenquellen** für Filme/Serien, Bedingungen vorher lesen und in DATENQUELLEN_UND_RECHT.md aufnehmen. Kandidaten: TMDB (kostenloser API-Schlüssel, verlangt Quellenhinweis, Nutzung für nichtkommerzielle Zwecke), TheTVDB, OMDb, Wikidata. Bis dahin gilt: nichts davon ist geprüft.
 3. **Barcode/EAN** bei DVD/Blu-ray: oft schlecht in freien Datenbanken; Alternative Titelsuche.
 4. **Felder:** Titel, Originaltitel, Jahr, Regie, Darsteller, Laufzeit, Format (DVD, Blu-ray, 4K, Datei), Staffeln/Folgen bei Serien, Altersfreigabe, Cover/Poster.

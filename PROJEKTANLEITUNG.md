@@ -8,7 +8,10 @@ Private Medien-Datenbank (Hobbyprojekt, ein Nutzer, Mac). Im Moment: CD- und Mus
 Läuft unter OrbStack/Docker auf dem Mac, Oberfläche im Browser unter http://localhost:8000.
 
 ## Entscheidungen (nicht neu diskutieren)
-- SQLite bleibt. Postgres ist für ca. 400 CDs und einen Nutzer nicht nötig.
+- SQLite bleibt, auch bei 500.000–1 Mio. Einträgen und für Familien mit mehreren Nutzern (Lasttest Okt. 2026: 1 Mio. Titel, Volltextsuche unter 1 ms, Filter wenige ms). Voraussetzung: Indizes und Volltextindex (FTS5). Zugriff nur über SQLAlchemy, damit ein späterer Wechsel zu PostgreSQL möglich bleibt.
+- **Drei getrennte Datenbanken und Bereiche, nicht vermischen:** `musik.db`, `filme.db`, `serien.db`.
+- Zielgruppe: Homelab. Eigener Betrieb unter Proxmox im LXC (Docker), Updates von Codeberg. Verteilung als Docker-Image über die Codeberg-Registry (amd64 + arm64), später ein Home-Assistant-Add-on.
+- Nicht für den öffentlichen Internetbetrieb gedacht: sichere Voreinstellungen, optionale Anmeldung (aus für Einzelnutzer, an für Familien, unnötig unter Home Assistant), deutliche Hinweise in README und Rechtsdokument.
 - Digitale Dateien sind formatoffen (MP3, M4A, FLAC und künftig weitere); „digital“ ist der Oberbegriff.
 - Die **physisch vorhandene CD hat Vorrang**. Es gibt eine eigene Ansicht „Vorhandene CDs“.
 - Eine Neuauflage/Remaster mit Zusatztiteln ist eine **eigene Ausgabe** (eigener Eintrag).
@@ -86,7 +89,7 @@ Den ganzen Ordner `data` regelmäßig kopieren (Datenbank + Cover). Vor größer
 
 ## Stand und nächste Schritte
 - **Version 1.0 (Musik) ist fertig** (Git-Stand `v1.0.0`), **1.1.0** bringt die Mehrsprachigkeit (Deutsch, Englisch, Französisch, Spanisch). Nutzer- und Rechtsdokumentation: `docs/ANLEITUNG.md`, `docs/DATENQUELLEN_UND_RECHT.md`.
-- Als Nächstes: Version 2 mit Filmen und Serien, Planung in `docs/ROADMAP.md`; außerdem Veröffentlichung auf Codeberg (Lizenz wählen, Schriftlizenzen beilegen, `git status` auf Daten prüfen).
+- Als Nächstes, festgelegte Reihenfolge (Details in `docs/ROADMAP.md`): **1.2 Fundament** → **2.0 Filme** → **2.1 Serien** → Veröffentlichung auf Codeberg → Home-Assistant-Add-on.
 - Weitere Optionen in `.env`: `DISCOGS_TOKEN`, `COVER_WEB`.
 
 ## Erfahrungen (hilft einer neuen Sitzung)
