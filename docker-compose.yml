@@ -1,0 +1,15 @@
+services:
+  musikdb:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=sqlite:////app/data/musikdb.db
+      - HOST_HOME=${HOME}
+    volumes:
+      - ./data:/app/data
+      - /Volumes:/host/volumes:ro
+      - ${HOME}:/host/home:ro
+    restart: unless-stopped

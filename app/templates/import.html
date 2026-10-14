@@ -1,0 +1,44 @@
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">MusikDB / <a href="/add">Hinzufügen</a> / Tabelle importieren</p><h1>Tabelle <em>importieren</em></h1>
+{% macro clabel(c) %}{{c.barcode or 'ohne Barcode'}} · {{(c.date or '')[:4] or '–'}} · {{c.country or '–'}} · {{c.label or 'ohne Label'}} · {{c.format}}{% if c.tracks %} · {{c.tracks}} Titel{% endif %}{% if c.status and c.status!='Official' %} · {{c.status}}{% endif %}{% endmacro %}
+{% if job.state=='idle' %}
+<p class="intro">Hast du deine CDs bisher in einer Tabelle geführt? Lade die Datei hoch (.xlsx, .ods oder .csv). Es genügen <strong>Interpret und Albumtitel</strong>, ein Barcode hilft zusätzlich. Alles Weitere – Label, Jahr, Titelliste, Cover, Genre – holt die App bei MusicBrainz. Vor dem Speichern siehst du eine Vorschau, es wird nichts ohne dein „Übernehmen“ angelegt.</p>
+<form method="post" action="/import/upload" enctype="multipart/form-data" class="card"><input type="file" name="file" accept=".xlsx,.xlsm,.ods,.csv,.txt,.tsv" required><button>Datei hochladen</button></form>
+<p class="muted">Eine Sicherungsdatei aus dem Export dieser App wird erkannt und mit allen Feldern wiederhergestellt.</p>
+{% elif job.state=='error' %}
+<div class="warn"><strong>Fehler:</strong> {{job.error}}</div>
+<form method="post" action="/import/reset"><button>Zurück</button></form>
+{% elif job.state=='mapping' %}
+<p class="intro">Datei „{{job.filename}}“: {{job.rows|length}} Zeilen. Prüfe, welche Spalte was enthält.</p>
+{% if job.error %}<div class="warn">{{job.error}}</div>{% endif %}
+<div style="overflow-x:auto"><table><tr>{% for i in range(job.headers|length) %}<th>{{ 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i] if i<26 else i+1 }}</th>{% endfor %}</tr>{% for r in preview %}<tr>{% for c in r %}<td>{{c[:40]}}</td>{% endfor %}</tr>{% endfor %}</table></div>
+<form method="post" action="/import/match" class="card">
+<label class="checkbox"><input type="checkbox" name="header" value="1" checked> Die erste Zeile enthält Überschriften</label>
+<div class="grid">{% for f in ['artist','title','barcode','year'] %}<label>{{labels[f]}}<select name="col_{{f}}"><option value="">– nicht vorhanden –</option>{% for c in cols %}<option value="{{c.i}}"{% if job.mapping.get(f)==c.i %} selected{% endif %}>{{c.label}}</option>{% endfor %}</select></label>{% endfor %}</div>
+<button>Abgleichen (Probelauf)</button></form>
+<form method="post" action="/import/reset"><button style="background:transparent;color:var(--ink);border-color:var(--line)">Abbrechen</button></form>
+{% elif job.state in ('matching','applying') %}
+<div class="card"><h3>{{ 'Gleiche mit MusicBrainz ab …' if job.state=='matching' else 'Speichere …' }}</h3><p id="pt">{{job.done}} von {{job.total or '…'}} Zeilen</p><progress id="pb" max="{{job.total or 1}}" value="{{job.done}}" style="width:100%"></progress>
+<p class="muted">MusicBrainz erlaubt eine Anfrage pro Sekunde, bei vielen Zeilen dauert das einige Minuten. Der Fortschritt aktualisiert sich still, am Ende lädt die Seite einmal neu.</p></div>
+<script>(function(){var st="{{ job.state }}",T=document.getElementById("pt"),P=document.getElementById("pb");function poll(){fetch("/import/status").then(function(r){return r.json()}).then(function(d){if(d.state!==st){location.reload();return}T.textContent=d.done+" von "+(d.total||"…")+" Zeilen";P.max=d.total||1;P.value=d.done;setTimeout(poll,1500)}).catch(function(){setTimeout(poll,4000)})}setTimeout(poll,1500)})()</script>
+{% elif job.state=='done' %}
+<div class="ok"><h3>Fertig</h3><p>{{job.result.new}} CDs mit MusicBrainz-Daten angelegt, {{job.result.plain}} einfache Einträge (nur Interpret und Titel), {{job.result.skipped}} übersprungen. Cover und Genre werden jetzt im Hintergrund nachgeladen.</p></div>
+<div class="actions"><a href="/media">Zur Sammlung</a><form method="post" action="/import/reset"><button>Weitere Datei importieren</button></form></div>
+{% elif job.state=='ready' %}
+{% macro row(it) %}<div class="card albumrow"><div class="albhead"><strong>{{it.artist or '?'}}</strong> – {{it.title or '?'}}{% if it.barcode %} <span class="badge">{{it.barcode}}</span>{% endif %}</div>
+{% if it.note %}<p class="muted">{{it.note}}</p>{% endif %}
+{% if it.status=='full' %}<label class="checkbox"><input type="radio" name="d_{{it.idx}}" value="full" checked> Aus der Sicherung wiederherstellen</label>
+{% else %}{% for c in it.cands %}<label class="checkbox"><input type="radio" name="d_{{it.idx}}" value="rel:{{c.id}}"{% if it.default=='rel:'~c.id %} checked{% endif %}> {{c.artist}} – {{c.title}} · {{ clabel(c) }}</label>{% endfor %}
+{% if it.status!='exists' %}<label class="checkbox"><input type="radio" name="d_{{it.idx}}" value="plain"{% if it.default=='plain' %} checked{% endif %}> Nur mit Interpret und Titel anlegen (ohne MusicBrainz)</label>{% endif %}{% endif %}
+<label class="checkbox"><input type="radio" name="d_{{it.idx}}" value="skip"{% if it.default=='skip' %} checked{% endif %}> Überspringen</label></div>{% endmacro %}
+{% set n_new = groups.found|length + groups.full|length + groups.nf|length %}
+<div class="card"><strong>{{ job['items']|length }} Zeilen geprüft:</strong> {{groups.found|length}} bei MusicBrainz gefunden, {{groups.full|length}} aus Sicherung, {{groups.unsure|length}} unsicher, {{groups.nf|length}} nicht gefunden, {{groups.exists|length}} schon vorhanden, {{groups.skip|length}} unbrauchbar. Gespeichert wird erst bei „Übernehmen“.</div>
+<form method="post" action="/import/apply">
+{% if groups.unsure %}<h3>Bitte prüfen ({{groups.unsure|length}})</h3>{% for it in groups.unsure %}{{ row(it) }}{% endfor %}{% endif %}
+{% if groups.nf %}<h3>Nicht bei MusicBrainz gefunden ({{groups.nf|length}})</h3><p class="muted">Standard: nur mit Interpret und Titel anlegen. Du kannst sie später in der Sammlung bearbeiten.</p>{% for it in groups.nf %}{{ row(it) }}{% endfor %}{% endif %}
+{% if groups.found %}<h3>Gefunden ({{groups.found|length}})</h3><p class="muted">Ohne Barcode in der Datei wählt die App die älteste offizielle CD-Ausgabe. Bei Bedarf wähle eine andere Ausgabe.</p><details><summary class="muted">Liste anzeigen</summary>{% for it in groups.found %}{{ row(it) }}{% endfor %}</details>{% endif %}
+{% if groups.full %}<h3>Aus Sicherung ({{groups.full|length}})</h3><details><summary class="muted">Liste anzeigen</summary>{% for it in groups.full %}{{ row(it) }}{% endfor %}</details>{% endif %}
+{% if groups.exists %}<h3>Schon vorhanden ({{groups.exists|length}})</h3><details><summary class="muted">Liste anzeigen</summary>{% for it in groups.exists %}<p>{{it.artist}} – {{it.title}} <span class="muted">{{it.note}}</span></p>{% endfor %}</details>{% endif %}
+{% if groups.skip %}<details><summary class="muted">Unbrauchbare Zeilen ({{groups.skip|length}})</summary>{% for it in groups.skip %}<p>Zeile {{it.idx+1}}: {{it.note}}</p>{% endfor %}</details>{% endif %}
+<div class="actions"><button>Übernehmen</button></div></form>
+<form method="post" action="/import/reset" class="actions"><button style="background:transparent;color:var(--ink);border-color:var(--line)">Verwerfen</button></form>
+{% endif %}{% endblock %}

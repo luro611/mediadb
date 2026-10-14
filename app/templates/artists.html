@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">MusikDB / Archiv</p><h1>Sammlung</h1><div class="tabs"><a class="tab{% if mode!='list' %} active{% endif %}" href="/media?{{ 'view='~view if view!='all' else '' }}">Interpreten</a><a class="tab{% if mode=='list' and not interpret %} active{% endif %}" href="/media?mode=list{{ '&view='~view if view!='all' else '' }}">Alle CDs</a></div><div class="tabs">{% for key,label in [('all','Alle'),('cd','Vorhandene CDs'),('digital','Nur digital')] %}<a class="tab{% if view==key %} active{% endif %}" href="{{tab_links[key]}}">{{label}} <span class="n">{{tabs[key]}}</span></a>{% endfor %}</div>
+{% include '_head.html' %}
+<p class="muted">{{arts|length}} Interpreten · {{total}} Einträge · Klick auf einen Interpreten zeigt seine CDs und Dateien</p>
+<div class="abcbar">{% for L in abc %}{% if firsts.get(L) %}<a href="#L-{{ '0' if L=='#' else L }}">{{L}}</a>{% else %}<span>{{L}}</span>{% endif %}{% endfor %}</div>
+{% for a in arts %}{% if loop.first or arts[loop.index0-1].l!=a.l %}{% if not loop.first %}</ul>{% endif %}<h2 class="letterhead" id="L-{{ '0' if a.l=='#' else a.l }}">{{a.l}}</h2><ul class="artistlist">{% endif %}
+<li><a class="artistitem" href="{{a.url}}">{% if a.covers %}<img class="thumb" width="40" height="40" src="/covers/{{a.covers[0]}}" alt="" loading="lazy">{% else %}<span class="thumb ph">♪</span>{% endif %}<span><strong>{{a.name}}</strong><br><span class="muted">{{a.n}} {{ 'Eintrag' if a.n==1 else 'Einträge' }}{% if a.dig %} · davon {{a.dig}} digital{% endif %}</span></span></a></li>
+{% if loop.last %}</ul>{% endif %}{% else %}<p>Noch keine Einträge.</p>{% endfor %}
+{% endblock %}
