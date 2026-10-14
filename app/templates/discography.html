@@ -1,36 +1,36 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">MusikDB / Hinzufügen / Diskografie</p>
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB / Hinzufügen / Diskografie") }}</p>
 {% macro filt(ph) %}<input class="wide" id="flt" type="search" placeholder="{{ph}}" autocomplete="off" autofocus>{% endmacro %}
 {% macro filterjs() %}<script>
 (function(){const f=document.getElementById('flt'),c=document.getElementById('onlycd'),rows=[...document.querySelectorAll('tr[data-t]')],n=document.getElementById('cnt');
 function run(){const q=(f&&f.value||'').toLowerCase().split(/\s+/).filter(Boolean);let k=0;rows.forEach(r=>{const ok=q.every(w=>r.dataset.t.includes(w))&&(!c||!c.checked||r.dataset.cd==='1');r.style.display=ok?'':'none';if(ok)k++});if(n)n.textContent=k}
 if(f)f.addEventListener('input',run);if(c)c.addEventListener('change',run);run()})();
 </script>{% endmacro %}
-{% if error %}<div class="warn">{{error}}</div>{% endif %}
+{% if error %}<div class="warn">{{ _(error) }}</div>{% endif %}
 {% if view=='artists' %}
-<h1>Diskografie</h1>
-<form method="get" action="/discography"><input class="wide" name="artist" value="{{q}}" placeholder="Interpret" required autofocus><button>Suchen</button></form>
-{% if q and not exact and not other and not error %}<p>Kein Interpret gefunden.</p>{% endif %}
+<h1>{{ _("Diskografie") }}</h1>
+<form method="get" action="/discography"><input class="wide" name="artist" value="{{q}}" placeholder="{{ _('Interpret') }}" required autofocus><button>{{ _("Suchen") }}</button></form>
+{% if q and not exact and not other and not error %}<p>{{ _("Kein Interpret gefunden.") }}</p>{% endif %}
 {% macro arow(a) %}<div class="card artistrow"><h3><a href="/discography/artist/{{a.id}}/releases?name={{a.name|urlencode}}">{{a.name}}</a></h3>
-<p class="muted">{{a.type or ''}}{% if a.country %} · {{a.country}}{% endif %}{% if a['life-span'] and a['life-span'].begin %} · seit {{a['life-span'].begin[:4]}}{% endif %}{% if a.disambiguation %} · {{a.disambiguation}}{% endif %}</p></div>{% endmacro %}
+<p class="muted">{{a.type or ''}}{% if a.country %} · {{a.country}}{% endif %}{% if a['life-span'] and a['life-span'].begin %} {{ _("· seit §", a['life-span'].begin[:4]) }}{% endif %}{% if a.disambiguation %} · {{a.disambiguation}}{% endif %}</p></div>{% endmacro %}
 {% for a in exact %}{{ arow(a) }}{% endfor %}
-{% if other %}<details class="bootlegs"{% if not exact %} open{% endif %}><summary>{{ 'Weitere ähnliche Namen' if exact else 'Gefundene Interpreten' }} ({{other|length}})</summary>{% for a in other %}{{ arow(a) }}{% endfor %}</details>{% endif %}
+{% if other %}<details class="bootlegs"{% if not exact %} open{% endif %}><summary>{{ _('Weitere ähnliche Namen') if exact else _('Gefundene Interpreten') }} ({{other|length}})</summary>{% for a in other %}{{ arow(a) }}{% endfor %}</details>{% endif %}
 {% elif view=='groups' %}
-<h1>{{name or 'Diskografie'}}</h1>
-<div class="tabs"><a class="tab active" href="#">Alben</a><a class="tab" href="/discography/artist/{{mbid}}/releases?name={{name|urlencode}}">Alle CDs mit Barcode</a></div>
-<div class="tabs"><a class="tab{% if kind=='albums' %} active{% endif %}" href="/discography/artist/{{mbid}}?name={{name|urlencode}}">Alben &amp; EPs</a><a class="tab{% if kind=='studio' %} active{% endif %}" href="/discography/artist/{{mbid}}?name={{name|urlencode}}&kind=studio">Nur Studioalben</a><a class="tab{% if kind=='all' %} active{% endif %}" href="/discography/artist/{{mbid}}?name={{name|urlencode}}&kind=all">Alles (auch Singles)</a></div>
-{{ filt('Album suchen …') }}
-<p class="muted"><span id="cnt">{{groups|length}}</span> von {{groups|length}} Alben · nach Erscheinen sortiert · Klick auf ein Album zeigt die Ausgaben mit Barcode</p>
-<table><tr><th></th><th>Album</th><th>Erschienen</th><th>Typ</th><th></th></tr>
-{% for g in groups %}<tr data-t="{{ (g.title ~ ' ' ~ (g['first-release-date'] or ''))|lower }}"><td><img class="thumb" width="48" height="48" src="https://coverartarchive.org/release-group/{{g.id}}/front-250" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></td><td><a href="/discography/group/{{g.id}}?title={{g.title|urlencode}}&name={{name|urlencode}}&mbid={{mbid}}">{{g.title}}</a>{% if g.id in have %} <span class="badge cd">in Sammlung</span>{% endif %}</td><td class="mono">{{(g['first-release-date'] or '')[:10]}}</td><td class="muted">{{g['primary-type'] or ''}}{% for t in g['secondary-types'] or [] %} · {{t}}{% endfor %}</td><td><a href="/discography/group/{{g.id}}?title={{g.title|urlencode}}&name={{name|urlencode}}&mbid={{mbid}}">Ausgaben ›</a></td></tr>{% endfor %}</table>
+<h1>{{name or _('Diskografie')}}</h1>
+<div class="tabs"><a class="tab active" href="#">{{ _("Alben") }}</a><a class="tab" href="/discography/artist/{{mbid}}/releases?name={{name|urlencode}}">{{ _("Alle CDs mit Barcode") }}</a></div>
+<div class="tabs"><a class="tab{% if kind=='albums' %} active{% endif %}" href="/discography/artist/{{mbid}}?name={{name|urlencode}}">{{ _("Alben & EPs") }}</a><a class="tab{% if kind=='studio' %} active{% endif %}" href="/discography/artist/{{mbid}}?name={{name|urlencode}}&kind=studio">{{ _("Nur Studioalben") }}</a><a class="tab{% if kind=='all' %} active{% endif %}" href="/discography/artist/{{mbid}}?name={{name|urlencode}}&kind=all">{{ _("Alles (auch Singles)") }}</a></div>
+{{ filt(_('Album suchen …')) }}
+<p class="muted"><span id="cnt">{{groups|length}}</span> {{ _("von § Alben · nach Erscheinen sortiert · Klick auf ein Album zeigt die Ausgaben mit Barcode", groups|length) }}</p>
+<table><tr><th></th><th>{{ _("Album") }}</th><th>{{ _("Erschienen") }}</th><th>{{ _("Typ") }}</th><th></th></tr>
+{% for g in groups %}<tr data-t="{{ (g.title ~ ' ' ~ (g['first-release-date'] or ''))|lower }}"><td><img class="thumb" width="48" height="48" src="https://coverartarchive.org/release-group/{{g.id}}/front-250" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></td><td><a href="/discography/group/{{g.id}}?title={{g.title|urlencode}}&name={{name|urlencode}}&mbid={{mbid}}">{{g.title}}</a>{% if g.id in have %} <span class="badge cd">{{ _("in Sammlung") }}</span>{% endif %}</td><td class="mono">{{(g['first-release-date'] or '')[:10]}}</td><td class="muted">{{g['primary-type'] or ''}}{% for t in g['secondary-types'] or [] %} · {{t}}{% endfor %}</td><td><a href="/discography/group/{{g.id}}?title={{g.title|urlencode}}&name={{name|urlencode}}&mbid={{mbid}}">{{ _("Ausgaben ›") }}</a></td></tr>{% endfor %}</table>
 {{ filterjs() }}
 {% elif view=='releases' %}
-<h1>{{name or 'Diskografie'}}</h1><p class="muted">Alle CDs nach Albumtitel sortiert · <a href="/discography">anderen Interpreten suchen</a></p>
-{{ filt('Suchen: Albumtitel, Barcode, Label, Katalognummer, Land …') }}
-<label class="checkbox"><input type="checkbox" id="onlycd" checked> Nur CDs</label>
-<p class="muted"><span id="cnt">{{rels|length}}</span> Ausgaben{% if truncated %} · Liste auf 1500 Ausgaben begrenzt – bitte das Suchfeld nutzen{% endif %}. Tippe den Barcode deiner CD ins Suchfeld, dann siehst du genau diese Ausgabe.</p>
+<h1>{{name or _('Diskografie')}}</h1><p class="muted">{{ _("Alle CDs nach Albumtitel sortiert ·") }} <a href="/discography">{{ _("anderen Interpreten suchen") }}</a></p>
+{{ filt(_('Suchen: Albumtitel, Barcode, Label, Katalognummer, Land …')) }}
+<label class="checkbox"><input type="checkbox" id="onlycd" checked> {{ _("Nur CDs") }}</label>
+<p class="muted"><span id="cnt">{{rels|length}}</span> {{ _("Ausgaben") }}{% if truncated %} {{ _("· Liste auf 1500 Ausgaben begrenzt – bitte das Suchfeld nutzen") }}{% endif %}{{ _(". Tippe den Barcode deiner CD ins Suchfeld, dann siehst du genau diese Ausgabe.") }}</p>
 <div class="abcbar" id="abc">{% for L in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#' %}<a href="#" data-l="{{L}}">{{L}}</a>{% endfor %}</div>
-<table><tr><th></th><th>Album</th><th>Barcode</th><th>Jahr</th><th>Land</th><th>Label / Kat.-Nr.</th><th>Format</th><th></th></tr>
-{% for e in rels %}<tr data-l="{{e.l}}" data-cd="{{ '1' if e.is_cd else '0' }}" data-t="{{ (e.title ~ ' ' ~ e.barcode ~ ' ' ~ e.label ~ ' ' ~ e.catno ~ ' ' ~ e.country ~ ' ' ~ e.date ~ ' ' ~ e.format ~ ' ' ~ e.disambiguation)|lower }}"><td><img class="thumb" width="48" height="48" src="https://coverartarchive.org/release/{{e.id}}/front-250" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></td><td><strong>{{e.title}}</strong>{% if e.disambiguation %} <span class="muted">{{e.disambiguation}}</span>{% endif %}{% if e.id in have_rel or (e.barcode and e.barcode.lstrip('0') in have_bc) %} <span class="badge cd">in Sammlung</span>{% endif %}</td><td class="mono"><strong>{{e.barcode or '–'}}</strong></td><td class="mono">{{(e.date or '')[:4]}}</td><td class="mono">{{e.country}}</td><td>{{e.label}}{% if e.catno %}<br><span class="muted">{{e.catno}}</span>{% endif %}</td><td class="muted">{{e.format}} · {{e.tracks}} Titel</td><td><form method="post" action="/discography/save"><input type="hidden" name="release_mbid" value="{{e.id}}"><input type="hidden" name="back" value="/discography/artist/{{mbid}}/releases?name={{name|urlencode}}"><button style="margin:0;padding:8px 12px">Das ist meine CD</button></form></td></tr>{% endfor %}</table>
+<table><tr><th></th><th>{{ _("Album") }}</th><th>{{ _("Barcode") }}</th><th>{{ _("Jahr") }}</th><th>{{ _("Land") }}</th><th>{{ _("Label / Kat.-Nr.") }}</th><th>{{ _("Format") }}</th><th></th></tr>
+{% for e in rels %}<tr data-l="{{e.l}}" data-cd="{{ '1' if e.is_cd else '0' }}" data-t="{{ (e.title ~ ' ' ~ e.barcode ~ ' ' ~ e.label ~ ' ' ~ e.catno ~ ' ' ~ e.country ~ ' ' ~ e.date ~ ' ' ~ e.format ~ ' ' ~ e.disambiguation)|lower }}"><td><img class="thumb" width="48" height="48" src="https://coverartarchive.org/release/{{e.id}}/front-250" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></td><td><strong>{{e.title}}</strong>{% if e.disambiguation %} <span class="muted">{{e.disambiguation}}</span>{% endif %}{% if e.id in have_rel or (e.barcode and e.barcode.lstrip('0') in have_bc) %} <span class="badge cd">{{ _("in Sammlung") }}</span>{% endif %}</td><td class="mono"><strong>{{e.barcode or '–'}}</strong></td><td class="mono">{{(e.date or '')[:4]}}</td><td class="mono">{{e.country}}</td><td>{{e.label}}{% if e.catno %}<br><span class="muted">{{e.catno}}</span>{% endif %}</td><td class="muted">{{ _("§ · § Titel", e.format, e.tracks) }}</td><td><form method="post" action="/discography/save"><input type="hidden" name="release_mbid" value="{{e.id}}"><input type="hidden" name="back" value="/discography/artist/{{mbid}}/releases?name={{name|urlencode}}"><button style="margin:0;padding:8px 12px">{{ _("Das ist meine CD") }}</button></form></td></tr>{% endfor %}</table>
 {{ filterjs() }}
 <script>
 (function(){const bar=document.getElementById('abc');if(!bar)return;const rows=[...document.querySelectorAll('tr[data-l]')];
@@ -39,12 +39,12 @@ bar.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;e.pr
 document.addEventListener('input',()=>setTimeout(mark,0));document.addEventListener('change',()=>setTimeout(mark,0));setTimeout(mark,0)})();
 </script>
 {% elif view=='editions' %}
-<h1>{{title}}</h1><p class="muted">{{name}} · <a href="/discography/artist/{{mbid}}?name={{name|urlencode}}">zurück zur Diskografie</a></p>
-<p>Vergleiche den <strong>Barcode</strong>, das Label, die Katalognummer und das Land mit deiner CD. Dann „Das ist meine CD“ wählen.</p>
-{% if total!=eds|length or not only_cd %}<p class="muted">{% if only_cd %}Nur CDs.{% else %}Alle Formate.{% endif %} <a href="/discography/group/{{rgid}}?title={{title|urlencode}}&name={{name|urlencode}}&mbid={{mbid}}&cds={{ '0' if only_cd else '1' }}">{{ 'Alle Formate zeigen' if only_cd else 'Nur CDs zeigen' }}</a></p>{% endif %}
-{% for e in eds %}<div class="card"><div class="ed"><div><h3>{{e.barcode or 'ohne Barcode'}}</h3>
-<p>{{e.date or '–'}} · {{e.country or '–'}} · {{e.label or 'ohne Label'}}{% if e.catno %} · Kat.-Nr. {{e.catno}}{% endif %}</p>
-<p class="muted">{{e.format or '?'}} · {{e.tracks}} Titel{% if e.packaging %} · {{e.packaging}}{% endif %}{% if e.status and e.status!='Official' %} · <b>{{e.status}}</b>{% endif %}{% if e.disambiguation %} · {{e.disambiguation}}{% endif %}</p>
-{% if e.id in have_rel or (e.barcode and e.barcode.lstrip('0') in have_bc) %}<span class="badge cd">schon in der Sammlung</span>{% endif %}</div>
-<form method="post" action="/discography/save"><input type="hidden" name="release_mbid" value="{{e.id}}"><input type="hidden" name="back" value="/discography/group/{{rgid}}?title={{title|urlencode}}&name={{name|urlencode}}&mbid={{mbid}}"><button>Das ist meine CD</button></form></div></div>{% else %}<p>Keine Ausgaben gefunden.</p>{% endfor %}
+<h1>{{title}}</h1><p class="muted">{{name}} · <a href="/discography/artist/{{mbid}}?name={{name|urlencode}}">{{ _("zurück zur Diskografie") }}</a></p>
+<p>{{ _("Vergleiche den") }} <strong>{{ _("Barcode") }}</strong>{{ _(", das Label, die Katalognummer und das Land mit deiner CD. Dann „Das ist meine CD“ wählen.") }}</p>
+{% if total!=eds|length or not only_cd %}<p class="muted">{% if only_cd %}{{ _("Nur CDs.") }}{% else %}{{ _("Alle Formate.") }}{% endif %} <a href="/discography/group/{{rgid}}?title={{title|urlencode}}&name={{name|urlencode}}&mbid={{mbid}}&cds={{ '0' if only_cd else '1' }}">{{ _('Alle Formate zeigen') if only_cd else _('Nur CDs zeigen') }}</a></p>{% endif %}
+{% for e in eds %}<div class="card"><div class="ed"><div><h3>{{e.barcode or _('ohne Barcode')}}</h3>
+<p>{{e.date or '–'}} · {{e.country or '–'}} · {{e.label or _('ohne Label')}}{% if e.catno %} {{ _("· Kat.-Nr. §", e.catno) }}{% endif %}</p>
+<p class="muted">{{ _("§ · § Titel", e.format or '?', e.tracks) }}{% if e.packaging %} · {{e.packaging}}{% endif %}{% if e.status and e.status!='Official' %} · <b>{{e.status}}</b>{% endif %}{% if e.disambiguation %} · {{e.disambiguation}}{% endif %}</p>
+{% if e.id in have_rel or (e.barcode and e.barcode.lstrip('0') in have_bc) %}<span class="badge cd">{{ _("schon in der Sammlung") }}</span>{% endif %}</div>
+<form method="post" action="/discography/save"><input type="hidden" name="release_mbid" value="{{e.id}}"><input type="hidden" name="back" value="/discography/group/{{rgid}}?title={{title|urlencode}}&name={{name|urlencode}}&mbid={{mbid}}"><button>{{ _("Das ist meine CD") }}</button></form></div></div>{% else %}<p>{{ _("Keine Ausgaben gefunden.") }}</p>{% endfor %}
 {% endif %}{% endblock %}

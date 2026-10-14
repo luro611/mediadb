@@ -13,6 +13,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from openpyxl import Workbook, load_workbook
 from io import BytesIO
 from . import audio as au
+from . import i18n
+from functools import partial
 
 BASE=Path(__file__).resolve().parent.parent
 DATA=Path(os.getenv('DATA_DIR',BASE/'data')); DATA.mkdir(exist_ok=True); (DATA/'covers').mkdir(exist_ok=True)
@@ -439,7 +441,28 @@ def disco_save(release_mbid:str=Form(...),ownership:str=Form('cd'),back:str=Form
   except Exception: logging.exception('Nachladen nach Diskografie-Auswahl fehlgeschlagen')
  return RedirectResponse(f'/media/{item.id}?message='+quote('Gespeichert.'),303)
 
-def ctx(request,**kw): return {'request':request,**kw}
+SETTINGS_FILE=DATA/'settings.json'
+def load_settings():
+ try: return json.loads(SETTINGS_FILE.read_text(encoding='utf-8'))
+ except Exception: return {}
+def save_settings(d):
+ try: SETTINGS_FILE.write_text(json.dumps(d,ensure_ascii=False),encoding='utf-8')
+ except Exception: logging.exception('Einstellungen konnten nicht gespeichert werden')
+def get_lang(request):
+ """Sprache: Cookie des Browsers, sonst die gespeicherte Voreinstellung (data/settings.json), sonst Deutsch."""
+ c=request.cookies.get('musikdb_lang') if request else None
+ if c in i18n.LANGS: return c
+ l=load_settings().get('lang')
+ return l if l in i18n.LANGS else i18n.DEFAULT
+def ctx(request,**kw):
+ lang=get_lang(request)
+ return {'request':request,'lang':lang,'langs':i18n.LANGS,'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),**kw}
+@app.get('/lang/{code}')
+def set_lang(code:str,next:str='/'):
+ if code not in i18n.LANGS: code=i18n.DEFAULT
+ if not next.startswith('/') or next.startswith('//') or '\\' in next: next='/'
+ d=load_settings(); d['lang']=code; save_settings(d)
+ r=RedirectResponse(next,303); r.set_cookie('musikdb_lang',code,max_age=60*60*24*365*5,samesite='lax'); return r
 @app.get('/')
 def home(): return RedirectResponse('/media',303)
 @app.get('/add',response_class=HTMLResponse)
@@ -560,8 +583,8 @@ def update(request:Request,id:int,ownership:str=Form('cd'),file_formats:str=Form
    o=old.get(t,{}); x.tracks.append(Track(position=i+1,disc_number=o.get('disc_number') or 1,number=o.get('number') or str(i+1),title=t,length_ms=o.get('length_ms'),duration=o.get('duration') or '',recording_mbid=o.get('recording_mbid'),artist=o.get('artist')))
  s.commit(); return RedirectResponse(f'/media/{id}',303)
 @app.get('/media/refresh-status')
-def refresh_status():
- return {'running':REFRESH['running'],'done':REFRESH['done'],'total':REFRESH['total'],'kind':REFRESH['kind']}
+def refresh_status(request:Request):
+ return {'running':REFRESH['running'],'done':REFRESH['done'],'total':REFRESH['total'],'kind':i18n.tr_text(get_lang(request),REFRESH['kind'])}
 @app.post('/media/refresh-all')
 def refresh_all():
  if not REFRESH['running']:
@@ -827,11 +850,11 @@ def audio_page(request:Request):
  roots=[{'path':c,'label':h,'name':n,'ok':os.path.isdir(c)} for c,h,n in au.ROOTS]
  return templates.TemplateResponse(request,'audio.html',ctx(request,job=JOB,groups=groups,roots=roots,n_files=n_files,n_media=n_media,host_label=au.host_label))
 @app.get('/audio/browse')
-def audio_browse(path:str=''):
+def audio_browse(request:Request,path:str=''):
  if not path: return JSONResponse({'path':'','label':'','parent':'','dirs':[{'name':n,'path':c,'label':h} for c,h,n in au.ROOTS if os.path.isdir(c)],'audio':0,'error':''})
  p=au.safe_dir(au.to_container_path(path,HOST_HOME))
- if not p: return JSONResponse({'path':path,'label':path,'parent':'','dirs':[],'audio':0,'error':'Ordner nicht gefunden oder nicht freigegeben.'})
- dirs,n,err=au.list_dirs(p); roots=[c for c,_,_ in au.ROOTS]
+ if not p: return JSONResponse({'path':path,'label':path,'parent':'','dirs':[],'audio':0,'error':i18n.tr_text(get_lang(request),'Ordner nicht gefunden oder nicht freigegeben.')})
+ dirs,n,err=au.list_dirs(p); err=i18n.tr_text(get_lang(request),err) if err else err; roots=[c for c,_,_ in au.ROOTS]
  parent='' if p in roots else os.path.dirname(p)
  return JSONResponse({'path':p,'label':au.host_label(p),'parent':parent,'audio':n,'error':err,'dirs':[{'name':d,'path':os.path.join(p,d),'label':d} for d in dirs]})
 @app.post('/audio/scan')
@@ -974,7 +997,7 @@ def import_apply_worker(choices):
 @app.get('/import',response_class=HTMLResponse)
 def import_page(request:Request):
  groups={k:[x for x in IMP['items'] if x['status']==k] for k in ('unsure','nf','found','full','exists','skip')} if IMP['state']=='ready' else {}
- cols=[{'i':i,'label':f"{im.col_letter(i)}: {(IMP['headers'][i] if IMP['has_header'] else (IMP['rows'][0][i] if IMP['rows'] else '')) or '(leer)'}"} for i in range(len(IMP['headers']))]
+ cols=[{'i':i,'label':f"{im.col_letter(i)}: {(IMP['headers'][i] if IMP['has_header'] else (IMP['rows'][0][i] if IMP['rows'] else '')) or i18n.tr_text(get_lang(request),'(leer)')}"} for i in range(len(IMP['headers']))]
  preview=IMP['rows'][:6]
  return templates.TemplateResponse(request,'import.html',ctx(request,job=IMP,groups=groups,cols=cols,preview=preview,labels=im.LABELS))
 @app.post('/import/upload')
@@ -1044,20 +1067,20 @@ def build_ods(header,rows):
   z.writestr(zipfile.ZipInfo('mimetype'),'application/vnd.oasis.opendocument.spreadsheet',compress_type=zipfile.ZIP_STORED)
   z.writestr('META-INF/manifest.xml',manifest,compress_type=zipfile.ZIP_DEFLATED); z.writestr('content.xml',content,compress_type=zipfile.ZIP_DEFLATED)
  out.seek(0); return out
-def build_markdown(view):
+def build_markdown(view,lang='de'):
  s=Session(); stmt=select(Medium)
  if view=='cd': stmt=stmt.where(Medium.ownership.in_(['cd','cd_digital']))
  elif view=='digital': stmt=stmt.where(Medium.ownership=='digital')
  items=sorted(s.scalars(stmt).all(),key=lambda x:(au.norm_full(x.artist),x.release_date or x.year or '9999',x.title or ''))
  def c(v): return _txt(v if v is not None else '').replace('|','\\|').replace('\n',' ').strip()
- lines=['# MusikDB','',f'{len(items)} Einträge, Stand {datetime.now():%d.%m.%Y}','','| '+' | '.join(h for _,h in MD_FIELDS)+' |','|'+'|'.join(['---']*len(MD_FIELDS))+'|']
- for x in items: lines.append('| '+' | '.join(c(OWN_SHORT.get(x.ownership or 'cd','CD') if f=='ownership' else getattr(x,f)) for f,_ in MD_FIELDS)+' |')
+ T=partial(i18n.tr_text,lang); lines=['# MusikDB','',T('§ Einträge, Stand §',len(items),f'{datetime.now():%d.%m.%Y}'),'','| '+' | '.join(T(h) for _,h in MD_FIELDS)+' |','|'+'|'.join(['---']*len(MD_FIELDS))+'|']
+ for x in items: lines.append('| '+' | '.join(c(T(OWN_SHORT.get(x.ownership or 'cd','CD')) if f=='ownership' else getattr(x,f)) for f,_ in MD_FIELDS)+' |')
  s.close(); return '\n'.join(lines)+'\n'
 @app.get('/export.xlsx')
 @app.get('/export/download')
-def export(view:str='all',format:str='xlsx'):
+def export(request:Request,view:str='all',format:str='xlsx'):
  view=view if view in ('cd','digital') else 'all'
- if format=='md': return StreamingResponse(iter([build_markdown(view).encode('utf-8')]),media_type='text/markdown; charset=utf-8',headers={'Content-Disposition':'attachment; filename=musikdb.md'})
+ if format=='md': return StreamingResponse(iter([build_markdown(view,get_lang(request)).encode('utf-8')]),media_type='text/markdown; charset=utf-8',headers={'Content-Disposition':'attachment; filename=musikdb.md'})
  rows=export_rows(view)
  if format=='csv':
   buf=StringIO(); w=csv.writer(buf,delimiter=';',quoting=csv.QUOTE_MINIMAL,lineterminator='\r\n'); w.writerow(EXCEL_FIELDS)

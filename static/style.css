@@ -25,3 +25,8 @@ tr.grouprow td{background:var(--soft);padding:22px 18px 12px;border-top:1px soli
 .abcbar a.off{color:var(--line);pointer-events:none}
 .foot{padding:18px 0 40px;border-top:1px solid var(--line);font:600 11px GeistMono,monospace;text-transform:uppercase;letter-spacing:.08em}.foot a{color:var(--muted);text-decoration:none}.foot a:hover{color:var(--accent)}.letterhead{margin:34px 0 8px;scroll-margin-top:60px;font:400 34px Instrument,serif;color:var(--accent)}.artistlist{list-style:none;padding:0;margin:0;max-width:none;border-top:1px solid var(--line);columns:3 280px;column-gap:28px}.artistlist li{break-inside:avoid;padding:8px 0}.artistitem{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--ink)}.artistitem:hover strong{color:var(--accent)}.artistitem .muted{text-transform:none;letter-spacing:0;font-size:12px}
 .foot a.btnlink{display:inline-block;padding:12px 18px;border:1px solid var(--accent);border-radius:2px;background:var(--accent);color:#fff;font:600 11px Archivo,sans-serif;text-transform:uppercase;letter-spacing:.1em;text-decoration:none}.foot a.btnlink:hover{background:var(--accent-strong);color:#fff}
+.lang-switch{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.lang-btn{font:600 11px GeistMono,monospace;letter-spacing:.08em;border:0;background:transparent;color:var(--muted);padding:8px 10px;cursor:pointer}
+.lang-btn+.lang-btn{border-left:1px solid var(--line)}
+.lang-btn:hover{color:var(--accent)}
+.lang-btn.active{background:var(--ink);color:var(--bg)}

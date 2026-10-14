@@ -78,8 +78,14 @@ Den ganzen Ordner `data` regelmäßig kopieren (Datenbank + Cover). Vor größer
 - Erfasste Dateien stehen in der Tabelle `audio_files`; ein erneuter Lauf zeigt nur neue Dateien.
 - macOS: Beim ersten Zugriff auf das externe Laufwerk ggf. in Systemeinstellungen → Datenschutz & Sicherheit → Dateien und Ordner bzw. Vollständiger Festplattenzugriff OrbStack erlauben.
 
+## Mehrsprachigkeit (seit 1.1.0)
+- Quellsprache ist Deutsch. In den Vorlagen steht jeder sichtbare Text als `{{ _("Deutscher Text") }}`; ein `§` ist ein Platzhalter für eingesetzte Werte (`{{ _("§ Titel", n) }}`); `*Wort*` wird zu `<em>Wort</em>` (nur Überschriften). Für JavaScript-Texte `_t(...)|tojson`.
+- Übersetzungen: `app/locales/en.json`, `fr.json`, `es.json` (Schlüssel = deutscher Text). Fehlt ein Eintrag, erscheint der deutsche Text. Programm (Python)-Meldungen bleiben deutsche Sätze und werden in den Vorlagen mit `_(message)` übersetzt; Muster mit `§` erkennen auch zusammengesetzte Sätze.
+- Auswahl: Cookie `musikdb_lang` und `data/settings.json` (Route `/lang/<code>`). `ctx(request, ...)` liefert `_`, `_t`, `lang` an jede Vorlage. Alle Seiten müssen über `ctx` gerendert werden.
+- Nach jeder Textänderung: `python3 tools/check_translations.py`. Neue Python-Meldungen zusätzlich in `EXTRA` dieses Skripts und in die drei JSON-Dateien eintragen.
+
 ## Stand und nächste Schritte
-- **Version 1.0 (Musik) ist fertig** und als Git-Stand `v1.0.0` abgelegt. Nutzer- und Rechtsdokumentation: `docs/ANLEITUNG.md`, `docs/DATENQUELLEN_UND_RECHT.md`.
+- **Version 1.0 (Musik) ist fertig** (Git-Stand `v1.0.0`), **1.1.0** bringt die Mehrsprachigkeit (Deutsch, Englisch, Französisch, Spanisch). Nutzer- und Rechtsdokumentation: `docs/ANLEITUNG.md`, `docs/DATENQUELLEN_UND_RECHT.md`.
 - Als Nächstes: Version 2 mit Filmen und Serien, Planung in `docs/ROADMAP.md`; außerdem Veröffentlichung auf Codeberg (Lizenz wählen, Schriftlizenzen beilegen, `git status` auf Daten prüfen).
 - Weitere Optionen in `.env`: `DISCOGS_TOKEN`, `COVER_WEB`.
 

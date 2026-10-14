@@ -6,3 +6,4 @@ data/*.db
 data/*.db-*
 data/covers/*
 !data/covers/.gitkeep
+data/settings.json

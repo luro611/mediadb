@@ -1,75 +1,76 @@
 {% extends 'base.html' %}{% block content %}
-<p class="eyebrow">MusikDB / <a href="/add">Hinzufügen</a> / Audio</p><h1>Audio-<em>Import</em></h1>
-<p class="intro">Wähle den Ordner mit deiner Musik (z. B. auf dem externen Laufwerk). Erst wird nur gelesen und abgeglichen; gespeichert wird erst, wenn du unten auf „Übernehmen“ klickst. Es gibt keine Doppelten: Gehört ein Album zu einer vorhandenen CD, wird dort nur „+ digital“ samt Dateiformat vermerkt.</p>
+<p class="eyebrow">{{ _("MusikDB /") }} <a href="/add">{{ _("Hinzufügen") }}</a> {{ _("/ Audio") }}</p><h1>{{ _("Audio-*Import*") }}</h1>
+<p class="intro">{{ _("Wähle den Ordner mit deiner Musik (z. B. auf dem externen Laufwerk). Erst wird nur gelesen und abgeglichen; gespeichert wird erst, wenn du unten auf „Übernehmen“ klickst. Es gibt keine Doppelten: Gehört ein Album zu einer vorhandenen CD, wird dort nur „+ digital“ samt Dateiformat vermerkt.") }}</p>
 
 {% if job.state in ('scanning','applying') %}
-<div class="card"><h3>{{ 'Lese Dateien …' if job.state=='scanning' else 'Speichere …' }}</h3>
-<p id="pt">{{ job.done }} von {{ job.total if job.total else '…' }}</p>
+<div class="card"><h3>{{ _('Lese Dateien …') if job.state=='scanning' else _('Speichere …') }}</h3>
+<p id="pt">{{ _("§ von §", job.done, job.total if job.total else '…') }}</p>
 <progress id="pb" max="{{ job.total or 1 }}" value="{{ job.done }}" style="width:100%"></progress>
-<p class="muted">Der Fortschritt aktualisiert sich still, am Ende lädt die Seite einmal neu.</p></div>
-<script>(function(){var st="{{ job.state }}",T=document.getElementById("pt"),P=document.getElementById("pb");function poll(){fetch("/audio/status").then(function(r){return r.json()}).then(function(d){if(d.state!==st){location.reload();return}T.textContent=d.done+" von "+(d.total||"…")+"";P.max=d.total||1;P.value=d.done;setTimeout(poll,1500)}).catch(function(){setTimeout(poll,4000)})}setTimeout(poll,1500)})()</script>
+<p class="muted">{{ _("Der Fortschritt aktualisiert sich still, am Ende lädt die Seite einmal neu.") }}</p></div>
+<script>(function(){var TXT={{ _t("§ von §","%D","%T")|tojson }};var st="{{ job.state }}",T=document.getElementById("pt"),P=document.getElementById("pb");function poll(){fetch("/audio/status").then(function(r){return r.json()}).then(function(d){if(d.state!==st){location.reload();return}T.textContent=TXT.replace("%D",d.done).replace("%T",d.total||"…");P.max=d.total||1;P.value=d.done;setTimeout(poll,1500)}).catch(function(){setTimeout(poll,4000)})}setTimeout(poll,1500)})()</script>
 
 {% elif job.state=='error' %}
-<div class="warn"><strong>Fehler:</strong> {{ job.error }}</div>
-<form method="post" action="/audio/reset"><button>Zurück</button></form>
+<div class="warn"><strong>{{ _("Fehler:") }}</strong> {{ _(job.error) }}</div>
+<form method="post" action="/audio/reset"><button>{{ _("Zurück") }}</button></form>
 
 {% elif job.state=='done' %}
-<div class="ok"><h3>Fertig</h3>
-<p>{{ job.result.attached }} Alben zu vorhandenen CDs hinzugefügt, {{ job.result.new }} neue digitale Einträge angelegt, {{ job.result.skipped }} übersprungen ({{ job.result.files }} Dateien erfasst).</p></div>
-<div class="actions"><a href="/media?view=digital">Nur digital ansehen</a><a href="/media">Zur Sammlung</a>
-<form method="post" action="/audio/reset"><button>Weiteren Ordner einlesen</button></form></div>
+<div class="ok"><h3>{{ _("Fertig") }}</h3>
+<p>{{ _("§ Alben zu vorhandenen CDs hinzugefügt, § neue digitale Einträge angelegt, § übersprungen (§ Dateien erfasst).", job.result.attached, job.result.new, job.result.skipped, job.result.files) }}</p></div>
+<div class="actions"><a href="/media?view=digital">{{ _("Nur digital ansehen") }}</a><a href="/media">{{ _("Zur Sammlung") }}</a>
+<form method="post" action="/audio/reset"><button>{{ _("Weiteren Ordner einlesen") }}</button></form></div>
 
 {% elif job.state=='ready' %}
 {% set total = job.albums|length %}
-<div class="card"><strong>{{ total }} Alben gefunden</strong> in {% for f in job.folders %}<code>{{ host_label(f) }}</code>{{ ', ' if not loop.last }}{% endfor %}.
-<p class="muted">Bereits erfasste Dateien werden nicht noch einmal angezeigt.</p></div>
-{% if total==0 %}<div class="warn">Keine neuen Audiodateien gefunden.</div>
-<form method="post" action="/audio/reset"><button>Zurück</button></form>
+<div class="card"><strong>{{ _("§ Alben gefunden", total) }}</strong> {{ _("in") }} {% for f in job.folders %}<code>{{ host_label(f) }}</code>{{ ', ' if not loop.last }}{% endfor %}.
+<p class="muted">{{ _("Bereits erfasste Dateien werden nicht noch einmal angezeigt.") }}</p></div>
+{% if total==0 %}<div class="warn">{{ _("Keine neuen Audiodateien gefunden.") }}</div>
+<form method="post" action="/audio/reset"><button>{{ _("Zurück") }}</button></form>
 {% else %}
 <form method="post" action="/audio/apply">
 {% macro rows(list, kind) %}
 {% for a in list %}
 <div class="card albumrow">
  <div class="albhead"><strong>{{ a.artist or '?' }}</strong> – {{ a.album or '?' }}
-  <span class="badge">{{ a.n }} Titel</span>{% if a.n_files != a.n %}<span class="badge">{{ a.n_files }} Dateien</span>{% endif %}<span class="badge">{{ a.formats }}</span>{% if a.year %}<span class="badge">{{ a.year }}</span>{% endif %}</div>
- {% if a.note %}<p class="muted">{{ a.note }}</p>{% endif %}
+  <span class="badge">{{ _("§ Titel", a.n) }}</span>{% if a.n_files != a.n %}<span class="badge">{{ _("§ Dateien", a.n_files) }}</span>{% endif %}<span class="badge">{{ a.formats }}</span>{% if a.year %}<span class="badge">{{ a.year }}</span>{% endif %}</div>
+ {% if a.note %}<p class="muted">{{ _(a.note) }}</p>{% endif %}
  {% if kind in ('match','known') %}
-  <p class="muted">Gehört zur vorhandenen CD: {{ a.match_label }}</p>
-  <label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="attach:{{a.medium_id}}" checked> Als „+ digital“ bei dieser CD vermerken</label>
+  <p class="muted">{{ _("Gehört zur vorhandenen CD: §", a.match_label) }}</p>
+  <label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="attach:{{a.medium_id}}" checked> {{ _("Als „+ digital“ bei dieser CD vermerken") }}</label>
  {% elif kind=='review' %}
-  <p class="muted">Ähnlicher Name, aber die Titel passen nicht eindeutig – bitte entscheiden:</p>
-  {% for c in a.candidates %}<label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="attach:{{c.id}}"> Gleiche Ausgabe wie: {{ c.artist }} – {{ c.title }} ({{ c.n }} Titel{% if c.of %}, davon {{ c.common }} gleich{% endif %})</label>{% endfor %}
-  <label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="new"> Eigene Ausgabe (z. B. Remaster mit Zusatztiteln) – neu anlegen</label>
+  <p class="muted">{{ _("Ähnlicher Name, aber die Titel passen nicht eindeutig – bitte entscheiden:") }}</p>
+  {% for c in a.candidates %}<label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="attach:{{c.id}}"> {{ _("Gleiche Ausgabe wie: § – § (§ Titel", c.artist, c.title, c.n) }}{% if c.of %}{{ _(", davon § gleich", c.common) }}{% endif %})</label>{% endfor %}
+  <label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="new"> {{ _("Eigene Ausgabe (z. B. Remaster mit Zusatztiteln) – neu anlegen") }}</label>
  {% else %}
-  <label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="new" checked> Als neuen digitalen Eintrag anlegen</label>
-  {% for c in a.candidates %}<label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="attach:{{c.id}}"> Doch zur CD zuordnen: {{ c.artist }} – {{ c.title }} ({{ c.n }} Titel, davon {{ c.common }} gleich)</label>{% endfor %}
+  <label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="new" checked> {{ _("Als neuen digitalen Eintrag anlegen") }}</label>
+  {% for c in a.candidates %}<label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="attach:{{c.id}}"> {{ _("Doch zur CD zuordnen: § – § (§ Titel, davon § gleich)", c.artist, c.title, c.n, c.common) }}</label>{% endfor %}
  {% endif %}
- <label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="skip"{% if kind=='review' %} checked{% endif %}> Überspringen</label>
+ <label class="checkbox"><input type="radio" name="d_{{a.idx}}" value="skip"{% if kind=='review' %} checked{% endif %}> {{ _("Überspringen") }}</label>
 </div>
 {% endfor %}
 {% endmacro %}
-{% if groups.review %}<h3>Bitte prüfen ({{ groups.review|length }})</h3>{{ rows(groups.review,'review') }}{% endif %}
-{% if groups.match or groups.known %}<h3>Passt zu vorhandenen CDs ({{ groups.match|length + groups.known|length }})</h3>{{ rows(groups.match,'match') }}{{ rows(groups.known,'known') }}{% endif %}
-{% if groups.new %}<h3>Neu – keine CD vorhanden ({{ groups.new|length }})</h3>{{ rows(groups.new,'new') }}{% endif %}
-<div class="actions"><button>Übernehmen</button></div>
+{% if groups.review %}<h3>{{ _("Bitte prüfen (§)", groups.review|length) }}</h3>{{ rows(groups.review,'review') }}{% endif %}
+{% if groups.match or groups.known %}<h3>{{ _("Passt zu vorhandenen CDs (§)", groups.match|length + groups.known|length) }}</h3>{{ rows(groups.match,'match') }}{{ rows(groups.known,'known') }}{% endif %}
+{% if groups.new %}<h3>{{ _("Neu – keine CD vorhanden (§)", groups.new|length) }}</h3>{{ rows(groups.new,'new') }}{% endif %}
+<div class="actions"><button>{{ _("Übernehmen") }}</button></div>
 </form>
-<form method="post" action="/audio/reset" class="actions"><button style="background:transparent;color:var(--ink);border-color:var(--line)">Verwerfen</button></form>
+<form method="post" action="/audio/reset" class="actions"><button style="background:transparent;color:var(--ink);border-color:var(--line)">{{ _("Verwerfen") }}</button></form>
 {% endif %}
 
 {% else %}
 <form method="post" action="/audio/scan" id="scanform" class="card" style="scroll-margin-top:20px">
- <h3>1. Ausgewählte Ordner</h3>
- <ul id="chosen"><li class="muted" id="none">Noch keiner – wähle unten einen Ordner und klicke „Diesen Ordner wählen“.</li></ul>
- <label>Oder Pfad eintippen (ein Pfad pro Zeile, z. B. /Volumes/Musik/Music)<textarea name="manual" rows="2"></textarea></label>
- <button>2. Einlesen und abgleichen</button>
- <p class="muted">Schon erfasste Dateien werden übersprungen. Neue Dateien in bekannten Ordnern kommen zur selben CD bzw. zum selben Eintrag, neue Alben werden wie gewohnt vorgeschlagen.{% if n_files %} Bisher erfasst: {{ n_files }} Dateien in {{ n_media }} Einträgen.{% endif %}</p>
+ <h3>{{ _("1. Ausgewählte Ordner") }}</h3>
+ <ul id="chosen"><li class="muted" id="none">{{ _("Noch keiner – wähle unten einen Ordner und klicke „Diesen Ordner wählen“.") }}</li></ul>
+ <label>{{ _("Oder Pfad eintippen (ein Pfad pro Zeile, z. B. /Volumes/Musik/Music)") }}<textarea name="manual" rows="2"></textarea></label>
+ <button>{{ _("2. Einlesen und abgleichen") }}</button>
+ <p class="muted">{{ _("Schon erfasste Dateien werden übersprungen. Neue Dateien in bekannten Ordnern kommen zur selben CD bzw. zum selben Eintrag, neue Alben werden wie gewohnt vorgeschlagen.") }}{% if n_files %} {{ _("Bisher erfasst: § Dateien in § Einträgen.", n_files, n_media) }}{% endif %}</p>
 </form>
 <div class="card">
- <h3>Ordner suchen</h3>
+ <h3>{{ _("Ordner suchen") }}</h3>
  <p class="muted" id="where">…</p>
  <div id="browser"></div>
 </div>
 <script>
+const L={{ {'drives':_t('Laufwerke und Ordner'),'files':_t('Audiodateien direkt hier'),'up':_t('⬆ eine Ebene hoch'),'choose':_t('Diesen Ordner wählen'),'nodirs':_t('Keine Unterordner.'),'remove':_t('entfernen')}|tojson }};
 const B=document.getElementById('browser'),W=document.getElementById('where'),C=document.getElementById('chosen'),F=document.getElementById('scanform');
 function flash(){F.scrollIntoView({behavior:'smooth',block:'start'});F.classList.remove('flash');void F.offsetWidth;F.classList.add('flash')}
 let cur='';
@@ -78,21 +79,21 @@ function add(path,label){
   if([...F.querySelectorAll('input[name=folders]')].some(i=>i.value===path))return;
   const n=document.getElementById('none'); if(n)n.remove();
   const li=document.createElement('li');
-  li.innerHTML='<strong class="chosenpath">'+esc(label)+'</strong> <a href="#">entfernen</a><input type="hidden" name="folders" value="'+esc(path)+'">';
+  li.innerHTML='<strong class="chosenpath">'+esc(label)+'</strong> <a href="#">'+esc(L.remove)+'</a><input type="hidden" name="folders" value="'+esc(path)+'">';
   li.querySelector('a').onclick=e=>{e.preventDefault();li.remove()};
   C.appendChild(li);
   flash();
 }
 async function go(path){
   const r=await fetch('/audio/browse?path='+encodeURIComponent(path)); const d=await r.json(); cur=d.path;
-  W.textContent=d.path?d.label:'Laufwerke und Ordner';
+  W.textContent=d.path?d.label:L.drives;
   let h='';
   if(d.error)h+='<div class="warn">'+esc(d.error)+'</div>';
   if(d.path){
-    h+='<p><a href="#" data-go="'+esc(d.parent)+'">⬆ eine Ebene hoch</a> · '+d.audio+' Audiodateien direkt hier · <button type="button" id="addcur" style="margin:0;padding:8px 12px">Diesen Ordner wählen</button></p>';
+    h+='<p><a href="#" data-go="'+esc(d.parent)+'">'+L.up+'</a> · '+d.audio+' '+L.files+' · <button type="button" id="addcur" style="margin:0;padding:8px 12px">'+L.choose+'</button></p>';
   }
   h+='<ul>'+d.dirs.map(x=>'<li><a href="#" data-go="'+esc(x.path)+'">📁 '+esc(x.label)+'</a></li>').join('')+'</ul>';
-  if(!d.dirs.length&&!d.error)h+='<p class="muted">Keine Unterordner.</p>';
+  if(!d.dirs.length&&!d.error)h+='<p class="muted">'+L.nodirs+'</p>';
   B.innerHTML=h;
   B.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.go)});
   const b=document.getElementById('addcur'); if(b)b.onclick=()=>add(d.path,d.label);

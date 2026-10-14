@@ -1,12 +1,12 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">MusikDB / Hinzufügen</p><h1>CD <em>hinzufügen</em></h1>
-<p class="intro">Wähle, wie du eine CD erfassen möchtest. Treffer werden erst nach deiner Bestätigung gespeichert.</p>
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MusikDB / Hinzufügen") }}</p><h1>{{ _("CD *hinzufügen*") }}</h1>
+<p class="intro">{{ _("Wähle, wie du eine CD erfassen möchtest. Treffer werden erst nach deiner Bestätigung gespeichert.") }}</p>
 <div class="grid addgrid">
-<div class="card"><h3>Mit Barcode</h3><p>Handscanner anschließen, Feld anklicken und scannen – oder den Barcode von Hand eintippen.</p>
-<form method="post" action="/scan/search"><input autofocus class="wide" name="barcode" placeholder="Barcode scannen oder eingeben" required><button>Online suchen</button></form></div>
-<div class="card"><h3>Ohne Scanner: nach Interpret suchen</h3><p>Gib einen Interpreten ein. Du siehst alle seine CDs nach Albumtitel sortiert mit Barcode und vergleichst mit deiner CD.</p>
-<form method="get" action="/discography"><input class="wide" name="artist" placeholder="Interpret, z. B. Pink Floyd" required><button>Diskografie anzeigen</button></form></div>
-<div class="card"><h3>Aus Musikdateien (MP3, M4A, FLAC …)</h3><p>Einen Musikordner einlesen, mit vorhandenen CDs abgleichen und Cover sowie Genre ergänzen.</p><p><a href="/audio">Audio-Import öffnen ›</a></p></div>
-<div class="card"><h3>Aus einer Tabelle (Excel, ODS, CSV)</h3><p>Du führst deine CDs schon in einer Liste? Interpret und Albumtitel genügen, den Rest holt die App von MusicBrainz. Mit Vorschau vor dem Speichern.</p><p><a href="/import">Tabelle importieren ›</a></p></div>
-<div class="card"><h3>Sammlung als Excel-Datei sichern</h3><p>Hier kannst du die komplette Sammlung als Excel-Datei herunterladen, zum Beispiel als Sicherung.</p><form method="get" action="/export"><button>Excel-Export öffnen</button></form></div>
+<div class="card"><h3>{{ _("Mit Barcode") }}</h3><p>{{ _("Handscanner anschließen, Feld anklicken und scannen – oder den Barcode von Hand eintippen.") }}</p>
+<form method="post" action="/scan/search"><input autofocus class="wide" name="barcode" placeholder="{{ _('Barcode scannen oder eingeben') }}" required><button>{{ _("Online suchen") }}</button></form></div>
+<div class="card"><h3>{{ _("Ohne Scanner: nach Interpret suchen") }}</h3><p>{{ _("Gib einen Interpreten ein. Du siehst alle seine CDs nach Albumtitel sortiert mit Barcode und vergleichst mit deiner CD.") }}</p>
+<form method="get" action="/discography"><input class="wide" name="artist" placeholder="{{ _('Interpret, z. B. Pink Floyd') }}" required><button>{{ _("Diskografie anzeigen") }}</button></form></div>
+<div class="card"><h3>{{ _("Aus Musikdateien (MP3, M4A, FLAC …)") }}</h3><p>{{ _("Einen Musikordner einlesen, mit vorhandenen CDs abgleichen und Cover sowie Genre ergänzen.") }}</p><p><a href="/audio">{{ _("Audio-Import öffnen ›") }}</a></p></div>
+<div class="card"><h3>{{ _("Aus einer Tabelle (Excel, ODS, CSV)") }}</h3><p>{{ _("Du führst deine CDs schon in einer Liste? Interpret und Albumtitel genügen, den Rest holt die App von MusicBrainz. Mit Vorschau vor dem Speichern.") }}</p><p><a href="/import">{{ _("Tabelle importieren ›") }}</a></p></div>
+<div class="card"><h3>{{ _("Sammlung als Excel-Datei sichern") }}</h3><p>{{ _("Hier kannst du die komplette Sammlung als Excel-Datei herunterladen, zum Beispiel als Sicherung.") }}</p><form method="get" action="/export"><button>{{ _("Excel-Export öffnen") }}</button></form></div>
 </div>
-<p class="muted">Quelle: MusicBrainz · <a href="/manual">Ganz von Hand erfassen</a></p><p class="muted" style="font-size:12px">Daten von <a href="https://musicbrainz.org" target="_blank" rel="noopener">MusicBrainz</a> (Cover: Cover Art Archive), optional Discogs, iTunes und Deezer. Ohne Verbindung zu und nicht unterstützt von diesen Diensten. Bedingungen: docs/DATENQUELLEN_UND_RECHT.md</p>{% endblock %}
+<p class="muted">{{ _("Quelle: MusicBrainz ·") }} <a href="/manual">{{ _("Ganz von Hand erfassen") }}</a></p><p class="muted" style="font-size:12px">{{ _("Daten von") }} <a href="https://musicbrainz.org" target="_blank" rel="noopener">{{ _("MusicBrainz") }}</a> {{ _("(Cover: Cover Art Archive), optional Discogs, iTunes und Deezer. Ohne Verbindung zu und nicht unterstützt von diesen Diensten. Bedingungen: docs/DATENQUELLEN_UND_RECHT.md") }}</p>{% endblock %}

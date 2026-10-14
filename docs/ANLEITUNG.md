@@ -20,6 +20,10 @@ MusikDB ist eine **private Musikdatenbank für den eigenen Rechner**. Du erfasst
 - Cover, Titellisten mit Laufzeiten, Label, Katalognummer, Land, Jahr der CD **und** Erscheinungsdatum des Albums, Genre und Styles.
 - Sammelaktionen mit Fortschrittsanzeige: **Fehlende Cover laden**, **Fehlende Genres laden**, **Alle aus MusicBrainz aktualisieren** (füllt nur Leeres, überschreibt nichts).
 
+**Sprachen**
+- Die Oberfläche gibt es auf **Deutsch, Englisch, Französisch und Spanisch**. Die Umschalter (DE · EN · FR · ES) steht oben rechts neben „Theme“. Die Wahl wird im Browser (Cookie) und zusätzlich im Ordner `data/` (Datei `settings.json`) gespeichert und bleibt auch nach einem Neustart erhalten. Ohne Auswahl gilt Deutsch.
+- Was nicht übersetzt wird: Namen von Künstlern, Alben und Labels, die Inhalte aus MusicBrainz/Discogs sowie technische Fehlermeldungen. Die Spaltenüberschriften der Exportdateien (xlsx, ods, csv) bleiben englische Feldnamen, damit Sicherungen in jeder Sprache wieder importierbar sind.
+
 **Sichern und mitnehmen**
 - **Export** als xlsx (Excel), ods (LibreOffice), csv (Semikolon, UTF-8 mit BOM, öffnet in Excel richtig) oder Markdown; wahlweise alles, nur CDs oder nur Digitales. Die Excel-Datei dient zugleich als Sicherung: Beim Import wird sie erkannt und vollständig wiederhergestellt.
 
@@ -66,7 +70,7 @@ Stoppen: `docker compose down`. Neu bauen nach einem Update: `docker compose up 
 ## 5. Woher kommen die Daten?
 Hauptquelle ist **MusicBrainz** (Daten) mit dem **Cover Art Archive** (Bilder). Optional **Discogs**, als Cover-Ausweichquelle **iTunes** und **Deezer**, außerdem die Tags in deinen Musikdateien. Zusammengefasst: Es werden nur Suchbegriffe gesendet, deine Daten bleiben lokal. Genaueres, auch zur Frage „Darf ich das?“, steht in **DATENQUELLEN_UND_RECHT.md**.
 
-## 6. Grenzen (Version 1.0)
+## 6. Grenzen
 - Kein Mehrbenutzerbetrieb, keine Anmeldung; gedacht für einen lokalen Rechner. Nicht ins offene Internet stellen.
 - Nur Musik (CDs, Audiodateien). Filme und Serien folgen in Version 2 (siehe ROADMAP.md).
 - Gelöschte oder verschobene Audiodateien werden nicht automatisch bereinigt.

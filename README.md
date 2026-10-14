@@ -5,7 +5,7 @@ Private Musikdatenbank für den eigenen Rechner: CDs und Musikdateien verwalten,
 *English: a small self-hosted catalogue for your CDs and music files (FastAPI, SQLite). Looks up releases on MusicBrainz, optional Discogs. German UI and docs.*
 
 ## Funktionen
-Barcode- und Diskografie-Suche · Import aus Excel/ODS/CSV · Audio-Import (MP3, M4A, FLAC …) mit Abgleich gegen vorhandene CDs · Cover und Genres · Suche, A–Z-Leiste, Interpreten-Übersicht · Export (xlsx, ods, csv, Markdown) · Discogs als Zweitquelle.
+Oberfläche in Deutsch, Englisch, Französisch und Spanisch (Auswahl oben neben „Theme“) · Barcode- und Diskografie-Suche · Import aus Excel/ODS/CSV · Audio-Import (MP3, M4A, FLAC …) mit Abgleich gegen vorhandene CDs · Cover und Genres · Suche, A–Z-Leiste, Interpreten-Übersicht · Export (xlsx, ods, csv, Markdown) · Discogs als Zweitquelle.
 
 ## Schnellstart
 ```
@@ -18,6 +18,7 @@ Dann `http://localhost:8000` öffnen. Daten liegen in `data/` (Datenbank und Cov
 - [Ausführliche Anleitung](docs/ANLEITUNG.md): Funktionen, Installation, Abläufe, Fehlersuche
 - [Datenquellen und Rechtliches](docs/DATENQUELLEN_UND_RECHT.md): welche Dienste genutzt werden, Bedingungen, was bei Weitergabe zu beachten ist
 - [Roadmap](docs/ROADMAP.md): Version 2 (Filme und Serien)
+- [Übersetzungen](docs/SPRACHEN.md): Sprachen ergänzen oder verbessern
 - [Projektanleitung](PROJEKTANLEITUNG.md): technische Entscheidungen und Stand, für die Weiterentwicklung
 - [Änderungen](CHANGELOG.md)
 

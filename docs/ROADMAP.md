@@ -15,5 +15,5 @@ Offene Entscheidungen vor dem Start:
 ## Weitere Ideen
 - Aufräumen gelöschter/verschobener Audiodateien.
 - Automatische Tests und eine kleine Demo-Datenbank ohne echte Cover.
-- Mehrsprachige Oberfläche (Deutsch/Englisch) für die Veröffentlichung.
+- Weitere Sprachen (siehe SPRACHEN.md) und Verbesserung der vorhandenen Übersetzungen durch Muttersprachler.
 - Codeberg: Repository mit README, Lizenz, Issues; Releases als Tags.
