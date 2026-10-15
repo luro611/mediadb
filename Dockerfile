@@ -1,9 +1,11 @@
 FROM python:3.12-slim
 LABEL org.opencontainers.image.title="MediaDB" \
-      org.opencontainers.image.description="Private Musikdatenbank fürs Heimnetz (CDs und Audiodateien)" \
+      org.opencontainers.image.description="Private Mediendatenbank fürs Heimnetz (Musik, Filme, Serien und Bücher)" \
       org.opencontainers.image.licenses="GPL-3.0-or-later"
 ENV PYTHONUNBUFFERED=1 PORT=8000 DATA_DIR=/app/data
 WORKDIR /app
+# ffprobe (aus ffmpeg) liest Aufloesung, Tonspuren und Untertitel aus Filmdateien
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg tzdata && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app

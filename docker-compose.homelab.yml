@@ -1,17 +1,37 @@
-# Homelab (Proxmox-LXC, Linux-Server, NAS). Start:  docker compose -f docker-compose.homelab.yml up -d --build
+# MediaDB im Homelab (Proxmox-LXC, Linux-Server, NAS) – auch zum Einfügen als Stack in Dockhand oder Portainer.
 # Anleitung: docs/BETRIEB.md
+#
+# Alles liegt in EINEM Ordner auf dem Server (hier /opt/mediadb). Der Container läuft als root,
+# deshalb gibt es keine Probleme mit Dateirechten, solange die Dateien auf dem Server selbst liegen.
+#
+#   /opt/mediadb/data            Datenbanken, Cover, Einstellungen  (DAS SIND DEINE DATEN – sichern!)
+#   /opt/mediadb/medien/musik    Musikdateien   → im Audio-Import als /music
+#   /opt/mediadb/medien/filme    Filmdateien    → im Film-Import als /movies
+#   /opt/mediadb/medien/serien   Serien         → im Serien-Import als /series
+#   /opt/mediadb/medien/buecher  E-Books, Hörbücher → im Bücher-Import als /books
+#
+# Fehlende Ordner legt Docker beim ersten Start selbst an (leer).
+# Musik, Filme usw. auf einer NAS: in MediaDB unter Einstellungen → NAS-Freigaben eintragen (SMB), dann ist hier nichts zu tun.
+# Update:  docker compose -f docker-compose.homelab.yml pull && docker compose -f docker-compose.homelab.yml up -d
+#          (in Dockhand: Stack → Pull und Redeploy)
 services:
   mediadb:
-    build: .
-    # Sobald es ein fertiges Image auf Codeberg gibt, statt "build: ." diese Zeile verwenden
-    # (Update dann mit: docker compose -f docker-compose.homelab.yml pull && docker compose -f docker-compose.homelab.yml up -d):
-    # image: codeberg.org/BENUTZERNAME/mediadb:latest
+    image: codeberg.org/luro61/mediadb:latest
+    # Wer lieber aus dem Quellcode baut: die Zeile "image:" durch "build: ." ersetzen.
+    container_name: mediadb
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    environment:
+      # Die meisten Einstellungen (TMDB-Schlüssel, Sprache, E-Mail, Discogs) trägst du in der App
+      # unter Einstellungen (Zahnrad) ein. Hier stehen nur die Zugriffseinstellungen (siehe docs/BETRIEB.md).
+      - APP_PASSWORD=
+      - ALLOW_PUBLIC=0
+      - BASE_PATH=
+      - TZ=Europe/Berlin
     volumes:
-      - ./data:/app/data
-      # Optional: Musikordner nur lesend einhängen; erscheint im Audio-Import als /music
-      # - /pfad/zur/musik:/host/music:ro
+      - /opt/mediadb/data:/app/data
+      - /opt/mediadb/medien/musik:/host/music:ro
+      - /opt/mediadb/medien/filme:/host/movies:ro
+      - /opt/mediadb/medien/serien:/host/series:ro
+      - /opt/mediadb/medien/buecher:/host/books:ro
     restart: unless-stopped
