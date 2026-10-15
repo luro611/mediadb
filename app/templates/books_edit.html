@@ -1,0 +1,21 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/books">{{ _("MediaDB / Bücher") }}</a></p><h1>{{ _("Bearbeiten") }}</h1>
+<form method="post" action="{{ base }}/books/{{ b.id }}/edit" class="card">
+<label for="et">{{ _("Titel") }}</label><input name="title" id="et" value="{{ b.title }}" required>
+<label for="es">{{ _("Untertitel") }}</label><input name="subtitle" id="es" value="{{ b.subtitle or '' }}">
+<label for="ea">{{ _("Autor (mehrere mit ; trennen)") }}</label><input name="authors" id="ea" value="{{ b.authors or '' }}">
+<div class="row3"><span><label for="ey">{{ _("Jahr") }}</label><input name="year" id="ey" value="{{ b.year or '' }}" inputmode="numeric" maxlength="4"></span>
+<span><label for="ep">{{ _("Seiten") }}</label><input name="pages" id="ep" value="{{ b.pages or '' }}" inputmode="numeric"></span>
+<span><label for="ei">{{ _("ISBN") }}</label><input name="isbn" id="ei" value="{{ b.isbn or '' }}" inputmode="numeric"></span></div>
+<div class="row2"><span><label for="er">{{ _("Reihe") }}</label><input name="series" id="er" value="{{ b.series or '' }}"></span><span><label for="en2">{{ _("Band") }}</label><input name="series_no" id="en2" value="{{ b.series_no or '' }}" class="short"></span></div>
+<div class="row2"><span><label for="ev">{{ _("Verlag") }}</label><input name="publisher" id="ev" value="{{ b.publisher or '' }}"></span>
+<span><label for="eort">{{ _("Verlagsort") }}</label><input name="place" id="eort" value="{{ b.place or '' }}"></span></div><div class="row2">
+<span><label for="ee">{{ _("Ausgabe") }}</label><input name="edition" id="ee" value="{{ b.edition or '' }}"></span>
+<span><label for="el">{{ _("Sprache") }}</label><select name="language" id="el"><option value="">–</option>{% for code,name in BOOK_LANGS.items() if code|length==3 and code not in ('deu','fra','nld') %}<option value="{{ code }}"{% if b.language==code %} selected{% endif %}>{{ _(name) }}</option>{% endfor %}</select></span></div>
+<label for="eo">{{ _("Originaltitel") }}</label><input name="original_title" id="eo" value="{{ b.original_title or '' }}">
+<label for="eg">{{ _("Genres (mit Komma getrennt)") }}</label><input name="genres" id="eg" value="{{ b.genres or '' }}">
+<label for="ed">{{ _("Inhalt") }}</label><textarea name="description" id="ed" rows="5">{{ b.description or '' }}</textarea>
+<label for="enn">{{ _("Notiz") }}</label><textarea name="notes" id="enn" rows="2">{{ b.notes or '' }}</textarea>
+<div class="actions"><button>{{ _("Speichern") }}</button><a href="{{ base }}/books/{{ b.id }}">{{ _("Abbrechen") }}</a></div>
+</form>
+{% endblock %}

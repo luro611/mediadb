@@ -1,0 +1,44 @@
+{% extends 'base.html' %}{% block content %}
+{% set p = person %}
+<p class="eyebrow"><a href="{{ base }}/films">{{ _("MediaDB / Filme") }}</a></p>
+{% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
+<div class="filmhead personhead">
+ <div class="filmposter">{% if p.profile %}<img src="{{ base }}/film-images/{{ p.profile }}" alt="{{ p.name }}">{% else %}<span class="pph">{{ p.name }}</span>{% endif %}</div>
+ <div class="filmmain">
+  <h1>{{ p.name }}</h1>
+  <p class="filmline">{% if p.department %}<span>{{ _(DEPARTMENTS.get(p.department, p.department)) }}</span>{% endif %}{% if p.birthday %}<span>{{ _("* §", p.birthday|fdate) }}{% if p.place %} · {{ p.place }}{% endif %}</span>{% endif %}{% if p.deathday %}<span>{{ _("† §", p.deathday|fdate) }}</span>{% endif %}</p>
+  {% if p.biography and p.biography|length > 480 %}<details class="bio"><summary>{{ p.biography[:420] }} … <span class="more">{{ _("weiterlesen") }}</span></summary><p class="overview">{{ p.biography }}</p></details>{% elif p.biography %}<p class="overview">{{ p.biography }}</p>{% endif %}
+  <p class="links"><a href="https://www.themoviedb.org/person/{{ p.id }}" target="_blank" rel="noopener">TMDB ›</a>{% if p.imdb_id %}<a href="https://www.imdb.com/name/{{ p.imdb_id }}/" target="_blank" rel="noopener">IMDb ›</a>{% endif %}<a href="{{ base }}/films?q={{ p.name|urlencode }}">{{ _("In der Sammlung suchen ›") }}</a></p>
+ </div>
+</div>
+
+<h2>{{ _("In deiner Sammlung") }} <span class="muted">({{ mine|length + series|length }})</span></h2>
+{% if mine %}{% if series %}<h3>{{ _("Filme") }} <span class="muted">({{ mine|length }})</span></h3>{% endif %}<div class="posters">{% for f in mine %}
+ <a class="pcard{% if f.watched %} seen{% endif %}" href="{{ base }}/films/{{ f.id }}">
+  <span class="pimg">{% if f.poster %}<img src="{{ base }}/film-images/{{ f.poster }}" alt="" loading="lazy">{% else %}<span class="pph">{{ f.title }}</span>{% endif %}
+   {% if f.rating %}<span class="prating">{{ f.rating }}</span>{% endif %}{% if f.watched %}<span class="pseen" title="{{ _('Gesehen') }}">✓</span>{% endif %}</span>
+  <span class="ptitle">{{ f.title }}</span>
+  <span class="pmeta">{{ f.year or '' }}{% if 'director' in (f.roles or '') %} · {{ _("Regie") }}{% endif %}{% if f.character %} · {{ f.character }}{% endif %}</span>
+ </a>{% endfor %}</div>
+{% elif not series %}<p class="muted">{{ _("Noch kein Film und keine Serie mit dieser Person in deiner Sammlung.") }}</p>{% endif %}
+{% if series %}<h3>{{ _("Serien") }} <span class="muted">({{ series|length }})</span></h3>
+<div class="posters">{% for s in series %}
+ <a class="pcard" href="{{ base }}/series/{{ s.id }}">
+  <span class="pimg">{% if s.poster %}<img src="{{ base }}/film-images/{{ s.poster }}" alt="" loading="lazy">{% else %}<span class="pph">{{ s.title }}</span>{% endif %}{% if s.rating %}<span class="prating">{{ s.rating }}</span>{% endif %}<span class="ptype">{{ _("Serie") }}</span></span>
+  <span class="ptitle">{{ s.title }}</span>
+  <span class="pmeta">{{ s.year or '' }}{% if 'creator' in (s.roles or '') %} · {{ _("Idee") }}{% endif %}{% if s.character %} · {{ s.character }}{% endif %}</span>
+ </a>{% endfor %}</div>{% endif %}
+
+{% if others %}
+<h2>{{ _("Weitere Filme und Serien") }} <span class="muted">({{ others|length }})</span></h2>
+<p class="muted">{{ _("Laut TMDB, neueste zuerst.") }}</p>
+<div class="posters small">{% for e in others %}
+ <div class="pcard other">
+  <a class="pimg" href="https://www.themoviedb.org/{{ e.media }}/{{ e.tmdb_id }}" target="_blank" rel="noopener">{% if e.poster_url %}<img src="{{ e.poster_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<span class="pph">{{ e.title }}</span>{% endif %}{% if e.media=='tv' %}<span class="ptype">{{ _("Serie") }}</span>{% endif %}</a>
+  <span class="ptitle">{{ e.title }}</span>
+  <span class="pmeta">{{ e.year or '' }}{% if 'director' in e.roles %} · {{ _("Regie") }}{% endif %}{% if e.character %} · {{ e.character }}{% endif %}</span>
+  {% if e.media=='movie' %}<a class="padd" href="{{ base }}/films/search?q={{ e.title|urlencode }}{% if e.year %}&amp;year={{ e.year }}{% endif %}">{{ _("Hinzufügen ›") }}</a>{% elif e.media=='tv' %}<a class="padd" href="{{ base }}/series/search?q={{ e.title|urlencode }}{% if e.year %}&amp;year={{ e.year }}{% endif %}">{{ _("Hinzufügen ›") }}</a>{% endif %}
+ </div>{% endfor %}</div>
+{% endif %}
+{% include '_films_foot.html' %}
+{% endblock %}

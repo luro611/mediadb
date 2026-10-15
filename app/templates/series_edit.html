@@ -1,0 +1,11 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/series">{{ _("MediaDB / Serien") }}</a></p><h1>{{ _("Bearbeiten") }}</h1>
+<form method="post" action="{{ base }}/series/{{ s.id }}/edit" class="card">
+<label for="et">{{ _("Titel") }}</label><input name="title" id="et" value="{{ s.title }}" required>
+<label for="ey">{{ _("Jahr") }}</label><input name="year" id="ey" value="{{ s.year or '' }}" inputmode="numeric" maxlength="4" class="short">
+<label for="ep">{{ _("Streamingdienst (eigene Angabe, ersetzt die Angabe von TMDB)") }}</label><input name="providers_own" id="ep" value="{{ s.providers_own or '' }}" placeholder="{{ _('z. B. Paramount+') }}">
+<label for="ev">{{ _("Handlung") }}</label><textarea name="overview" id="ev" rows="5">{{ s.overview or '' }}</textarea>
+<label for="en">{{ _("Notiz") }}</label><textarea name="notes" id="en" rows="2">{{ s.notes or '' }}</textarea>
+<div class="actions"><button>{{ _("Speichern") }}</button><a href="{{ base }}/series/{{ s.id }}">{{ _("Abbrechen") }}</a></div>
+</form>
+{% endblock %}

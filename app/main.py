@@ -20,6 +20,7 @@ from functools import partial
 
 BASE=Path(__file__).resolve().parent.parent
 DATA=Path(os.getenv('DATA_DIR',BASE/'data')); DATA.mkdir(exist_ok=True); (DATA/'covers').mkdir(exist_ok=True)
+from . import config; config.init(DATA)  # Einstellungen aus der App (data/settings.json) vor allem anderen
 DB_URL=storage.music_db_url(DATA,os.getenv('DATABASE_URL','').strip())  # seit MediaDB 1.0: data/musik.db (alte musikdb.db wird uebernommen)
 IS_SQLITE=DB_URL.startswith('sqlite')
 engine=create_engine(DB_URL, connect_args={'check_same_thread':False,'timeout':15} if IS_SQLITE else {})
@@ -45,9 +46,9 @@ def _search_index_update(session,flush_ctx):
  ids.discard(None)
  if ids: search.refresh(session.connection(),ids)
 SEC=sec.Settings(DATA)
-app=FastAPI(title='MediaDB'); app.add_middleware(sec.Gate,settings=SEC); app.mount('/static',StaticFiles(directory=str(BASE/'static')),name='static'); app.mount('/covers',StaticFiles(directory=str(DATA/'covers')),name='covers'); templates=Jinja2Templates(directory=str(BASE/'app/templates'))
+app=FastAPI(title='MediaDB'); app.add_middleware(sec.Gate,settings=SEC); (DATA/'film_images').mkdir(exist_ok=True); app.mount('/film-images',StaticFiles(directory=str(DATA/'film_images')),name='film_images'); app.mount('/static',StaticFiles(directory=str(BASE/'static')),name='static'); app.mount('/covers',StaticFiles(directory=str(DATA/'covers')),name='covers'); templates=Jinja2Templates(directory=str(BASE/'app/templates'))
 lock=threading.Lock(); last_mb=0.0
-templates.env.globals['asset_v']=int((BASE/'static'/'style.css').stat().st_mtime)
+templates.env.globals['asset_v']=int((BASE/'static'/'style.css').stat().st_mtime); templates.env.globals['app_version']=config.version()
 
 def clean_barcode(x): return re.sub(r"^'+",'',str(x or '').strip())
 def duration(ms):
@@ -143,7 +144,7 @@ def save_item(data,s):
  for t in data.get('tracks',[]): s.add(Track(medium_id=item.id,**{k:v for k,v in t.items() if k in Track.__table__.columns.keys() and k not in ('id','medium_id')}))
  s.commit(); return item
 
-CAA_HEADERS={'User-Agent':os.getenv('MB_USER_AGENT','MediaDB/1.0 (contact@example.invalid)')}
+def caa_headers(): return {'User-Agent':os.getenv('MB_USER_AGENT','MediaDB/1.0 (contact@example.invalid)')}
 def download_cover(item_id, release_mbid='', release_group_mbid='', extra=()):
  """Holt das Frontcover vom Cover Art Archive: erst Release, dann Release-Group, dann weitere Kandidaten. Gibt Dateiname oder None zurueck."""
  pairs=[]
@@ -154,7 +155,7 @@ def download_cover(item_id, release_mbid='', release_group_mbid='', extra=()):
   if not mbid or (kind,mbid) in seen: continue
   seen.add((kind,mbid))
   try:
-   r=requests.get(f'https://coverartarchive.org/{kind}/{mbid}/front-500',headers=CAA_HEADERS,timeout=12,allow_redirects=True)
+   r=requests.get(f'https://coverartarchive.org/{kind}/{mbid}/front-500',headers=caa_headers(),timeout=12,allow_redirects=True)
    ctype=r.headers.get('Content-Type','')
    if r.status_code==200 and ctype.startswith('image/') and len(r.content)>500:
     ext='png' if 'png' in ctype else 'jpg'; name=f'{item_id}.{ext}'
@@ -481,11 +482,67 @@ def set_lang(request:Request,code:str,next:str='/'):
  next=sec.strip_base(next,sec.get_base(request))
  if not next.startswith('/') or next.startswith('//') or '\\' in next: next='/'
  d=load_settings(); d['lang']=code; save_settings(d)
+ try:  # erste Einrichtung: Datensprache passend zur Oberflaeche, solange noch nichts gespeichert ist
+  if not config.source('TMDB_LANGUAGE'):
+   from . import films_db as _F, series_db as _S
+   with _F.db() as c1, _S.db() as c2:
+    if not c1.execute('SELECT 1 FROM films LIMIT 1').fetchone() and not c2.execute('SELECT 1 FROM series LIMIT 1').fetchone(): config.save({'TMDB_LANGUAGE':config.UI_FOR_DATA[code]})
+ except Exception: logging.exception('Datensprache nicht vorgeschlagen')
  r=RedirectResponse(next,303); r.set_cookie('mediadb_lang',code,max_age=60*60*24*365*5,samesite='lax'); return r
+# ---------------- Bereich Filme (eigene Datenbank data/filme.db, Seiten in films_web.py) ----------------
+from . import films_web
+films_web.setup(templates,ctx,DATA)
+app.add_route('/films',films_web.index)  # ohne Schraegstrich, sonst leitet FastAPI um
+app.mount('/films',films_web.app)
+# ---------------- Bereich Serien (eigene Datenbank data/serien.db, Seiten in series_web.py) ----------------
+from . import series_web
+series_web.setup(templates,ctx,DATA)
+app.add_route('/series',series_web.index)
+app.mount('/series',series_web.app)
+# ---------------- Bereich Buecher (eigene Datenbank data/buecher.db, Seiten in books_web.py) ----------------
+from . import books_web
+books_web.setup(templates,ctx,DATA)
+app.add_route('/books',books_web.index)
+app.mount('/books',books_web.app)
+# ---------------- Mediatheken (Suche ueber MediathekViewWeb, nur Links, kein Download) ----------------
+from . import mediathek_web
+mediathek_web.setup(templates,ctx)
+app.mount('/mediathek',mediathek_web.app)
+# ---------------- Verliehen (eigene kleine Datenbank data/verleih.db, Seiten in loans_web.py) ----------------
+from . import loans_web
+loans_web.setup(templates,ctx,DATA)
+app.add_route('/lend',loans_web.index)
+app.mount('/lend',loans_web.app)
+# ---------------- Merkliste (neue Staffeln, vorgemerkte Filme und Serien; Tabellen in filme.db und serien.db) ----------------
+from . import watchlist_web
+from . import activity
+activity.register_media()
+from . import settings_web
+settings_web.setup(templates,ctx)
+app.add_route('/settings',settings_web.page)
+app.mount('/settings',settings_web.app)
+activity.register(settings_web.activity)
+activity.register(books_web.activity)
+app.add_route('/activity',activity.endpoint)
+@activity.register
+def _music_activity():
+ out=[]
+ if REFRESH['running']: out.append({'label':{'Cover':'Musik: Cover laden','Genre':'Musik: Genres laden'}.get(REFRESH['kind'],'Musik: Daten aktualisieren'),'net':True,'done':REFRESH['done'],'total':REFRESH['total'],'url':'/media'})
+ if JOB['state'] in ('scanning','applying'): out.append({'label':'Musik: Audiodateien einlesen' if JOB['state']=='scanning' else 'Musik: Audiodateien übernehmen','files':True,'net':JOB['state']=='applying','done':JOB['done'],'total':JOB['total'],'url':'/audio'})
+ if IMP['state'] in ('matching','applying'): out.append({'label':'Musik: Tabellen-Import','net':True,'done':IMP['done'],'total':IMP['total'],'url':'/import'})
+ return out
+watchlist_web.setup(templates,ctx)
+app.add_route('/watchlist',watchlist_web.index)
+app.mount('/watchlist',watchlist_web.app)
+# ---------------- Startseite und Suche ueber alle Bereiche (home.py) ----------------
+from . import home as home_page
+home_page.setup(templates,ctx,storage.sqlite_path(DB_URL) if IS_SQLITE else None)
+app.add_route('/',home_page.home)
+app.add_route('/search',home_page.search)
 @app.get('/healthz')
 def healthz(): return {'ok':True}
 def _safe_next(n):
- n=n or '/media'
+ n=n or '/'
  return n if n.startswith('/') and not n.startswith('//') and '\\' not in n else '/media'
 @app.get('/login',response_class=HTMLResponse)
 def login_page(request:Request,next:str='/media',error:str=''):
@@ -501,8 +558,6 @@ def login(request:Request,password:str=Form(''),next:str=Form('/media')):
 @app.get('/logout')
 def logout():
  r=RedirectResponse('/login' if SEC.auth_on else '/media',303); r.delete_cookie(sec.COOKIE); return r
-@app.get('/')
-def home(): return RedirectResponse('/media',303)
 @app.get('/add',response_class=HTMLResponse)
 def add_page(request:Request): return templates.TemplateResponse(request,'scan.html',ctx(request))
 @app.post('/scan/search',response_class=HTMLResponse)
@@ -545,7 +600,7 @@ def create(request:Request, ownership:str=Form('cd'), file_formats:str=Form(''),
 SORTS={'genre':('genre','artist','release_date'),'artist':('artist','release_date','title'),'title':('title','artist'),'year':('year','artist','title'),'release_date':('release_date','artist','title')}
 def qs(**kw): return urlencode({k:v for k,v in kw.items() if v})
 @app.get('/media',response_class=HTMLResponse)
-def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:str='artist',dir:str='asc',view:str='all',message:str='',mode:str='',interpret:str=''):
+def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:str='artist',dir:str='asc',view:str='all',message:str='',mode:str='',interpret:str='',l:str=''):
  s=Session(); list_mode=bool(q or artist or genre or year or interpret or mode=='list'); view={'mp3':'digital'}.get(view,view); view=view if view in ('cd','digital') else 'all'; sort=sort if sort in SORTS else 'artist'; dir='desc' if dir=='desc' else 'asc'; stmt=select(Medium)
  if artist: stmt=stmt.where(or_(Medium.artist.ilike(f'%{artist}%'),Medium.tracks.any(Track.artist.ilike(f'%{artist}%'))))
  for col,val in [(Medium.genre,genre),(Medium.year,year)]:
@@ -574,32 +629,40 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
   idx={}
   for x in items:
    nm=(x.artist or '').strip() or 'Ohne Künstler'; key=au.norm_full(nm) or nm.lower()
-   e=idx.setdefault(key,{'names':{},'n':0,'dig':0,'covers':[]}); e['names'][nm]=e['names'].get(nm,0)+1; e['n']+=1
+   e=idx.setdefault(key,{'names':{},'n':0,'dig':0,'covers':[],'first':x.id}); e['names'][nm]=e['names'].get(nm,0)+1; e['n']+=1
    if (x.ownership or 'cd')=='digital': e['dig']+=1
    if x.cover_path and len(e['covers'])<3: e['covers'].append(x.cover_path)
   arts=[]
   for key,e in idx.items():
    name=max(e['names'],key=e['names'].get); c=unicodedata.normalize('NFKD',key[:1].upper())[:1]
-   arts.append({'name':name,'key':key,'n':e['n'],'dig':e['dig'],'cd':e['n']-e['dig'],'covers':e['covers'],'l':c if 'A'<=c<='Z' else '#','url':'/media?'+qs(interpret=name,view=filt['view'])})
-  arts.sort(key=lambda a:(a['l']=='#',a['key']))
+   arts.append({'name':name,'key':key,'n':e['n'],'dig':e['dig'],'cd':e['n']-e['dig'],'covers':e['covers'],'l':c if 'A'<=c<='Z' else '#','url':(f"/media/{e['first']}" if e['n']==1 else '/media?'+qs(interpret=name,view=filt['view']))})  # nur ein Eintrag: direkt oeffnen
+  arts.sort(key=lambda a:(a['l']!='#',a['key']))  # Zahlen (#) zuerst
   firsts={}
-  for a in arts: firsts.setdefault(a['l'],a['name'])
-  return templates.TemplateResponse(request,'artists.html',ctx(request,arts=arts,firsts=firsts,abc=[chr(c) for c in range(65,91)]+['#'],total=len(items),view=view,tabs=tabs,tab_links=tab_links,message=message,q=q,artist=artist,genre=genre,year=year,sort=sort,dir=dir,mode='artists',interpret='',all_url='/media',refresh=dict(REFRESH,show_done=bool(not REFRESH['running'] and REFRESH['total'] and time.time()-REFRESH['finished']<600))))
+  for a in arts: firsts[a['l']]=firsts.get(a['l'],0)+1  # Anzahl Interpreten je Buchstabe
+  abc=['#']+[chr(c) for c in range(65,91)]
+  sel=l if (l in firsts or l=='all') else next((x for x in abc if x in firsts),'all')  # ohne Auswahl: erster belegter Buchstabe
+  letter_links={x:'/media?'+qs(view=filt['view'],l=x) for x in abc+['all']}
+  shown=arts if sel=='all' else [a for a in arts if a['l']==sel]
+  return templates.TemplateResponse(request,'artists.html',ctx(request,arts=shown,n_arts=len(arts),sel=sel,letter_links=letter_links,firsts=firsts,abc=abc,total=len(items),view=view,tabs=tabs,tab_links=tab_links,message=message,q=q,artist=artist,genre=genre,year=year,sort=sort,dir=dir,mode='artists',interpret='',all_url='/media',refresh=dict(REFRESH,show_done=bool(not REFRESH['running'] and REFRESH['total'] and time.time()-REFRESH['finished']<600))))
  def letter(v):
   v=unicodedata.normalize('NFKD',(v or '').strip())[:1].upper()
   return v if 'A'<=v<='Z' else '#'
+ back_l=''
+ if interpret:  # Zurueck zur Interpretenliste beim selben Buchstaben
+  c0=unicodedata.normalize('NFKD',(au.norm_full(interpret) or interpret)[:1].upper())[:1]; back_l=c0 if 'A'<=c0<='Z' else '#'
  abc_src='title' if sort=='title' else ('artist' if sort=='artist' else '')
  first_of={}
  if abc_src:
   for x in items: first_of.setdefault(letter(getattr(x,abc_src)),x.id)
  for x in items: k=(x.artist or '').strip().lower(); counts[k]=counts.get(k,0)+1
- return templates.TemplateResponse(request,'list.html',ctx(request,mode='list',interpret=interpret,items=items,counts=counts,first_of=first_of,abc=[chr(c) for c in range(65,91)]+['#'],abc_src=abc_src,letter=letter,q=q,artist=artist,genre=genre,year=year,sort=sort,dir=dir,links=links,all_url='/media?'+qs(sort=sort,dir=dir,view=filt['view']),view=view,tabs=tabs,tab_links=tab_links,message=message,refresh=dict(REFRESH,show_done=bool(not REFRESH['running'] and REFRESH['total'] and time.time()-REFRESH['finished']<600))))
+ return templates.TemplateResponse(request,'list.html',ctx(request,mode='list',interpret=interpret,back_l=back_l,items=items,counts=counts,first_of=first_of,abc=['#']+[chr(c) for c in range(65,91)],abc_src=abc_src,letter=letter,q=q,artist=artist,genre=genre,year=year,sort=sort,dir=dir,links=links,all_url='/media?'+qs(sort=sort,dir=dir,view=filt['view']),view=view,tabs=tabs,tab_links=tab_links,message=message,refresh=dict(REFRESH,show_done=bool(not REFRESH['running'] and REFRESH['total'] and time.time()-REFRESH['finished']<600))))
 @app.get('/media/{id}',response_class=HTMLResponse)
 def detail(request:Request,id:int,message:str=''):
  s=Session(); item=s.get(Medium,id)
  if item: item.tracks  # Tracks laden, solange die Sitzung offen ist
  if not item: return RedirectResponse('/media',303)
- return templates.TemplateResponse(request,'detail.html',ctx(request,item=item,message=message))
+ c0=unicodedata.normalize('NFKD',(au.norm_full(item.artist or '') or ' ')[:1].upper())[:1]
+ return templates.TemplateResponse(request,'detail.html',ctx(request,item=item,message=message,back_l=c0 if 'A'<=c0<='Z' else '#'))
 @app.get('/media/{id}/edit',response_class=HTMLResponse)
 def edit(request:Request,id:int):
  s=Session(); x=s.get(Medium,id)
@@ -672,15 +735,16 @@ def mb_similar_search(artist,title):
     out.sort(key=lambda c:(-c['score'],)+_cand_sort(c))
     return out[:25]
 # ---------------- Discogs als Zweitquelle (Link einfuegen, optional Suche mit Token) ----------------
-DISCOGS_TOKEN=os.getenv('DISCOGS_TOKEN','').strip(); last_dc=0.0; dc_lock=threading.Lock()
+def discogs_token(): return os.getenv('DISCOGS_TOKEN','').strip()
+last_dc=0.0; dc_lock=threading.Lock()
 def discogs_get(path,params=None):
     global last_dc
     with dc_lock:
-        wait=(1.0 if DISCOGS_TOKEN else 2.5)-(time.time()-last_dc)
+        wait=(1.0 if discogs_token() else 2.5)-(time.time()-last_dc)
         if wait>0: time.sleep(wait)
         try:
             h={'User-Agent':os.getenv('MB_USER_AGENT','MediaDB/1.0 (contact@example.invalid)')}
-            if DISCOGS_TOKEN: h['Authorization']=f'Discogs token={DISCOGS_TOKEN}'
+            if discogs_token(): h['Authorization']=f'Discogs token={discogs_token()}'
             r=requests.get('https://api.discogs.com'+path,params=params,headers=h,timeout=15); last_dc=time.time(); r.raise_for_status(); return r.json(),None
         except Exception as e: last_dc=time.time(); return None,str(e)
 def discogs_id(text):
@@ -707,7 +771,7 @@ def discogs_parse(d):
     imgs=d.get('images') or []; img=next((i for i in imgs if i.get('type')=='primary'),imgs[0] if imgs else {})
     return {'id':str(d.get('id','')),'artist':' / '.join(a for a in arts if a),'title':d.get('title',''),'year':str(d.get('year') or ''),'release_date':d.get('released') or '','country':d.get('country') or '','label':', '.join(dict.fromkeys(l.get('name','') for l in lab if l.get('name'))),'catalog_number':', '.join(dict.fromkeys(l.get('catno','') for l in lab if l.get('catno') and l.get('catno')!='none')),'format':fmt,'genre':', '.join(d.get('genres') or []),'styles':', '.join(d.get('styles') or []),'barcode':bc,'tracks':tracks,'image':img.get('uri') or img.get('resource_url') or d.get('thumb') or '','thumb':d.get('thumb') or img.get('uri150') or ''}
 def discogs_search(artist,title):
-    if not DISCOGS_TOKEN: return None,'kein Token'
+    if not discogs_token(): return None,'kein Token'
     d,err=discogs_get('/database/search',{'type':'release','artist':artist or '','release_title':title or '','per_page':15})
     if err or not d: return [],err
     out=[]
@@ -733,7 +797,7 @@ def apply_discogs(item,s,rid):
             if not url: continue
             try:
                 h={'User-Agent':os.getenv('MB_USER_AGENT','MediaDB/1.0 (contact@example.invalid)')}
-                if DISCOGS_TOKEN: h['Authorization']=f'Discogs token={DISCOGS_TOKEN}'
+                if discogs_token(): h['Authorization']=f'Discogs token={discogs_token()}'
                 r=requests.get(url,headers=h,timeout=15)
                 if r.status_code==200 and r.headers.get('Content-Type','').startswith('image/') and len(r.content)>500:
                     item.cover_path=save_cover_bytes(item.id,r.content,'png' if 'png' in r.headers['Content-Type'] else 'jpg'); item.cover_url=url; s.commit(); break
@@ -767,7 +831,7 @@ def match_page(request:Request,id:int,artist:str=None,title:str=None):
     a=x.artist if artist is None else artist; t=x.title if title is None else title
     cands=mb_similar_search(a,t)
     dres,derr=discogs_search(a,t)
-    return templates.TemplateResponse(request,'match.html',ctx(request,item=x,sa=a or '',st=t or '',cands=cands,dres=dres,derr=derr,has_token=bool(DISCOGS_TOKEN),dq=quote((a or '')+' '+(t or ''))))
+    return templates.TemplateResponse(request,'match.html',ctx(request,item=x,sa=a or '',st=t or '',cands=cands,dres=dres,derr=derr,has_token=bool(discogs_token()),dq=quote((a or '')+' '+(t or ''))))
 @app.post('/media/{id}/match/apply')
 def match_apply(id:int,release_mbid:str=Form(...)):
     s=Session(); x=s.get(Medium,id); msg='Eintrag nicht gefunden.'
@@ -888,14 +952,14 @@ def audio_page(request:Request):
  s=Session(); n_files=s.query(AudioFile).count(); n_media=s.query(AudioFile.medium_id).distinct().count(); s.close()
  albums=JOB['albums'] if JOB['state']=='ready' else []
  groups={k:[a for a in albums if a['status']==k] for k in ('review','match','known','new')}
- roots=[{'path':c,'label':h,'name':n,'ok':os.path.isdir(c)} for c,h,n in au.ROOTS]
+ roots=[{'path':c,'label':h,'name':n,'ok':au.nas.is_nas(c) or os.path.isdir(c)} for c,h,n in au.all_roots()]
  return templates.TemplateResponse(request,'audio.html',ctx(request,job=JOB,groups=groups,roots=roots,n_files=n_files,n_media=n_media,host_label=au.host_label))
 @app.get('/audio/browse')
 def audio_browse(request:Request,path:str=''):
- if not path: return JSONResponse({'path':'','label':'','parent':'','dirs':[{'name':n,'path':c,'label':h} for c,h,n in au.ROOTS if os.path.isdir(c)],'audio':0,'error':''})
+ if not path: return JSONResponse({'path':'','label':'','parent':'','dirs':[{'name':n,'path':c,'label':h} for c,h,n in au.available_roots()],'audio':0,'error':''})
  p=au.safe_dir(au.to_container_path(path,HOST_HOME))
  if not p: return JSONResponse({'path':path,'label':path,'parent':'','dirs':[],'audio':0,'error':i18n.tr_text(get_lang(request),'Ordner nicht gefunden oder nicht freigegeben.')})
- dirs,n,err=au.list_dirs(p); err=i18n.tr_text(get_lang(request),err) if err else err; roots=[c for c,_,_ in au.ROOTS]
+ dirs,n,err=au.list_dirs(p); err=i18n.tr_text(get_lang(request),err) if err else err; roots=[c for c,_,_ in au.all_roots()]
  parent='' if p in roots else os.path.dirname(p)
  return JSONResponse({'path':p,'label':au.host_label(p),'parent':parent,'audio':n,'error':err,'dirs':[{'name':d,'path':os.path.join(p,d),'label':d} for d in dirs]})
 @app.post('/audio/scan')

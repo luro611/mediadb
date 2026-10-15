@@ -1,0 +1,13 @@
+<label for="{{ pre }}l">{{ _("Name (erscheint in der Ordnerauswahl)") }}</label>
+<input name="label" id="{{ pre }}l" value="{{ x.label or '' }}" placeholder="{{ _('z. B. Musik') }}" maxlength="40" required>
+<label for="{{ pre }}h">{{ _("NAS-Adresse") }}</label>
+<input name="host" id="{{ pre }}h" value="{{ x.host or '' }}" placeholder="192.168.1.20" spellcheck="false" autocapitalize="off" required>
+<label for="{{ pre }}s">{{ _("Freigabe") }}</label>
+<input name="share" id="{{ pre }}s" value="{{ x.share or '' }}" placeholder="{{ _('z. B. Musik oder music') }}" spellcheck="false" autocapitalize="off" required>
+<label for="{{ pre }}f">{{ _("Unterordner (optional)") }}</label>
+<input name="folder" id="{{ pre }}f" value="{{ x.folder or '' }}" placeholder="{{ _('z. B. Alben') }}" spellcheck="false" autocapitalize="off">
+<label for="{{ pre }}u">{{ _("Benutzer") }}</label>
+<input name="user" id="{{ pre }}u" value="{{ x.user or '' }}" autocomplete="off" spellcheck="false" autocapitalize="off">
+<label for="{{ pre }}p">{{ x.has_password and _("Neues Passwort (leer lassen = unverändert)") or _("Passwort") }}</label>
+<input type="password" name="password" id="{{ pre }}p" autocomplete="new-password">
+<p class="help">{{ _("Die Adresse steht in der NAS-Oberfläche oder im Router. Die Freigabe ist der Ordnername, den du auch im Finder unter smb://adresse/freigabe oder im Windows-Explorer unter Netzwerk siehst.") }}</p>

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/">{{ _("MediaDB / Start") }}</a></p>
+<h1>{{ _("*Suche*") }}</h1>
+<form method="get" action="{{ base }}/search" class="homesearch" role="search">
+ <input type="search" name="q" id="sq" value="{{ q }}" placeholder="{{ _('Interpret, Album, Film, Serie, Buch, Person …') }}" aria-label="{{ _('Suche in allen Bereichen') }}" autofocus>
+ <button>{{ _("Suchen") }}</button>
+</form>
+{% if q %}
+{% set LP = lend_find(q) if q and q|length >= 2 and lend_find is defined else [] %}{% if not music and not films and not series and not books and not people and not authors and not LP %}<div class="card"><p>{{ _("Nichts gefunden für „§“.", q) }}</p></div>{% endif %}
+{% if LP %}<h2>{{ _("Verliehen an") }}</h2><div class="personhits">{% for x in LP %}<a class="tab" href="{{ base }}/lend/person/{{ x.id }}">{{ x.name }} <span class="n">{{ x.n_open }}</span></a>{% endfor %}</div>{% endif %}
+{% if people %}<h2>{{ _("Personen") }}</h2><div class="personhits">{% for x in people %}<a class="tab" href="{{ base }}/films/person/{{ x.id }}">{{ x.name }} <span class="n">{{ x.n }}</span></a>{% endfor %}</div>{% endif %}
+{% if films %}<h2>{{ _("Filme") }} <span class="muted">({{ n_films }})</span></h2>
+<div class="posters small">{% for f in films %}<a class="pcard{% if f.watched %} seen{% endif %}" href="{{ base }}/films/{{ f.id }}"><span class="pimg">{% if f.poster %}<img src="{{ base }}/film-images/{{ f.poster }}" alt="" loading="lazy">{% else %}<span class="pph">{{ f.title }}</span>{% endif %}{% if f.rating %}<span class="prating">{{ f.rating }}</span>{% endif %}{% if f.watched %}<span class="pseen">✓</span>{% endif %}</span><span class="ptitle">{{ f.title }}</span><span class="pmeta">{{ f.year or '' }}</span></a>{% endfor %}</div>
+{% if n_films > films|length %}<p><a href="{{ base }}/films?q={{ q|urlencode }}">{{ _("Alle § Filme anzeigen ›", n_films) }}</a></p>{% endif %}{% endif %}
+{% if series %}<h2>{{ _("Serien") }} <span class="muted">({{ n_series }})</span></h2>
+<div class="posters small">{% for s in series %}<a class="pcard" href="{{ base }}/series/{{ s.id }}"><span class="pimg">{% if s.poster %}<img src="{{ base }}/film-images/{{ s.poster }}" alt="" loading="lazy">{% else %}<span class="pph">{{ s.title }}</span>{% endif %}{% if s.rating %}<span class="prating">{{ s.rating }}</span>{% endif %}</span><span class="ptitle">{{ s.title }}</span><span class="pmeta">{{ s.year or '' }}</span></a>{% endfor %}</div>
+{% if n_series > series|length %}<p><a href="{{ base }}/series?q={{ q|urlencode }}">{{ _("Alle § Serien anzeigen ›", n_series) }}</a></p>{% endif %}{% endif %}
+{% if books or authors %}<h2>{{ _("Bücher") }} <span class="muted">({{ n_books }})</span></h2>
+{% if authors %}<div class="personhits">{% for x in authors %}<a class="tab" href="{{ base }}/books/author/{{ x.id }}">{{ x.name }} <span class="n">{{ x.n }}</span></a>{% endfor %}</div>{% endif %}
+<div class="posters small books">{% for b in books %}<a class="pcard{% if b.status=='read' %} seen{% endif %}" href="{{ base }}/books/{{ b.id }}"><span class="pimg">{% if b.cover %}<img src="{{ base }}/film-images/{{ b.cover }}" alt="" loading="lazy">{% else %}<span class="pph">{{ b.title }}</span>{% endif %}</span><span class="ptitle">{{ b.title }}</span><span class="pmeta">{{ (b.authors or '').split(';')[0] }}</span></a>{% endfor %}</div>
+{% if n_books > books|length %}<p><a href="{{ base }}/books?q={{ q|urlencode }}">{{ _("Alle § Bücher anzeigen ›", n_books) }}</a></p>{% endif %}{% endif %}
+{% if music %}<h2>{{ _("Musik") }} <span class="muted">({{ n_music }})</span></h2>
+<ul class="artistlist homealbums">{% for m in music %}<li><a class="artistitem" href="{{ base }}/media/{{ m.id }}">{% if m.cover_path %}<img class="thumb" width="40" height="40" src="{{ base }}/covers/{{ m.cover_path }}" alt="" loading="lazy">{% else %}<span class="thumb ph">♪</span>{% endif %}<span><strong>{{ m.artist or '' }}</strong><br><span class="sub">{{ m.title }}{% if m.year %} · {{ m.year }}{% endif %}</span></span></a></li>{% endfor %}</ul>
+{% if n_music > music|length %}<p><a href="{{ base }}/media?q={{ q|urlencode }}">{{ _("Alle § Musik-Einträge anzeigen ›", n_music) }}</a></p>{% endif %}{% endif %}
+{% endif %}
+{% endblock %}

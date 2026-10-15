@@ -1,0 +1,81 @@
+{% extends 'base.html' %}{% block content %}
+{% macro prov(x) %}{% set p = x.providers_own or x.providers %}{% if p %}<span class="prov" title="{{ _('Streaming laut JustWatch') if not x.providers_own else '' }}">{{ p }}</span>{% elif x.networks %}<span class="prov net">{{ x.networks }}</span>{% endif %}{% endmacro %}
+{% macro thumb(path, local=false, title='') %}{% if path %}<img class="wthumb" src="{{ (base ~ '/film-images/' ~ path) if local else (img_base ~ 'w92' ~ path) }}" alt="" loading="lazy"{% if not local %} referrerpolicy="no-referrer"{% endif %}>{% else %}<span class="wthumb ph">{{ title[:1] }}</span>{% endif %}{% endmacro %}
+<p class="eyebrow">{{ _("MediaDB / Merkliste") }}</p>
+<h1>{{ _("Merk*liste*") }}</h1>
+<p class="intro">{{ _("Neue Staffeln und Folgen deiner Serien und alles, was du dir vorgemerkt hast, etwa Tipps aus Videos. Termine und Streamingdienste kommen von TMDB und werden einmal am Tag aufgefrischt.") }}</p>
+{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+{% if upd.error %}<div class="warn">{{ _(upd.error) }}</div>{% endif %}
+{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+
+<div class="updline">
+{% if upd.state == 'running' %}<span id="updtxt">{{ _("Aktualisiere: § von §", upd.done, upd.total) }}</span> <progress id="updbar" max="{{ upd.total or 1 }}" value="{{ upd.done }}"></progress>
+<script>(function(){var T={{ _t("Aktualisiere: § von §","%D","%T")|tojson }};function p(){fetch("{{ base }}/watchlist/status").then(function(r){return r.json()}).then(function(d){if(d.state!=="running"){location.reload();return}document.getElementById("updtxt").textContent=T.replace("%D",d.done).replace("%T",d.total)+(d.current?" · "+d.current:"");var b=document.getElementById("updbar");b.max=d.total||1;b.value=d.done;setTimeout(p,2000)}).catch(function(){setTimeout(p,5000)})}setTimeout(p,1500)})()</script>
+{% else %}<span class="muted">{% if last %}{{ _("Zuletzt aktualisiert: §", last[:10]|fdate ~ ' ' ~ last[11:16]) }}{% else %}{{ _("Noch nicht aktualisiert.") }}{% endif %}</span>
+<form method="post" action="{{ base }}/watchlist/update" class="inline-form"><input type="hidden" name="force" value="1"><button class="quiet small">{{ _("Jetzt aktualisieren") }}</button></form>{% endif %}
+</div>
+
+<h2 id="merkliste">{{ _("Vorgemerkt") }} <span class="muted">({{ items|length }})</span></h2>
+<form method="get" action="{{ base }}/watchlist" class="card inline-form wsearch">
+ <label for="wq">{{ _("Film oder Serie vormerken") }}</label><input id="wq" name="q" value="{{ q }}" placeholder="{{ _('Titel, z. B. Tulsa King') }}" required><button>{{ _("Suchen") }}</button>
+</form>
+{% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
+{% if q %}{% if results %}<div class="cands">{% for c in results %}
+<form method="post" action="{{ base }}/watchlist/add" class="cand card">
+ {% for k in ('kind','tmdb_id','title','year','poster_path','original_title') %}<input type="hidden" name="{{ k }}" value="{{ c[k] or '' }}">{% endfor %}<input type="hidden" name="overview" value="{{ c.overview }}">
+ {% if c.poster_url %}<img src="{{ c.poster_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<span class="pph small">{{ c.title }}</span>{% endif %}
+ <div><h3>{{ c.title }}{% if c.year %} <span class="muted">({{ c.year }})</span>{% endif %} <span class="badge">{{ _("Serie") if c.kind=='tv' else _("Film") }}</span></h3>
+  {% if c.original_title and c.original_title!=c.title %}<p class="sub">{{ c.original_title }}</p>{% endif %}
+  {% if c.overview %}<p class="ov">{{ c.overview }}{% if c.overview|length>=280 %} …{% endif %}</p>{% endif %}
+  {% if c.owned %}<p class="badge">{{ _("schon in der Sammlung") }}</p>{% endif %}{% if c.listed %}<p class="badge">{{ _("schon vorgemerkt") }}</p>{% endif %}
+  <label for="n{{ loop.index }}">{{ _("Notiz (optional)") }}</label><input id="n{{ loop.index }}" name="note" placeholder="{{ _('z. B. Tipp von …, ab 16.10. bei …') }}">
+  <button>{{ _("Vormerken") }}</button>
+ </div></form>{% endfor %}</div>
+{% else %}<div class="card"><p>{{ _("Keine Treffer bei TMDB.") }}</p></div>{% endif %}
+<details class="card"><summary>{{ _("Ohne TMDB vormerken") }}</summary>
+<form method="post" action="{{ base }}/watchlist/add"><div class="row2"><span><label for="mt">{{ _("Titel") }}</label><input name="title" id="mt" value="{{ q }}" required></span>
+<span><label for="mk">{{ _("Art") }}</label><select name="kind" id="mk"><option value="tv">{{ _("Serie") }}</option><option value="movie">{{ _("Film") }}</option></select></span></div>
+<label for="mn">{{ _("Notiz (optional)") }}</label><input name="note" id="mn"><button>{{ _("Vormerken") }}</button></form></details>
+{% endif %}
+
+{% if items %}<div class="wcards">{% for x in items %}
+<article class="card wcard" id="w-{{ x.kind }}-{{ x.id }}">
+ {{ thumb(x.poster_path, false, x.title) }}
+ <div class="wbody">
+  <h3>{% if x.owned %}<a href="{{ base }}/{{ 'series' if x.kind=='tv' else 'films' }}/{{ x.owned }}">{{ x.title }}</a>{% else %}{{ x.title }}{% endif %}{% if x.year %} <span class="muted">({{ x.year }})</span>{% endif %} <span class="badge">{{ _("Serie") if x.kind=='tv' else _("Film") }}</span>{% if x.owned %} <span class="badge okb">{{ _("in der Sammlung") }}</span>{% endif %}</h3>
+  <p class="wfacts">{% if x.date %}<strong class="wwhen">{{ _(x.date_label, x.next_season) if '§' in x.date_label else _(x.date_label) }}: {{ x.date|fdate }}</strong>{% elif x.kind=='tv' and x.status %}{{ _(SERIES_STATUS.get(x.status, x.status)) }}{% if x.number_of_seasons %} · {{ _("§ Staffeln", x.number_of_seasons) }}{% endif %}{% elif x.release_date %}{{ _("Erschienen") }} {{ x.release_date|fdate }}{% endif %}
+   {% if x.providers %}<br>{{ _("Streaming:") }} {{ x.providers }}{% elif x.networks %}<br>{{ x.networks }}{% endif %}{% if x.providers_buy and not x.providers %}<br>{{ _("Kaufen/Leihen:") }} {{ x.providers_buy }}{% endif %}</p>
+  <form method="post" action="{{ base }}/watchlist/{{ x.kind }}/{{ x.id }}/note" class="wnote"><input name="note" value="{{ x.note or '' }}" placeholder="{{ _('Notiz') }}" aria-label="{{ _('Notiz') }}"><button class="quiet small">{{ _("Speichern") }}</button></form>
+  <div class="wactions">
+   {% if not x.owned %}<a class="small" href="{{ base }}/{{ 'series' if x.kind=='tv' else 'films' }}/search?q={{ x.title|urlencode }}{% if x.year %}&amp;year={{ x.year }}{% endif %}">{{ _("In die Sammlung ›") }}</a>{% endif %}
+   {% if x.providers_link %}<a class="small" href="{{ x.providers_link }}" target="_blank" rel="noopener">{{ _("Wo ansehen? ›") }}</a>{% endif %}
+   {% if x.tmdb_id %}<form method="post" action="{{ base }}/watchlist/{{ x.kind }}/{{ x.id }}/refresh"><button class="linkbtn">{{ _("aktualisieren") }}</button></form>{% endif %}
+   <form method="post" action="{{ base }}/watchlist/{{ x.kind }}/{{ x.id }}/done"><button class="linkbtn">{{ _("erledigt") }}</button></form>
+   <form method="post" action="{{ base }}/watchlist/{{ x.kind }}/{{ x.id }}/delete"><button class="linkbtn">{{ _("entfernen") }}</button></form>
+  </div>
+ </div>
+</article>{% endfor %}</div>
+{% elif not q %}<p class="muted">{{ _("Noch nichts vorgemerkt. Oben einen Titel suchen und „Vormerken“ klicken.") }}</p>{% endif %}
+<p class="muted"><a href="{{ base }}/watchlist/done">{{ _("Erledigte Einträge ›") }}</a></p>
+
+{% set mt_src = '/mediathek/watchlist' %}{% include '_mediathek.html' %}
+<h2 id="neu" class="wsec">{{ _("Neu bei deinen Serien") }}</h2>
+{% if not soon and not new and not announced %}<p class="muted">{{ _("Keine neuen oder angekündigten Folgen bei deinen Serien.") }}{% if not last %} {{ _("Nach der ersten Aktualisierung erscheinen hier Termine.") }}{% endif %}</p>{% endif %}
+{% if soon %}<h3>{{ _("Demnächst") }}</h3>
+<ul class="wlist">{% for x in soon %}<li><span class="wdate">{{ x.air_date|fdate }}</span>{{ thumb(x.poster, true, x.title) }}
+ <span class="wmain"><a href="{{ base }}/series/{{ x.id }}"><strong>{{ x.title }}</strong></a>
+ <span class="sub">{% if x.episode == x.first_ep %}{{ _("Staffel § startet", x.season) }}{% if x.n_eps %} · {{ _("§ Folgen", x.n_eps) }}{% endif %}{% else %}S{{ '%02d' % x.season }}E{{ '%02d' % x.episode }}{% if x.ep_name %} · {{ x.ep_name }}{% endif %}{% endif %}</span></span>
+ {{ prov(x) }}</li>{% endfor %}</ul>{% endif %}
+{% if new %}<h3>{{ _("Gerade erschienen (letzte 30 Tage)") }}</h3>
+<ul class="wlist">{% for x in new %}<li><span class="wdate">{{ x.air_date|fdate }}</span>{{ thumb(x.poster, true, x.title) }}
+ <span class="wmain"><a href="{{ base }}/series/{{ x.id }}#st{{ x.season }}"><strong>{{ x.title }}</strong></a>
+ <span class="sub">{{ _("Staffel §", x.season) }} · {{ _("§ neue Folgen", x.n_new) if x.n_new != 1 else _("1 neue Folge") }}</span></span>
+ {{ prov(x) }}</li>{% endfor %}</ul>{% endif %}
+{% if announced %}<h3>{{ _("Angekündigt") }}</h3>
+<ul class="wlist">{% for x in announced %}<li><span class="wdate">{{ x.air_date|fdate if x.air_date else _('ohne Termin') }}</span>{{ thumb(x.poster, true, x.title) }}
+ <span class="wmain"><a href="{{ base }}/series/{{ x.id }}"><strong>{{ x.title }}</strong></a><span class="sub">{{ x.season_name or _('Staffel §', x.season) }}</span></span>
+ {{ prov(x) }}</li>{% endfor %}</ul>{% endif %}
+
+<p class="tmdbnote muted">{{ _("Streaming-Angaben: JustWatch (über TMDB).") }}</p>
+{% include '_films_foot.html' %}
+{% endblock %}

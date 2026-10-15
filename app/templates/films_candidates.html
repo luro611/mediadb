@@ -1,0 +1,35 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Filme / Hinzufügen") }}</p>
+<h1>{% if attach %}{{ _("Anderen Film *zuordnen*") }}{% else %}{{ _("Treffer *wählen*") }}{% endif %}</h1>
+{% if attach %}<p class="intro">{{ _("Wähle den richtigen Film für „§“. Alle Angaben werden dann neu von TMDB übernommen; Exemplare, Bewertung, gesehen und Notizen bleiben.", attach.title) }}</p>{% endif %}
+{% if barcode %}<p class="muted">{{ _("Barcode") }} <code>{{ barcode }}</code>{% if product %} · {{ _("Produkt laut Barcode-Dienst:") }} „{{ product }}“{% endif %}</p>{% endif %}
+{% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
+{% if local %}
+<div class="ok"><p>{{ _("Dieser Barcode steht schon in deiner Sammlung:") }}</p><ul>{% for f in local %}<li><a href="{{ base }}/films/{{ f.id }}">{{ f.title }}{% if f.year %} ({{ f.year }}){% endif %}</a></li>{% endfor %}</ul></div>
+<p class="muted">{{ _("Ein zweites Exemplar fügst du auf der Seite des Films hinzu.") }}</p>
+{% else %}
+{% if barcode and not product and not err %}<div class="warn">{{ _("Zu diesem Barcode wurde kein Produkt gefunden. Bitte nach dem Titel suchen; der Barcode wird mit gespeichert.") }}</div>{% endif %}
+<form method="get" action="{{ base }}/films/search" class="card inline-form">
+ <input type="hidden" name="barcode" value="{{ barcode }}"><input type="hidden" name="kind" value="{{ kind }}"><input type="hidden" name="edition" value="{{ edition }}">{% if attach %}<input type="hidden" name="attach" value="{{ attach.id }}">{% endif %}
+ <label for="cq">{{ _("Titel") }}</label><input id="cq" name="q" value="{{ query }}" required><label for="cy">{{ _("Jahr") }}</label><input id="cy" name="year" value="{{ year }}" inputmode="numeric" maxlength="4" class="short"><button>{{ _("Suchen") }}</button>
+</form>
+{% if cands %}
+<div class="cands">{% for c in cands %}
+<form method="post" action="{{ base }}{{ '/films/%d/rematch' % attach.id if attach else '/films/save' }}" class="cand card">
+ <input type="hidden" name="tmdb_id" value="{{ c.tmdb_id }}">
+ {% if c.poster_url %}<img src="{{ c.poster_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<span class="pph small">{{ c.title }}</span>{% endif %}
+ <div><h3>{{ c.title }}{% if c.year %} <span class="muted">({{ c.year }})</span>{% endif %}</h3>
+  {% if c.original_title and c.original_title!=c.title %}<p class="sub">{{ c.original_title }}</p>{% endif %}
+  {% if c.overview %}<p class="ov">{{ c.overview }}{% if c.overview|length>=280 %} …{% endif %}</p>{% endif %}
+  {% if c.have %}<p class="badge">{{ _("schon in der Sammlung") }}</p>{% endif %}
+  {% if not attach %}<div class="row3">
+   <span><label for="k{{ loop.index }}">{{ _("Format") }}</label><select name="kind" id="k{{ loop.index }}">{% for k,l in kinds.items() %}<option value="{{ k }}"{% if k==kind %} selected{% endif %}>{{ _(l) }}</option>{% endfor %}</select></span>
+   <span><label for="e{{ loop.index }}">{{ _("Fassung (optional)") }}</label><input name="edition" id="e{{ loop.index }}" value="{{ edition }}" placeholder="{{ _('z. B. Director’s Cut, Steelbook') }}"></span>
+   <span><label for="b{{ loop.index }}">{{ _("Barcode") }}</label><input name="barcode" id="b{{ loop.index }}" value="{{ barcode }}" inputmode="numeric"></span></div>{% endif %}
+  <button>{% if attach %}{{ _("Diesen Film zuordnen") }}{% elif c.have %}{{ _("Als weiteres Exemplar hinzufügen") }}{% else %}{{ _("Das ist mein Film") }}{% endif %}</button>
+ </div></form>{% endfor %}</div>
+{% elif query %}<div class="card"><p>{{ _("Keine Treffer bei TMDB. Andere Schreibweise oder den Originaltitel versuchen, oder den Film von Hand anlegen.") }}</p></div>{% endif %}
+{% endif %}
+<p class="muted">{% if attach %}<a href="{{ base }}/films/{{ attach.id }}">{{ _("← Zurück zum Film") }}</a>{% else %}<a href="{{ base }}/films/add">{{ _("← Zurück") }}</a>{% endif %}</p>
+{% include '_films_foot.html' %}
+{% endblock %}

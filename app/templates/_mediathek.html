@@ -1,0 +1,3 @@
+{# Platzhalter, der die Treffer nach dem Laden der Seite holt. Aufruf: {% include '_mediathek.html' %} mit mt_src gesetzt #}
+{% if mediathek_on is defined and mediathek_on() %}<section class="mediathek" id="mediathek" data-src="{{ base }}{{ mt_src }}" aria-live="polite"><h2>{{ _("In der Mediathek") }}</h2><p class="muted">{{ _("Suche in den Mediatheken von ARD, ZDF, Arte und Co. …") }}</p></section>
+<script>(function(){var s=document.getElementById('mediathek');fetch(s.dataset.src,{credentials:'same-origin'}).then(function(r){return r.ok?r.text():''}).then(function(h){if(h.trim())s.innerHTML=h;else s.remove()}).catch(function(){s.remove()})})();</script>{% endif %}

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Serien / Hinzufügen") }}</p><h1>{{ _("Serien-*Import*") }}</h1>
+<p class="intro">{{ _("Wähle den Ordner mit deinen Serien, etwa auf dem NAS. Die Folgen werden nach Serie gruppiert und jede Serie einmal bei TMDB nachgeschlagen; gespeichert wird erst, wenn du unten auf „Übernehmen“ klickst. Erkannt werden Namen wie Serie.S01E01, 1x01, E01 und Staffelordner. Eine tvshow.nfo von Jellyfin oder Kodi macht die Zuordnung sicher.") }}</p>
+{% if message %}<div class="warn">{{ _(message) }}</div>{% endif %}
+{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+
+{% if job.state in ('scanning','applying') %}
+{% set PH = {'collect': _t('Schritt 1 von 3: Ordner durchsuchen'), 'parse': _t('Schritt 2 von 3: Dateinamen auswerten'), 'tmdb': _t('Schritt 3 von 3: Serien bei TMDB suchen'), 'apply': _t('Speichere, lade Episodenführer und lese Dateien …')} %}
+<div class="card"><h3 id="ph">{{ PH.get(job.phase, _t('Lese Dateien und frage TMDB …')) }}</h3>
+<p id="pt">{% if job.phase=='collect' %}{{ _("§ Videodateien gefunden", job.found) }}{% else %}{{ _("§ von §", job.done, job.total if job.total else '…') }}{% endif %}</p>
+<progress id="pb" max="{{ job.total or 1 }}"{% if job.phase!='collect' %} value="{{ job.done }}"{% endif %} style="width:100%"></progress>
+<p class="muted" id="pc">{{ job.current or '' }}</p>
+<p class="muted">{{ _("Der Fortschritt aktualisiert sich still, am Ende lädt die Seite einmal neu.") }} {{ _("Große Ordner auf dem NAS zu durchsuchen kann einige Minuten dauern.") }}</p></div>
+<script>(function(){var PH={{ PH|tojson }},TXT={{ _t("§ von §","%D","%T")|tojson }},FOUND={{ _t("§ Videodateien gefunden","%N")|tojson }};var st="{{ job.state }}",H=document.getElementById("ph"),T=document.getElementById("pt"),P=document.getElementById("pb"),C=document.getElementById("pc");
+function poll(){fetch("{{ base }}/series/files/status").then(function(r){return r.json()}).then(function(d){if(d.state!==st){location.reload();return}
+if(PH[d.phase])H.textContent=PH[d.phase];C.textContent=d.current||"";
+if(d.phase==="collect"){T.textContent=FOUND.replace("%N",d.found);P.removeAttribute("value")}else{T.textContent=TXT.replace("%D",d.done).replace("%T",d.total||"…");P.max=d.total||1;P.value=d.done}
+setTimeout(poll,1500)}).catch(function(){setTimeout(poll,4000)})}setTimeout(poll,1500)})()</script>
+
+{% elif job.state=='error' %}
+<div class="warn"><strong>{{ _("Fehler:") }}</strong> {{ _(job.error) }}</div>
+<form method="post" action="{{ base }}/series/files/reset"><button>{{ _("Zurück") }}</button></form>
+
+{% elif job.state=='done' %}
+<div class="ok"><h3>{{ _("Fertig") }}</h3><p>{{ _("§ Serien neu angelegt, § zu vorhandenen Serien ergänzt, § ohne TMDB angelegt, § übersprungen; § Dateien übernommen.", job.result.new, job.result.attached, job.result.plain, job.result.skipped, job.result.files) }}</p></div>
+<div class="actions"><a href="{{ base }}/series/missing">{{ _("Fehlende Folgen ansehen") }}</a><a href="{{ base }}/series?view=recent_added">{{ _("Zuletzt hinzugefügt ansehen") }}</a><form method="post" action="{{ base }}/series/files/reset"><button>{{ _("Weiteren Ordner einlesen") }}</button></form></div>
+
+{% elif job.state=='ready' %}
+{% set total = job['items']|sum(attribute='n_files') %}
+<div class="card"><strong>{{ _("§ neue Videodateien gefunden", total) }}</strong> · {{ _("§ Serien", job['items']|length) }} {{ _("in") }} {% for f in job.folders %}<code>{{ host_label(f) }}</code>{{ ', ' if not loop.last }}{% endfor %}.
+<p class="muted">{{ _("Bereits erfasste Dateien werden nicht noch einmal angezeigt. Trailer, Samples und Extras werden übersprungen.") }}</p></div>
+{% if total==0 %}<div class="warn">{{ _("Keine neuen Videodateien gefunden.") }}</div><form method="post" action="{{ base }}/series/files/reset"><button>{{ _("Zurück") }}</button></form>
+{% else %}
+<form method="post" action="{{ base }}/series/files/apply">
+{% macro rows(list, kind) %}{% for it in list %}
+<div class="card albumrow">
+ <div class="albhead"><strong>{{ it.name }}</strong>{% if it.year %} <span class="badge">{{ it.year }}</span>{% endif %}{% if it.source=='nfo' %} <span class="badge">tvshow.nfo</span>{% endif %} <span class="badge">{{ _("§ Dateien", it.n_files) }}</span></div>
+ <p class="muted"><code class="path">{{ host_label(it.series_dir) }}</code>{% if it.note %} · {{ _(it.note) }}{% endif %}</p>
+ <p class="seasonsfound">{% for s,n in it.seasons_found %}<span class="badge">{{ _("Staffel § · § Folgen", s, n) }}</span> {% endfor %}{% if it.unnumbered %}<span class="badge missb">{{ _("§ ohne Folgennummer", it.unnumbered) }}</span>{% endif %}</p>
+ <details class="filelist"><summary>{{ _("Dateien zeigen") }}</summary><ul>{% for f in it.files %}<li>{% if f.season is not none and f.episode is not none %}<strong>S{{ '%02d' % f.season }}E{{ '%02d' % f.episode }}{% if f.episode_end %}–E{{ '%02d' % f.episode_end }}{% endif %}</strong>{% elif f.episode is not none %}<strong>E{{ '%02d' % f.episode }}</strong>{% else %}<strong>?</strong>{% endif %} {{ f.path.split('/')[-1] }}</li>{% endfor %}</ul></details>
+ {% if kind=='known' %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ it.tmdb_id }}" checked> {{ _("Zur vorhandenen Serie „§“ hinzufügen", it.series_title) }}</label>
+ {% elif kind=='match' %}{% set c0 = (it.cands|selectattr('tmdb_id','equalto',it.tmdb_id)|list or [None])[0] %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ it.tmdb_id }}" checked> {{ _("Übernehmen als:") }} <strong>{{ c0.title if c0 else 'TMDB ' ~ it.tmdb_id }}</strong>{% if c0 and c0.year %} ({{ c0.year }}){% endif %}</label>
+  {% for c in it.cands if c.tmdb_id != it.tmdb_id %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ c.tmdb_id }}"> {{ _("Stattdessen:") }} {{ c.title }}{% if c.year %} ({{ c.year }}){% endif %}</label>{% endfor %}
+ {% else %}{% for c in it.cands %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ c.tmdb_id }}"{% if it.default == 'tmdb:%s' % c.tmdb_id %} checked{% endif %}> {{ c.title }}{% if c.year %} ({{ c.year }}){% endif %}{% if c.original_title and c.original_title!=c.title %} <span class="sub">{{ c.original_title }}</span>{% endif %}</label>{% endfor %}
+  <label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="plain"{% if it.default=='plain' %} checked{% endif %}> {{ _("Ohne TMDB anlegen (Titel aus dem Ordnernamen)") }}</label>{% endif %}
+ <label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="skip"{% if it.default=='skip' %} checked{% endif %}> {{ _("Überspringen") }}</label>
+</div>{% endfor %}{% endmacro %}
+{% set G = [('unsure', _t('Bitte prüfen (§)', groups.unsure|length)), ('nf', _t('Nicht gefunden (§)', groups.nf|length)), ('match', _t('Erkannt (§)', groups.match|length)), ('known', _t('Serie schon vorhanden (§)', groups.known|length))] %}
+<div class="fold impgroups">{% for k, label in G if groups[k] %}
+<details id="grp-{{ k }}"{% if k in ('unsure','nf') or groups[k]|length <= 30 %} open{% endif %}><summary><span>{{ label }}</span></summary>
+{% if k=='unsure' %}<p class="muted">{{ _("Hier war die Zuordnung nicht ganz sicher. Vorgewählt ist der beste Vorschlag, wenn er gut genug passt, sonst „Überspringen“. Übersprungenes wird nicht gespeichert und erscheint beim nächsten Einlesen wieder.") }}</p>{% endif %}
+{{ rows(groups[k], k) }}
+</details>{% endfor %}</div>
+<div class="importbar">
+ <p class="tally" id="tally" aria-live="polite"></p>
+ <div class="ibtns">{% if groups.unsure %}<button type="button" class="quiet" data-pick="first">{{ _("Bei „Bitte prüfen“: überall den ersten Vorschlag") }}</button><button type="button" class="quiet" data-pick="skip">{{ _("Bei „Bitte prüfen“: alle überspringen") }}</button>{% endif %}
+ <button type="submit">{{ _("Übernehmen") }}</button><button type="submit" class="quiet" form="resetform">{{ _("Verwerfen") }}</button></div>
+</div>
+</form>
+<form method="post" action="{{ base }}/series/files/reset" id="resetform"></form>
+<script>(function(){var L={{ {'take':_t('§ übernehmen','%N'),'plain':_t('§ ohne TMDB','%N'),'skip':_t('§ überspringen','%N'),'set':_t('Bei § Einträgen geändert.','%N')}|tojson }};
+var T=document.getElementById('tally');
+function tally(extra){var n={take:0,plain:0,skip:0};document.querySelectorAll('.impgroups input[type=radio]:checked').forEach(function(i){var v=i.value;n[v.indexOf('tmdb:')===0?'take':(v==='plain'?'plain':'skip')]++});
+var s=[L.take.replace('%N',n.take)];if(n.plain)s.push(L.plain.replace('%N',n.plain));s.push(L.skip.replace('%N',n.skip));T.innerHTML=(extra?'<b>✓ '+extra+'</b> · ':'')+s.join(' · ')}
+document.querySelector('.impgroups').addEventListener('change',function(){tally()});
+document.querySelectorAll('[data-pick]').forEach(function(b){b.onclick=function(){var c=0;document.querySelectorAll('#grp-unsure .albumrow').forEach(function(r){var i=b.dataset.pick==='first'?r.querySelector('input[value^="tmdb:"]'):r.querySelector('input[value="skip"]');if(i&&!i.checked){i.checked=true;c++}});
+var g=document.getElementById('grp-unsure');if(g)g.open=true;tally(L.set.replace('%N',c))}});tally()})()</script>
+{% endif %}
+
+{% else %}
+<form method="post" action="{{ base }}/series/files/scan" id="scanform" class="card" style="scroll-margin-top:20px">
+ <h3>{{ _("1. Ausgewählte Ordner") }}</h3>
+ <ul id="chosen"><li class="muted" id="none">{{ _("Noch keiner – wähle unten einen Ordner und klicke „Diesen Ordner wählen“.") }}</li></ul>
+ <label for="manual">{{ _("Oder Pfad eintippen (ein Pfad pro Zeile, z. B. /Volumes/Serien)") }}</label><textarea name="manual" id="manual" rows="2"></textarea>
+ <button>{{ _("2. Einlesen und erkennen") }}</button>
+ <p class="muted">{{ _("Schon erfasste Dateien werden übersprungen. Am besten den Ordner wählen, in dem die Serienordner liegen.") }}</p>
+</form>
+<div class="card"><h3>{{ _("Ordner suchen") }}</h3><p class="muted" id="where">…</p><div id="browser"></div></div>
+<script>
+const L={{ {'drives':_t('Laufwerke und Ordner'),'up':_t('⬆ eine Ebene hoch'),'choose':_t('Diesen Ordner wählen'),'nodirs':_t('Keine Unterordner.'),'remove':_t('entfernen')}|tojson }};
+const B=document.getElementById('browser'),W=document.getElementById('where'),C=document.getElementById('chosen'),F=document.getElementById('scanform');
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function add(path,label){
+  if([...F.querySelectorAll('input[name=folders]')].some(i=>i.value===path))return;
+  const n=document.getElementById('none'); if(n)n.remove();
+  const li=document.createElement('li');
+  li.innerHTML='<strong class="chosenpath">'+esc(label)+'</strong> <a href="#">'+esc(L.remove)+'</a><input type="hidden" name="folders" value="'+esc(path)+'">';
+  li.querySelector('a').onclick=e=>{e.preventDefault();li.remove()};
+  C.appendChild(li); F.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function go(path){
+  const r=await fetch('{{ base }}/series/files/browse?path='+encodeURIComponent(path)); const d=await r.json();
+  W.textContent=d.path?d.label:L.drives;
+  let h='';
+  if(d.error)h+='<div class="warn">'+esc(d.error)+'</div>';
+  if(d.path)h+='<p><a href="#" data-go="'+esc(d.parent)+'">'+esc(L.up)+'</a> · <button type="button" id="addcur" style="margin:0;padding:8px 12px">'+esc(L.choose)+'</button></p>';
+  h+='<ul>'+d.dirs.map(x=>'<li><a href="#" data-go="'+esc(x.path)+'">📁 '+esc(x.name)+'</a></li>').join('')+'</ul>';
+  if(!d.dirs.length&&!d.error)h+='<p class="muted">'+esc(L.nodirs)+'</p>';
+  B.innerHTML=h;
+  B.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.go)});
+  const b=document.getElementById('addcur'); if(b)b.onclick=()=>add(d.path,d.label);
+}
+go('');
+</script>
+{% endif %}
+<p class="muted"><a href="{{ base }}/series/add">{{ _("← Zurück") }}</a></p>
+{% include '_films_foot.html' %}
+{% endblock %}

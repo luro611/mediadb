@@ -1,0 +1,96 @@
+{% extends 'base.html' %}{% from '_lend.html' import lend_box with context %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/series">{{ _("MediaDB / Serien") }}</a></p>
+{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+{% if s.backdrop %}<div class="backdrop" style="background-image:url('{{ base }}/film-images/{{ s.backdrop }}')" role="img" aria-label=""></div>{% endif %}
+<div class="filmhead">
+ <div class="filmposter">{% if s.poster %}<img src="{{ base }}/film-images/{{ s.poster }}" alt="{{ _('Poster') }} {{ s.title }}">{% else %}<span class="pph">{{ s.title }}</span>{% endif %}<p><a href="{{ base }}/series/{{ s.id }}/poster" class="small">{{ _("Poster ändern ›") }}</a></p></div>
+ <div class="filmmain">
+  <h1>{{ s.title }}</h1>
+  {% if s.original_title and s.original_title!=s.title %}<p class="subtitle">{{ s.original_title }}</p>{% endif %}
+  <p class="filmline">{% for x in [((s.first_air_date or '')[:4] ~ ('–' ~ (s.last_air_date or '')[:4] if s.status in ('Ended','Canceled') and s.last_air_date and s.last_air_date[:4] != (s.first_air_date or '')[:4] else ('–' if s.status=='Returning Series' else ''))) if s.first_air_date else s.year, _(SERIES_STATUS.get(s.status, s.status)) if s.status else '', s.networks, s.certification, (_('§ Staffeln', s.number_of_seasons) if s.number_of_seasons else ''), s.genres] if x %}<span>{{ x }}</span>{% endfor %}</p>
+  {% set pv = s.providers_own or s.providers %}
+  {% if pv or s.next_air_date %}<p class="streamline">{% if pv %}<span class="muted">{{ _("Streaming:") }}</span> <strong>{{ pv }}</strong>{% if s.providers_link and not s.providers_own %} · <a href="{{ s.providers_link }}" target="_blank" rel="noopener">{{ _("Wo ansehen? ›") }}</a>{% endif %}{% endif %}
+   {% if s.next_air_date %}{% if pv %}<br>{% endif %}<span class="muted">{{ _("Nächste Folge:") }}</span> <strong>{{ s.next_air_date|fdate }}</strong> (S{{ '%02d' % (s.next_season or 0) }}E{{ '%02d' % (s.next_episode or 0) }}){% endif %}</p>{% endif %}
+
+  <section class="watch card" id="fortschritt" aria-label="{{ _('Fortschritt') }}">
+   <div class="sumgrid">
+    <div><span class="big">{{ tot.have }}</span><span class="muted">{{ _("von § Folgen vorhanden", tot.aired) }}</span></div>
+    <div><span class="big{% if tot.missing %} accent{% endif %}">{{ tot.missing }}</span><span class="muted">{{ _("fehlt") if tot.missing == 1 else _("fehlen") }}{% if tot.missing %} · <a href="#staffeln">{{ _("anzeigen") }}</a>{% endif %}</span></div>
+    <div><span class="big">{{ tot.seen }}</span><span class="muted">{{ _("gesehen") }}</span></div>
+    {% if tot.upcoming %}<div><span class="big">{{ tot.upcoming }}</span><span class="muted">{{ _("noch nicht ausgestrahlt") }}</span></div>{% endif %}
+   </div>
+   {% if tot.aired %}<span class="progressbar" title="{{ _('§ von § Folgen gesehen', tot.seen, tot.aired) }}"><i style="width:{{ (100 * tot.seen / tot.aired)|round|int }}%"></i></span>{% endif %}
+   {% if next %}<form method="post" action="{{ base }}/series/{{ s.id }}/next-seen" class="nextup"><input type="hidden" name="anchor" value="fortschritt">
+    <span><span class="muted">{{ _("Als Nächstes:") }}</span> <strong>S{{ '%02d' % next.season }}E{{ '%02d' % next.episode }}</strong> {{ next.name or '' }}</span><button>{{ _("Gesehen") }}</button></form>{% endif %}
+   <form method="post" action="{{ base }}/series/{{ s.id }}/rating" class="rating"><input type="hidden" name="anchor" value="fortschritt">
+    <p class="rlabel">{{ _("Eigene Bewertung") }}{% if s.rating %}: <strong>{{ s.rating }}</strong>{% if RATING_LABELS.get(s.rating) %} · {{ _(RATING_LABELS[s.rating]) }}{% endif %}{% endif %}</p>
+    <div class="scale">{% for n in range(1,11) %}<button name="rating" value="{{ n }}" class="r{% if s.rating==n %} on{% endif %}" aria-pressed="{{ 'true' if s.rating==n else 'false' }}">{{ n }}</button>{% endfor %}</div>
+    <p class="scalelabels"><span>1 · {{ _("5× löschen") }}</span><span>10 · {{ _("Unbedingt sehen") }}</span></p>
+    {% if s.rating %}<button name="rating" value="" class="linkbtn">{{ _("Bewertung entfernen") }}</button>{% endif %}
+   </form>
+  </section>
+
+  {% if s.overview %}<h2>{{ _("Handlung") }}</h2><p class="overview">{{ s.overview }}</p>{% endif %}
+  <dl class="facts">{% if people.creator %}<dt>{{ _("Idee") }}</dt><dd>{% for x in people.creator %}<a href="{{ base }}/films/person/{{ x.id }}">{{ x.name }}</a>{{ ', ' if not loop.last }}{% endfor %}</dd>{% elif s.creators %}<dt>{{ _("Idee") }}</dt><dd>{{ s.creators }}</dd>{% endif %}
+  {% for label,val in [('Sender',s.networks),('Land',s.countries),('Originalsprache',s.original_language),('Laufzeit',(_('§ Min.', s.episode_runtime) if s.episode_runtime else '')),('TMDB-Wertung',(('%.1f' % s.tmdb_rating) ~ ' / 10') if s.tmdb_rating else ''),('Stichworte',s.keywords)] if val %}<dt>{{ _(label) }}</dt><dd>{{ val }}</dd>{% endfor %}</dl>
+  <p class="links">{% if s.trailer_url %}<a href="{{ s.trailer_url }}" target="_blank" rel="noopener">{{ _("Trailer ansehen ›") }}</a>{% endif %}{% if s.tmdb_id %}<a href="https://www.themoviedb.org/tv/{{ s.tmdb_id }}" target="_blank" rel="noopener">TMDB ›</a>{% endif %}{% if s.imdb_id %}<a href="https://www.imdb.com/title/{{ s.imdb_id }}/" target="_blank" rel="noopener">IMDb ›</a>{% endif %}</p>
+ </div>
+</div>
+
+
+<h2 id="staffeln">{{ _("Staffeln und Folgen") }}</h2>
+{% if folders %}<p class="muted srcdirs">{{ _("Ordner:") }} {% for d in folders[:5] %}<code class="path">{{ d }}</code>{{ ', ' if not loop.last }}{% endfor %}{% if folders|length > 5 %} …{% endif %}</p>{% endif %}
+{% if not seasons %}<p class="muted">{{ _("Noch keine Folgen: kein Episodenführer und keine Dateien.") }}{% if not s.tmdb_id %} <a href="{{ base }}/series/search?attach={{ s.id }}&amp;q={{ s.title|urlencode }}">{{ _("Serie bei TMDB zuordnen ›") }}</a>{% endif %}</p>{% if s.tmdb_id %}<form method="post" action="{{ base }}/series/{{ s.id }}/refresh"><button>{{ _("Episodenführer jetzt laden") }}</button></form>{% endif %}{% endif %}
+{% set real = seasons|selectattr('season')|list %}
+{% if seasons|length > 1 %}<p class="foldall"><button type="button" class="linkbtn" data-fold="1">{{ _("Alle Staffeln aufklappen") }}</button> · <button type="button" class="linkbtn" data-fold="0">{{ _("Alle zuklappen") }}</button></p>{% endif %}
+<div class="fold seasons">{% for se in seasons %}
+<details id="st{{ se.season }}"{% if se.season and (se.n_missing or real|length <= 2 or (next and next.season == se.season) or (not next and loop.first)) %} open{% endif %}>
+ <summary><span>{{ se.name or _('Staffel §', se.season) }}</span>
+  <span class="n">{% if se.season == 0 %}{{ _("Specials") }} · {% endif %}{% if se.n_aired %}{{ _("§ / § vorhanden", se.n_have, se.n_aired) }}{% else %}{{ _("§ Folgen", se.episodes|length) }}{% endif %}{% if se.n_missing %} · <b class="miss">{{ _("§ fehlt", se.n_missing) if se.n_missing == 1 else _("§ fehlen", se.n_missing) }}</b>{% elif se.complete %} · <b class="okc">{{ _("komplett") }}</b>{% endif %} · {{ _("§ gesehen", se.n_seen) }}</span></summary>
+ <div class="seasonbody">
+  <form method="post" action="{{ base }}/series/{{ s.id }}/watched" class="inline-form"><input type="hidden" name="anchor" value="st{{ se.season }}"><input type="hidden" name="season" value="{{ se.season }}">
+   <button name="on" value="1" class="quiet small">{{ _("Ganze Staffel als gesehen") }}</button>{% if se.n_seen %}<button name="on" value="0" class="quiet small">{{ _("Staffel als ungesehen") }}</button>{% endif %}</form>
+  <div class="tablewrap"><table class="eps">
+  {% for e in se.episodes %}<tr class="{{ e.state }}{% if e.seen %} isseen{% endif %}">
+   <td class="eno">{{ e.episode }}</td>
+   <td class="ett">{% if e.overview %}<details class="eov"><summary>{{ e.name or _('Folge §', e.episode) }}</summary><p>{{ e.overview }}</p></details>{% else %}{{ e.name or _('Folge §', e.episode) }}{% endif %}</td>
+   <td class="eda">{{ e.air_date|fdate }}</td>
+   <td class="est">{% if e.state=='have' %}<span class="badge okb"{% if e.files %} title="{{ e.files|map(attribute='path')|map('hostpath')|join('\n') }}"{% endif %}>{% if e.files %}{{ e.files[0].resolution or _('Datei') }}{% else %}{{ _("Box") }}{% endif %}</span>{% if e.unlisted %} <span class="badge" title="{{ _('Diese Folge steht nicht im Episodenführer von TMDB.') }}">{{ _("nur Datei") }}</span>{% endif %}{% elif e.state=='missing' %}<span class="badge missb">{{ _("fehlt") }}</span>{% else %}<span class="badge">{{ _("kommt") }}</span>{% endif %}</td>
+   <td class="ewa"><form method="post" action="{{ base }}/series/{{ s.id }}/watched"><input type="hidden" name="anchor" value="st{{ se.season }}"><input type="hidden" name="season" value="{{ e.season }}"><input type="hidden" name="episode" value="{{ e.episode }}"><input type="hidden" name="on" value="{{ '0' if e.seen else '1' }}"><button class="seenbtn{% if e.seen %} on{% endif %}" title="{{ _('Als ungesehen markieren') if e.seen else _('Als gesehen markieren') }}" aria-pressed="{{ 'true' if e.seen else 'false' }}">✓</button></form></td>
+  </tr>{% endfor %}</table></div>
+ </div>
+</details>{% endfor %}</div>
+
+{% set mt_src = '/mediathek/series/' ~ s.id %}{% include '_mediathek.html' %}
+{% if people.cast %}<h2>{{ _("Besetzung") }}</h2><ul class="castlist">{% for p in people.cast %}<li><a href="{{ base }}/films/person/{{ p.id }}"><strong>{{ p.name }}</strong></a>{% if p.character %}<span class="sub">{{ p.character }}{% if p.episodes %} · {{ _("§ Folgen", p.episodes) }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
+
+{% if extra_files %}<h2>{{ _("Dateien ohne passende Folge") }}</h2>
+<p class="muted">{{ _("Diese Dateien konnten keiner Folge im Episodenführer zugeordnet werden. Hier lässt sich Staffel und Folge von Hand eintragen.") }}</p>
+<div class="tablewrap"><table class="copies">{% for f in extra_files %}<tr><td><code class="path">{{ f.path }}</code>{% if f.title_hint %}<br><span class="muted">{{ f.title_hint }}</span>{% endif %}</td>
+<td><form method="post" action="{{ base }}/series/file/{{ f.id }}/move" class="inline-form"><input name="season" value="{{ f.season if f.season is not none else '' }}" class="short" aria-label="{{ _('Staffel') }}" placeholder="{{ _('Staffel') }}" inputmode="numeric"><input name="episode" value="{{ f.episode if f.episode is not none else '' }}" class="short" aria-label="{{ _('Folge') }}" placeholder="{{ _('Folge') }}" inputmode="numeric"><button class="quiet small">{{ _("Zuordnen") }}</button></form></td>
+<td><form method="post" action="{{ base }}/series/file/{{ f.id }}/delete"><button class="quiet small">{{ _("entfernen") }}</button></form></td></tr>{% endfor %}</table></div>{% endif %}
+
+<h2 id="boxen">{{ _("DVD- und Blu-ray-Boxen") }}</h2>
+{% if copies %}<div class="tablewrap"><table class="copies">{% for k in copies %}<tr><td><span class="badge">{{ _(kinds.get(k.kind,k.kind)) }}</span></td><td>{{ _("Staffeln:") }} {{ k.seasons or '–' }}</td><td>{% if k.barcode %}<code>{{ k.barcode }}</code>{% endif %} {{ k.edition or '' }}</td>
+<td><form method="post" action="{{ base }}/series/copies/{{ k.id }}/delete"><button class="quiet small">{{ _("entfernen") }}</button></form></td></tr>{% endfor %}</table></div>{% else %}<p class="muted">{{ _("Keine Box eingetragen.") }}</p>{% endif %}
+<details class="card"><summary>{{ _("Box hinzufügen") }}</summary>
+<form method="post" action="{{ base }}/series/{{ s.id }}/copies"><input type="hidden" name="anchor" value="boxen">
+<div class="row3"><span><label for="bk">{{ _("Format") }}</label><select name="kind" id="bk">{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span>
+<span><label for="bs">{{ _("Staffeln") }}</label><input name="seasons" id="bs" placeholder="{{ _('z. B. 1-3 oder komplett') }}"></span>
+<span><label for="bb">{{ _("Barcode") }}</label><input name="barcode" id="bb" inputmode="numeric"></span></div>
+<button>{{ _("Hinzufügen") }}</button></form></details>
+
+{{ lend_box('series', s.id, s.title, s.year) }}
+<h2 id="notiz">{{ _("Notiz") }}</h2>
+<form method="post" action="{{ base }}/series/{{ s.id }}/notes"><input type="hidden" name="anchor" value="notiz"><textarea name="notes" id="snotes" rows="3" aria-label="{{ _('Notiz') }}">{{ s.notes or '' }}</textarea><button>{{ _("Notiz speichern") }}</button></form>
+
+<div class="actions filmactions">
+ <form method="get" action="{{ base }}/series/{{ s.id }}/edit"><button class="quiet">{{ _("Bearbeiten") }}</button></form>
+ {% if s.tmdb_id %}<form method="post" action="{{ base }}/series/{{ s.id }}/refresh"><button class="quiet">{{ _("Episodenführer aktualisieren") }}</button></form>{% endif %}
+ <form method="get" action="{{ base }}/series/search"><input type="hidden" name="attach" value="{{ s.id }}"><input type="hidden" name="q" value="{{ s.title }}"><button class="quiet">{{ _("Andere Serie zuordnen") }}</button></form>
+ <form method="post" action="{{ base }}/series/{{ s.id }}/delete" onsubmit="return confirm({{ _t('Serie wirklich löschen? Die Dateien selbst bleiben unberührt.')|tojson|forceescape }})"><button class="quiet">{{ _("Löschen") }}</button></form>
+</div>
+<script>document.querySelectorAll('[data-fold]').forEach(function(b){b.onclick=function(){var o=b.dataset.fold==='1';document.querySelectorAll('.seasons>details').forEach(function(d){d.open=o})}});
+if(location.hash){var d=document.querySelector(location.hash);if(d&&d.tagName==='DETAILS')d.open=true}</script>
+{% include '_films_foot.html' %}
+{% endblock %}

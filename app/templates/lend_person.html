@@ -1,0 +1,23 @@
+{% extends 'base.html' %}{% from '_lend.html' import when with context %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/lend">{{ _("MediaDB / Verliehen") }}</a></p>
+<h1>{{ person.name }}</h1>
+{% if person.note %}<p class="intro">{{ person.note }}</p>{% endif %}
+{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+{% set back_to = '/lend/person/' ~ person.id %}
+<h2>{{ _("Hat zurzeit (§)", rows|length) }}</h2>
+{% if rows %}{% include '_lend_rows.html' %}
+<form method="post" action="{{ base }}/lend/person/{{ person.id }}/return-all" class="inline-form" onsubmit="return confirm({{ _t('Wirklich alles als zurückbekommen eintragen?')|tojson|forceescape }})">
+ <input name="date" value="{{ lend_today() }}" class="short date" inputmode="numeric" aria-label="{{ _('Zurückbekommen am') }}"><button class="quiet">{{ _("Alles zurückbekommen") }}</button></form>
+{% else %}<p class="muted">{{ _("Zurzeit nichts.") }}</p>{% endif %}
+<p><a href="{{ base }}/lend?person={{ person.name|urlencode }}#eintragen">{{ _("Etwas an § verleihen ›", person.name) }}</a></p>
+
+{% if history %}<h2>{{ _("Früher geliehen") }}</h2>
+<div class="tablewrap"><table class="lendtable">{% for r in history %}<tr><td><span class="badge">{{ _(LEND_AREAS[r.area][0]) }}</span></td><td><a href="{{ base }}{{ r.url }}">{{ r.title }}</a>{% if r.detail %} <span class="muted">{{ r.detail }}</span>{% endif %}</td><td class="muted">{{ r.lent_at|fdate if r.lent_at else '?' }} – {{ r.returned_at|fdate }}</td></tr>{% endfor %}</table></div>{% endif %}
+
+<details class="card"><summary>{{ _("Name ändern") }}</summary>
+<form method="post" action="{{ base }}/lend/person/{{ person.id }}/edit">
+<label for="pn">{{ _("Name") }}</label><input id="pn" name="name" value="{{ person.name }}" required>
+<label for="pno">{{ _("Notiz (optional)") }}</label><input id="pno" name="note" value="{{ person.note or '' }}">
+<p class="muted hint">{{ _("Gibt es den neuen Namen schon, werden beide zusammengeführt.") }}</p>
+<button>{{ _("Speichern") }}</button></form></details>
+{% endblock %}

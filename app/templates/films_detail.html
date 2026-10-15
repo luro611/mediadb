@@ -1,0 +1,82 @@
+{% extends 'base.html' %}{% from '_lend.html' import lend_box with context %}{% block content %}
+{% set f = film %}
+<p class="eyebrow"><a href="{{ base }}/films">{{ _("MediaDB / Filme") }}</a></p>
+{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+{% if f.backdrop %}<div class="backdrop" style="background-image:url('{{ base }}/film-images/{{ f.backdrop }}')" role="img" aria-label=""></div>{% endif %}
+<div class="filmhead">
+ <div class="filmposter">{% if f.poster %}<img src="{{ base }}/film-images/{{ f.poster }}" alt="{{ _('Poster') }} {{ f.title }}">{% else %}<span class="pph">{{ f.title }}</span>{% endif %}<p><a href="{{ base }}/films/{{ f.id }}/poster" class="small">{{ _("Poster ändern ›") }}</a></p></div>
+ <div class="filmmain">
+  <h1>{{ f.title }}</h1>
+  {% if f.original_title and f.original_title!=f.title %}<p class="subtitle">{{ f.original_title }}</p>{% endif %}
+  <p class="filmline">{% for x in [f.year, (_('§ Min.', f.runtime) if f.runtime else ''), f.certification, f.genres] if x %}<span>{{ x }}</span>{% endfor %}</p>
+  {% if f.tagline %}<p class="tagline">{{ f.tagline }}</p>{% endif %}
+
+  <section class="watch card" id="gesehen" aria-label="{{ _('Gesehen') }}">
+   <div class="watchstate">{% if f.watched %}<strong class="isseen">✓ {{ _("Gesehen") }}</strong>{% if f.watched_at %} <span class="muted">{{ _("zuletzt am §", f.watched_at|fdate) }}</span>{% endif %}{% if f.watch_count > 1 %} <span class="badge">{{ _("§ × gesehen", f.watch_count) }}</span>{% endif %}
+    {% else %}<strong>{{ _("Noch nicht gesehen") }}</strong>{% endif %}</div>
+   <form method="post" action="{{ base }}/films/{{ f.id }}/watched" class="actions">
+    <input type="hidden" name="anchor" value="gesehen">
+    {% if f.watched %}<button name="action" value="seen">{{ _("Heute nochmal gesehen") }}</button><button name="action" value="unseen" class="quiet">{{ _("Als ungesehen markieren") }}</button>
+    {% else %}<button name="action" value="seen">{{ _("Heute gesehen") }}</button>{% endif %}
+   </form>
+   <form method="post" action="{{ base }}/films/{{ f.id }}/watched" class="inline-form watchdate">
+    <input type="hidden" name="anchor" value="gesehen"><input type="hidden" name="action" value="{{ 'date' if f.watched else 'seen' }}">
+    <label for="wdate">{{ _("Gesehen am") }}</label>
+    <input id="wdate" name="date" value="{{ f.watched_at|fdate if f.watched else '' }}" placeholder="{{ _('TT.MM.JJJJ') }}" inputmode="numeric" class="short date">
+    <button class="quiet">{{ _("Datum ändern") if f.watched else _("Mit Datum als gesehen eintragen") }}</button>
+   </form>
+   <p class="muted hint">{{ _("Genaues Datum unbekannt? Dann reicht das Jahr, z. B. 1999.") }}{% if f.watched %} {{ _("Leer lassen und speichern = Datum unbekannt.") }}{% endif %}</p>
+   <form method="post" action="{{ base }}/films/{{ f.id }}/rating" class="rating" aria-label="{{ _('Eigene Bewertung') }}">
+    <input type="hidden" name="anchor" value="gesehen">
+    <p class="rlabel">{{ _("Eigene Bewertung") }}{% if f.rating %}: <strong>{{ f.rating }}</strong>{% if RATING_LABELS.get(f.rating) %} · {{ _(RATING_LABELS[f.rating]) }}{% endif %}{% endif %}</p>
+    <div class="scale">{% for n in range(1,11) %}<button name="rating" value="{{ n }}" class="r{% if f.rating==n %} on{% endif %}" title="{{ _(RATING_LABELS[n]) if RATING_LABELS.get(n) else n }}" aria-pressed="{{ 'true' if f.rating==n else 'false' }}">{{ n }}</button>{% endfor %}</div>
+    <p class="scalelabels"><span>1 · {{ _("5× löschen") }}</span><span>10 · {{ _("Unbedingt sehen") }}</span></p>
+    {% if f.rating %}<button name="rating" value="" class="linkbtn">{{ _("Bewertung entfernen") }}</button>{% endif %}
+   </form>
+  </section>
+
+  {% if f.overview %}<h2>{{ _("Handlung") }}</h2><p class="overview">{{ f.overview }}</p>{% endif %}
+  {% macro plinks(lst) %}{% for x in lst %}<a href="{{ base }}/films/person/{{ x.id }}">{{ x.name }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endmacro %}
+  <dl class="facts">{% if people.director %}<dt>{{ _("Regie") }}</dt><dd>{{ plinks(people.director) }}</dd>{% endif %}{% if people.writer %}<dt>{{ _("Drehbuch") }}</dt><dd>{{ plinks(people.writer) }}</dd>{% endif %}{% for label,val in [('Regie',f.directors if not people.director else ''),('Drehbuch',f.writers if not people.writer else ''),('Produktion',f.studios),('Land',f.countries),('Originalsprache',f.original_language),('Erschienen',f.release_date),('TMDB-Wertung',(('%.1f' % f.tmdb_rating) ~ ' / 10 (' ~ f.tmdb_votes ~ ')') if f.tmdb_rating else ''),('Stichworte',f.keywords)] if val %}<dt>{{ _(label) }}</dt><dd>{{ val }}</dd>{% endfor %}</dl>
+  <p class="links">{% if f.trailer_url %}<a href="{{ f.trailer_url }}" target="_blank" rel="noopener">{{ _("Trailer ansehen ›") }}</a>{% endif %}{% if f.tmdb_id %}<a href="https://www.themoviedb.org/movie/{{ f.tmdb_id }}" target="_blank" rel="noopener">TMDB ›</a>{% endif %}{% if f.imdb_id %}<a href="https://www.imdb.com/title/{{ f.imdb_id }}/" target="_blank" rel="noopener">IMDb ›</a>{% endif %}</p>
+ </div>
+</div>
+
+{% if cast %}<h2>{{ _("Besetzung") }}</h2><ul class="castlist">{% for p in cast %}<li>{% if p.id %}<a href="{{ base }}/films/person/{{ p.id }}"><strong>{{ p.name }}</strong></a>{% else %}<strong>{{ p.name }}</strong>{% endif %}{% if p.character %}<span class="sub">{{ p.character }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
+
+{% if f.collection_id %}<h2>{{ _("Filmreihe") }}: <a href="{{ base }}/films?collection={{ f.collection_id }}">{{ f.collection_name }}</a></h2>
+{% if in_coll %}<p class="muted">{{ _("Weitere Teile in deiner Sammlung:") }} {% for x in in_coll %}<a href="{{ base }}/films/{{ x.id }}">{{ x.title }}{% if x.year %} ({{ x.year }}){% endif %}</a>{% if x.watched %} ✓{% endif %}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}{% endif %}
+
+{% set mt_src = '/mediathek/film/' ~ f.id %}{% include '_mediathek.html' %}
+<h2 id="exemplare">{{ _("Exemplare") }}</h2>
+{% if copies %}<div class="tablewrap"><table class="copies"><tr><th>{{ _("Format") }}</th><th>{{ _("Fassung") }}</th><th>{{ _("Barcode / Datei") }}</th><th>{{ _("Technik") }}</th><th></th></tr>
+{% for k in copies %}<tr><td><span class="badge">{{ _(kinds.get(k.kind, k.kind)) }}</span></td><td>{{ k.edition or '' }}{% if k.region %} <span class="muted">{{ k.region }}</span>{% endif %}</td>
+<td>{% if k.path %}<code class="path">{{ k.path }}</code>{% elif k.barcode %}<code>{{ k.barcode }}</code>{% endif %}{% if k.notes %}<br><span class="muted">{{ k.notes }}</span>{% endif %}</td>
+<td class="tech">{{ [k.resolution, k.hdr, k.video_codec, k.container, ((k.duration_s//60)|string ~ ' min') if k.duration_s else '', ((k.size_bytes/1073741824)|round(1)|string ~ ' GB') if k.size_bytes and k.size_bytes > 100000000 else '']|select|join(' · ') }}{% if k.audio %}<br><span class="muted">{{ _("Ton:") }} {{ k.audio }}</span>{% endif %}{% if k.subtitles %}<br><span class="muted">{{ _("Untertitel:") }} {{ k.subtitles }}</span>{% endif %}</td>
+<td><form method="post" action="{{ base }}/films/copies/{{ k.id }}/delete" onsubmit="return confirm({{ _t('Exemplar entfernen?')|tojson|forceescape }})"><button class="quiet small">{{ _("entfernen") }}</button></form></td></tr>{% endfor %}</table></div>
+{% else %}<p class="muted">{{ _("Noch kein Exemplar eingetragen.") }}</p>{% endif %}
+<details class="card"><summary>{{ _("Exemplar hinzufügen") }}</summary>
+<form method="post" action="{{ base }}/films/{{ f.id }}/copies"><input type="hidden" name="anchor" value="exemplare">
+<div class="row3"><span><label for="ck">{{ _("Format") }}</label><select name="kind" id="ck">{% for k,l in kinds.items() if k!='file' %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span>
+<span><label for="ce">{{ _("Fassung (optional)") }}</label><input name="edition" id="ce" placeholder="{{ _('z. B. Director’s Cut, Steelbook') }}"></span>
+<span><label for="cb">{{ _("Barcode") }}</label><input name="barcode" id="cb" inputmode="numeric"></span></div>
+<label for="cn">{{ _("Notiz") }}</label><input name="notes" id="cn"><button>{{ _("Hinzufügen") }}</button></form></details>
+
+{{ lend_box('film', f.id, f.title, f.year) }}
+<h2 id="listen">{{ _("Eigene Listen") }}</h2>
+<form method="post" action="{{ base }}/films/{{ f.id }}/lists" class="card"><input type="hidden" name="anchor" value="listen">
+{% for l in lists %}<label class="checkbox"><input type="checkbox" name="list" value="{{ l.id }}" id="l{{ l.id }}"{% if l.id in in_lists %} checked{% endif %}> {{ l.name }}</label>{% else %}<p class="muted">{{ _("Noch keine eigenen Listen.") }}</p>{% endfor %}
+<label for="nl">{{ _("Neue Liste anlegen und Film hinzufügen") }}</label><input name="new_list" id="nl" maxlength="80" placeholder="{{ _('z. B. Weihnachtsfilme') }}">
+<button>{{ _("Listen speichern") }}</button></form>
+
+<h2 id="notiz">{{ _("Notiz") }}</h2>
+<form method="post" action="{{ base }}/films/{{ f.id }}/notes"><input type="hidden" name="anchor" value="notiz"><textarea name="notes" id="fnotes" rows="3" aria-label="{{ _('Notiz') }}">{{ f.notes or '' }}</textarea><button>{{ _("Notiz speichern") }}</button></form>
+
+<div class="actions filmactions">
+ <form method="get" action="{{ base }}/films/{{ f.id }}/edit"><button class="quiet">{{ _("Bearbeiten") }}</button></form>
+ {% if f.tmdb_id %}<form method="post" action="{{ base }}/films/{{ f.id }}/refresh"><button class="quiet">{{ _("Von TMDB ergänzen") }}</button></form>{% endif %}
+ <form method="get" action="{{ base }}/films/search"><input type="hidden" name="attach" value="{{ f.id }}"><input type="hidden" name="q" value="{{ f.title }}"><input type="hidden" name="year" value="{{ f.year or '' }}"><button class="quiet">{{ _("Anderen Film zuordnen") }}</button></form>
+ <form method="post" action="{{ base }}/films/{{ f.id }}/delete" onsubmit="return confirm({{ _t('Film mit allen Exemplaren wirklich löschen? Die Dateien selbst bleiben unberührt.')|tojson|forceescape }})"><button class="quiet">{{ _("Löschen") }}</button></form>
+</div>
+{% include '_films_foot.html' %}
+{% endblock %}

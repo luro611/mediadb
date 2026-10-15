@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/films">{{ _("MediaDB / Filme") }}</a></p><h1>{{ _("Bearbeiten") }}</h1>
+<p class="intro">{{ _("Änderungen hier überschreibt „Von TMDB ergänzen“ nicht; dort werden nur leere Felder gefüllt.") }}</p>
+<form method="post" action="{{ base }}/films/{{ film.id }}/edit" class="card">
+<label for="et">{{ _("Titel") }}</label><input name="title" id="et" value="{{ film.title }}" required>
+<label for="eo">{{ _("Originaltitel") }}</label><input name="original_title" id="eo" value="{{ film.original_title or '' }}">
+<div class="row3"><span><label for="ey">{{ _("Jahr") }}</label><input name="year" id="ey" value="{{ film.year or '' }}" inputmode="numeric" maxlength="4"></span>
+<span><label for="er">{{ _("Laufzeit (Minuten)") }}</label><input name="runtime" id="er" value="{{ film.runtime or '' }}" inputmode="numeric"></span>
+<span><label for="ec">{{ _("Altersfreigabe") }}</label><input name="certification" id="ec" value="{{ film.certification or '' }}" placeholder="FSK 12"></span></div>
+<label for="eg">{{ _("Genres (mit Komma getrennt)") }}</label><input name="genres" id="eg" value="{{ film.genres or '' }}">
+<label for="ed">{{ _("Regie") }}</label><input name="directors" id="ed" value="{{ film.directors or '' }}">
+<label for="ev">{{ _("Handlung") }}</label><textarea name="overview" id="ev" rows="5">{{ film.overview or '' }}</textarea>
+<label for="en">{{ _("Notiz") }}</label><textarea name="notes" id="en" rows="2">{{ film.notes or '' }}</textarea>
+<div class="actions"><button>{{ _("Speichern") }}</button><a href="{{ base }}/films/{{ film.id }}">{{ _("Abbrechen") }}</a></div>
+</form>
+{% endblock %}

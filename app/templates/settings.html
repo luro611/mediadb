@@ -1,0 +1,104 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Einstellungen") }}</p>
+<h1>{{ _("Ein*stellungen*") }}</h1>
+<p class="intro">{{ _("Hier stellst du ein, was bisher in der Datei .env stand. Änderungen gelten sofort, ein Neustart ist nicht nötig. Gespeichert wird in data/settings.json.") }}</p>
+{% if message and part != 'nas' %}<div class="ok">{{ _(message) }}</div>{% endif %}
+
+<form method="post" action="{{ base }}/settings/save" class="settings">
+<section class="card" id="sprache">
+ <h2>{{ _("Sprache der Daten") }}</h2>
+ <p class="help">{{ _("In dieser Sprache kommen Titel, Inhaltsangaben, Genres und Episodennamen von TMDB in die Datenbank. Das Land bestimmt Altersfreigabe, Kinostart und Streamingdienste. Die Sprache der Oberfläche stellst du oben rechts um; sie ist davon unabhängig.") }}</p>
+ <label for="dl">{{ _("Datensprache und Land") }}</label>
+ <select name="TMDB_LANGUAGE" id="dl">{% for code, name in languages %}<option value="{{ code }}"{% if code==data_lang %} selected{% endif %}>{{ _(name) }}</option>{% endfor %}{% if data_lang not in languages|map('first')|list %}<option value="{{ data_lang }}" selected>{{ data_lang }}</option>{% endif %}</select>
+ {% if lang != data_lang[:2] %}<p class="hint">{{ _("Die Oberfläche ist auf „§“ gestellt, die Daten kommen aber in „§“. Passt das so?", lang|upper, data_lang) }}</p>{% endif %}
+</section>
+
+<section class="card" id="tmdb">
+ <h2>{{ _("TMDB (Filme und Serien)") }}</h2>
+ <p class="help">{{ _("Kostenloser Schlüssel: Konto auf themoviedb.org anlegen, unter Einstellungen → API einen Schlüssel beantragen (Zweck: privat). Eintragen kannst du den „API-Schlüssel“ oder den langen „Lesezugriffstoken“.") }} <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org ›</a></p>
+ <p class="status">{% if cfg.TMDB_API_KEY %}<span class="badge okb">{{ _("eingetragen") }}</span> <code>{{ masked.TMDB_API_KEY }}</code> {% if src.TMDB_API_KEY=='env' %}<span class="muted">{{ _("(aus .env)") }}</span>{% endif %}{% else %}<span class="badge missb">{{ _("fehlt") }}</span>{% endif %}</p>
+ <label for="tk">{{ cfg.TMDB_API_KEY and _("Neuen Schlüssel eintragen (leer lassen = unverändert)") or _("Schlüssel") }}</label>
+ <input type="password" name="TMDB_API_KEY" id="tk" autocomplete="off" spellcheck="false">
+ {% if src.TMDB_API_KEY=='app' %}<label class="checkbox"><input type="checkbox" name="TMDB_API_KEY_remove" value="1"> {{ _("Gespeicherten Schlüssel entfernen") }}</label>{% endif %}
+</section>
+
+<section class="card" id="musik">
+ <h2>{{ _("Musik") }}</h2>
+ <label for="mc">{{ _("E-Mail-Adresse für MusicBrainz") }}</label>
+ <input type="email" name="MB_CONTACT" id="mc" value="{{ contact }}" placeholder="du@example.com">
+ <p class="help">{{ _("MusicBrainz verlangt eine Kontaktangabe. Sie wird nur an MusicBrainz und das Cover Art Archive mitgeschickt.") }}</p>
+ <p class="status">{{ _("Discogs-Token") }}: {% if cfg.DISCOGS_TOKEN %}<span class="badge okb">{{ _("eingetragen") }}</span> <code>{{ masked.DISCOGS_TOKEN }}</code>{% if src.DISCOGS_TOKEN=='env' %} <span class="muted">{{ _("(aus .env)") }}</span>{% endif %}{% else %}<span class="badge">{{ _("keiner (optional)") }}</span>{% endif %}</p>
+ <label for="dt">{{ _("Discogs-Token (optional, discogs.com → Einstellungen → Entwickler)") }}</label>
+ <input type="password" name="DISCOGS_TOKEN" id="dt" autocomplete="off" spellcheck="false">
+ {% if src.DISCOGS_TOKEN=='app' %}<label class="checkbox"><input type="checkbox" name="DISCOGS_TOKEN_remove" value="1"> {{ _("Gespeichertes Token entfernen") }}</label>{% endif %}
+</section>
+
+<section class="card" id="dienste">
+ <h2>{{ _("Dienste und Automatik") }}</h2>
+ <label class="checkbox"><input type="checkbox" name="BARCODE_LOOKUP" value="1"{% if flags.BARCODE_LOOKUP %} checked{% endif %}> {{ _("Barcodes von DVDs und Blu-rays online nachschlagen (UPCitemdb)") }}</label>
+ <label class="checkbox"><input type="checkbox" name="COVER_WEB" value="1"{% if flags.COVER_WEB %} checked{% endif %}> {{ _("Fehlende CD-Cover bei iTunes und Deezer suchen") }}</label>
+ <label class="checkbox"><input type="checkbox" name="AUTO_UPDATE" value="1"{% if flags.AUTO_UPDATE %} checked{% endif %}> {{ _("Serien und Merkliste einmal am Tag aktualisieren") }}</label>
+ <label class="checkbox"><input type="checkbox" name="MEDIATHEK" value="1"{% if flags.MEDIATHEK %} checked{% endif %}> {{ _("In den Mediatheken von ARD, ZDF, Arte und Co. suchen (MediathekViewWeb, nur Links)") }}</label>
+</section>
+<div class="actions"><button>{{ _("Speichern") }}</button></div>
+</form>
+
+<section class="card settings" id="nas">
+ <h2>{{ _("NAS-Freigaben") }}</h2>
+ {% if message and part == 'nas' %}<div class="{{ 'ok' if message.startswith('Verbindung klappt') or message.startswith('Freigabe entfernt') else 'warn' }}">{{ _(message) }}</div>{% endif %}
+ <p class="help">{{ _("MediaDB liest Musik, Filme, Serien und Bücher direkt von der NAS (SMB, wie im Finder oder Windows-Explorer). Einhängen ist nicht nötig, auch nicht im Proxmox-LXC. Es wird nur gelesen. Am besten auf der NAS einen eigenen Benutzer anlegen, der nur lesen darf.") }}</p>
+ {% for x in nas_shares %}
+ <div class="nasrow">
+  <p><strong>{{ _("NAS: §", x.label) }}</strong> <code>//{{ x.host }}/{{ x.share }}{% if x.folder %}/{{ x.folder }}{% endif %}</code>{% if x.user %} · {{ x.user }}{% endif %}</p>
+  <div class="actions">
+   <form method="post" action="{{ base }}/settings/nas/check"><input type="hidden" name="id" value="{{ x.id }}"><button class="quiet">{{ _("Verbindung prüfen") }}</button></form>
+   <form method="post" action="{{ base }}/settings/nas/delete" onsubmit="return confirm({{ _t('Freigabe „§“ entfernen? Schon eingelesene Einträge bleiben erhalten.', x.label)|tojson }})"><input type="hidden" name="id" value="{{ x.id }}"><button class="quiet">{{ _("Entfernen") }}</button></form>
+  </div>
+  <details><summary>{{ _("Ändern") }}</summary>
+   <form method="post" action="{{ base }}/settings/nas/save">
+    <input type="hidden" name="id" value="{{ x.id }}">
+    {% set pre = 'n' ~ loop.index %}
+    {% include '_nas_fields.html' %}
+    <div class="actions"><button>{{ _("Speichern und prüfen") }}</button></div>
+   </form>
+  </details>
+ </div>
+ {% endfor %}
+ <details{% if not nas_shares %} open{% endif %}><summary>{{ _("Freigabe hinzufügen") }}</summary>
+  <form method="post" action="{{ base }}/settings/nas/save">
+   {% set x = {} %}{% set pre = 'n0' %}
+   {% include '_nas_fields.html' %}
+   <div class="actions"><button>{{ _("Speichern und prüfen") }}</button></div>
+  </form>
+ </details>
+ <p class="help">{{ _("Danach erscheint jede Freigabe beim Einlesen von Musik, Filmen, Serien und Büchern in der Ordnerauswahl als „NAS: Name“.") }}</p>
+</section>
+
+<div class="grid settingsextra">
+<section class="card">
+ <h3>{{ _("TMDB-Schlüssel prüfen") }}</h3>
+ <form method="post" action="{{ base }}/settings/test-tmdb"><button class="quiet">{{ _("Jetzt prüfen") }}</button></form>
+</section>
+<section class="card" id="neuladen">
+ <h3>{{ _("Alles in der Datensprache neu laden") }}</h3>
+ {% if relang.state == 'running' %}<p id="rltxt">{{ _("§ von §", relang.done, relang.total) }}</p><progress id="rlbar" max="{{ relang.total or 1 }}" value="{{ relang.done }}" style="width:100%"></progress>
+ <script>(function(){var T={{ _t("§ von §","%D","%T")|tojson }};function p(){fetch("{{ base }}/settings/relang/status").then(function(r){return r.json()}).then(function(d){if(d.state!=="running"){location.reload();return}document.getElementById("rltxt").textContent=T.replace("%D",d.done).replace("%T",d.total)+(d.current?" · "+d.current:"");var b=document.getElementById("rlbar");b.max=d.total||1;b.value=d.done;setTimeout(p,2000)}).catch(function(){setTimeout(p,5000)})}setTimeout(p,1500)})()</script>
+ {% else %}
+ {% if changed %}<p class="hint">{{ _("Schon gespeicherte Filme und Serien sind noch in der bisherigen Sprache. Hier lädst du sie in der neuen Sprache neu.") }}</p>{% else %}<p class="help">{{ _("Lädt Inhaltsangaben, Genres, Episodennamen und Merkliste aller Filme und Serien in der eingestellten Datensprache neu. Läuft im Hintergrund.") }}</p>{% endif %}
+ {% if relang.state == 'done' %}<p class="help">{{ _("Zuletzt fertig: § Einträge, § ohne Ergebnis.", relang.done, relang.errors) }}</p>{% elif relang.state == 'error' %}<div class="warn">{{ _(relang.current) }}</div>{% endif %}
+ <form method="post" action="{{ base }}/settings/relang"><label class="checkbox"><input type="checkbox" name="titles" value="1" checked> {{ _("Auch die Titel ersetzen (eigene Änderungen an Titeln gehen dabei verloren)") }}</label><button{% if not tmdb_on %} disabled{% endif %}>{{ _("Jetzt neu laden") }}</button></form>
+ {% endif %}
+</section>
+<section class="card">
+ <h3>{{ _("Sprache der Oberfläche") }}</h3>
+ <p class="help">{{ _("Wird im Browser gespeichert und zusätzlich als Voreinstellung für neue Geräte.") }}</p>
+ <p>{% for code,name in ui_langs.items() %}<a class="tab{% if code==lang %} active{% endif %}" href="{{ base }}/lang/{{ code }}?next={{ (base ~ '/settings')|urlencode }}">{{ name }}</a> {% endfor %}</p>
+</section>
+<section class="card">
+ <h3>{{ _("Zugriff") }}</h3>
+ <p>{{ _("Passwort:") }} <strong>{{ _("an") if password_on else _("aus") }}</strong> · {{ _("Zugriff aus dem Internet:") }} <strong>{{ _("erlaubt") if public else _("gesperrt (nur Heimnetz)") }}</strong></p>
+ <p class="help">{{ _("Aus Sicherheitsgründen nur in der Datei .env änderbar (APP_PASSWORD, ALLOW_PUBLIC), danach neu starten.") }}</p>
+</section>
+</div>
+{% include '_films_foot.html' %}
+{% endblock %}

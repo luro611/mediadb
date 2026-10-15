@@ -1,0 +1,29 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Filme / Hinzufügen") }}</p><h1>{{ _("Film *hinzufügen*") }}</h1>
+<p class="intro">{{ _("Per Barcode, über die Titelsuche, aus einem Ordner mit Filmdateien oder ganz von Hand. Gespeichert wird erst, wenn du einen Treffer bestätigst.") }}</p>
+{% if message %}<div class="warn">{{ _(message) }}</div>{% endif %}
+{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+<div class="grid addgrid">
+<div class="card"><h3>{{ _("Mit Barcode") }}</h3><p>{{ _("DVD, Blu-ray oder 4K UHD: Feld anklicken und scannen oder die Nummer eintippen.") }}{% if not barcode_lookup %} {{ _("Die Online-Barcode-Suche ist ausgeschaltet; gefunden werden nur Barcodes, die schon in deiner Sammlung stehen.") }}{% endif %}</p>
+<form method="post" action="{{ base }}/films/scan"><input autofocus class="wide" name="barcode" id="fbarcode" inputmode="numeric" placeholder="{{ _('Barcode scannen oder eingeben') }}" required>
+<label for="fbkind">{{ _("Format") }}</label><select name="kind" id="fbkind"><option value="auto">{{ _("automatisch erkennen") }}</option>{% for k,l in kinds.items() if k!='file' %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select>
+<button>{{ _("Suchen") }}</button></form></div>
+<div class="card"><h3>{{ _("Nach Titel suchen") }}</h3><p>{{ _("Ohne Scanner: Titel eingeben, das Jahr hilft bei gleichnamigen Filmen.") }}</p>
+<form method="get" action="{{ base }}/films/search"><input class="wide" name="q" id="fsq" placeholder="{{ _('Titel, z. B. Der Pate') }}" required>
+<div class="row2"><span><label for="fsy">{{ _("Jahr (optional)") }}</label><input name="year" id="fsy" inputmode="numeric" maxlength="4"></span>
+<span><label for="fsk">{{ _("Format") }}</label><select name="kind" id="fsk">{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span></div>
+<button>{{ _("Suchen") }}</button></form></div>
+<div class="card"><h3>{{ _("Aus Filmdateien") }}</h3><p>{{ _("Einen Ordner mit Filmen einlesen (MKV, MP4, AVI, ISO, DVD- und Blu-ray-Ordner). Jellyfin- und Kodi-.nfo-Dateien werden genutzt, sonst Titel und Jahr aus dem Namen.") }}</p><p><a href="{{ base }}/films/files">{{ _("Film-Import öffnen ›") }}</a></p></div>
+<div class="card"><h3>{{ _("Von Hand") }}</h3><p>{{ _("Für Filme, die TMDB nicht kennt, etwa eigene Aufnahmen.") }}</p>
+<details><summary>{{ _("Formular öffnen") }}</summary>
+<form method="post" action="{{ base }}/films/manual">
+<label for="mt">{{ _("Titel") }}</label><input name="title" id="mt" required>
+<div class="row2"><span><label for="my">{{ _("Jahr") }}</label><input name="year" id="my" inputmode="numeric" maxlength="4"></span><span><label for="mk">{{ _("Format") }}</label><select name="kind" id="mk">{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span></div>
+<label for="mb">{{ _("Barcode") }}</label><input name="barcode" id="mb" inputmode="numeric">
+<label for="mr">{{ _("Regie") }}</label><input name="directors" id="mr">
+<label for="mo">{{ _("Handlung") }}</label><textarea name="overview" id="mo" rows="3"></textarea>
+<button>{{ _("Speichern") }}</button></form></details></div>
+</div>
+<p class="muted"><a href="{{ base }}/films">{{ _("← Zu den Filmen") }}</a></p>
+{% include '_films_foot.html' %}
+{% endblock %}

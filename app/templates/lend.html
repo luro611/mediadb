@@ -1,0 +1,47 @@
+{% extends 'base.html' %}{% from '_lend.html' import when, copy_label with context %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Verliehen") }}</p>
+<h1>{{ _("Verliehen *an …*") }}</h1>
+<p class="intro">{{ _("Wer hat welche CD, DVD, Blu-ray oder welches Buch? Verleihen lässt sich nur, was du in der Hand hast; Dateien, digitale Alben und E-Books nicht.") }}</p>
+{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+
+{% if stats.n %}<p class="lendstats"><strong>{{ _("§ Sachen bei § Personen", stats.n|num, stats.people|num) }}</strong>{% for a,(label,_u) in LEND_AREAS.items() if stats.by_area.get(a) %} · {{ _(label) }} {{ stats.by_area[a]|num }}{% endfor %}{% if stats.overdue %} · <span class="overdue">{{ _("§ überfällig", stats.overdue) }}</span>{% endif %}</p>{% endif %}
+
+<section class="card" id="eintragen">
+ <h2>{{ _("Verleihen eintragen") }}</h2>
+ <p class="muted">{{ _("Name eintragen, dann in der ganzen Sammlung suchen und bei jedem Treffer „Verleihen“ klicken. So lassen sich auch viele alte Verleihungen schnell nachtragen.") }}</p>
+ <form method="get" action="{{ base }}/lend" class="lendsearch">
+  <span><label for="sp">{{ _("An wen?") }}</label><input id="sp" name="person" value="{{ person }}" list="lendnames" autocomplete="off"></span>
+  <span><label for="sq">{{ _("Was? (Titel, Interpret, Autor, Barcode)") }}</label><input id="sq" name="q" value="{{ q }}" type="search"></span>
+  <button>{{ _("Suchen") }}</button>
+ </form>
+ <datalist id="lendnames">{% for p in people %}<option value="{{ p.name }}">{% endfor %}</datalist>
+ {% if q %}{% if results %}<ul class="lendresults">{% for x in results %}<li>
+  <span class="badge">{{ _(LEND_AREAS[x.area][0]) }}</span>
+  <a href="{{ base }}{{ LEND_AREAS[x.area][1] }}{{ x.id }}"><strong>{{ x.title }}</strong></a>{% if x.sub %} <span class="sub">{{ x.sub }}</span>{% endif %}{% if x.year %} <span class="muted">({{ x.year }})</span>{% endif %}
+  {% for o in x.open %}<br><span class="muted">{{ _("Verliehen an") }} <a href="{{ base }}/lend/person/{{ o.person_id }}">{{ o.person }}</a>{% if o.detail %} · {{ o.detail }}{% endif %}</span>{% endfor %}
+  {% if x.free %}<form method="post" action="{{ base }}/lend/add" class="inline-form">
+   <input type="hidden" name="area" value="{{ x.area }}"><input type="hidden" name="item_id" value="{{ x.id }}"><input type="hidden" name="title" value="{{ x.title }}"><input type="hidden" name="subtitle" value="{{ x.sub }}">
+   <input type="hidden" name="back" value="/lend?person={{ person|urlencode }}&q={{ q|urlencode }}"><input type="hidden" name="person" value="{{ person }}">
+   {% if x.free|length > 1 %}<select name="copy_id" aria-label="{{ _('Exemplar') }}">{% for p in x.free %}<option value="{{ p.copy_id }}">{{ copy_label(p) }}</option>{% endfor %}</select>{% else %}<input type="hidden" name="copy_id" value="{{ x.free[0].copy_id or '' }}"><span class="muted">{{ copy_label(x.free[0]) }}</span>{% endif %}
+   <input name="date" value="{{ lend_today() }}" class="short date" inputmode="numeric" aria-label="{{ _('Verliehen am') }}">
+   <button{% if not person %} disabled title="{{ _('Oben zuerst eintragen, an wen.') }}"{% endif %}>{{ _("An § verleihen", person) if person else _("Verleihen") }}</button></form>
+  {% elif x.digital %}<br><span class="muted">{{ _("Nur digital vorhanden – nichts zum Verleihen.") }}</span>{% endif %}
+ </li>{% endfor %}</ul>
+ {% if not person %}<p class="muted hint">{{ _("Oben zuerst eintragen, an wen.") }}</p>{% endif %}
+ {% else %}<p class="muted">{{ _("Nichts gefunden.") }}</p>{% endif %}{% endif %}
+</section>
+
+<nav class="lendtabs" aria-label="{{ _('Bereich') }}"><a href="{{ base }}/lend"{% if not sel_area %} class="on"{% endif %}>{{ _("Alle") }}</a>{% for a,(label,_u) in LEND_AREAS.items() %}<a href="{{ base }}/lend?area={{ a }}"{% if sel_area==a %} class="on"{% endif %}>{{ _(label) }}</a>{% endfor %}<a href="{{ base }}/lend/text" class="right">{{ _("Als Text zum Kopieren") }}</a></nav>
+
+{% if groups %}{% for (pid, name), rows in groups %}
+<section class="card lendperson">
+ <h2><a href="{{ base }}/lend/person/{{ pid }}">{{ name }}</a> <span class="muted">{{ rows|length }}</span></h2>
+ {% include '_lend_rows.html' %}
+</section>{% endfor %}
+{% else %}<p class="muted">{{ _("Zurzeit ist nichts verliehen.") }}</p>{% endif %}
+
+{% if history %}<details class="card"><summary>{{ _("Zurückbekommen (§)", history|length) }}</summary>
+<div class="tablewrap"><table class="lendtable">{% for r in history %}<tr><td><span class="badge">{{ _(LEND_AREAS[r.area][0]) }}</span></td><td><a href="{{ base }}{{ r.url }}">{{ r.title }}</a>{% if r.detail %} <span class="muted">{{ r.detail }}</span>{% endif %}</td>
+<td><a href="{{ base }}/lend/person/{{ r.person_id }}">{{ r.person }}</a></td><td class="muted">{{ r.lent_at|fdate if r.lent_at else '?' }} – {{ r.returned_at|fdate }}</td>
+<td><form method="post" action="{{ base }}/lend/{{ r.id }}/reopen"><input type="hidden" name="back" value="/lend"><button class="linkbtn">{{ _("doch noch verliehen") }}</button></form></td></tr>{% endfor %}</table></div></details>{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/books">{{ _("MediaDB / Bücher") }}</a></p>
+{% if name %}
+<h1>{{ name }}</h1>
+<p class="muted"><a href="{{ base }}/books/series">{{ _("← Alle Buchreihen") }}</a></p>
+{% if gaps %}<div class="warn">{{ _("Es fehlen Band §.", gaps|join(', ')) }}</div>{% endif %}
+<div class="posters books">{% for b in books %}<a class="pcard{% if b.status=='read' %} seen{% endif %}" href="{{ base }}/books/{{ b.id }}"><span class="pimg">{% if b.cover %}<img src="{{ base }}/film-images/{{ b.cover }}" alt="" loading="lazy">{% else %}<span class="pph">{{ b.title }}</span>{% endif %}{% if b.status=='read' %}<span class="pseen">✓</span>{% endif %}</span><span class="ptitle">{{ b.title }}</span><span class="pmeta">{{ _("Band §", b.series_no) if b.series_no else '' }}{% if b.year %} · {{ b.year }}{% endif %}</span></a>{% endfor %}</div>
+{% else %}
+<h1>{{ _("Buch*reihen*") }}</h1>
+<p class="intro">{{ _("Reihen kommen aus der Nationalbibliothek, aus E-Book-Daten oder von dir (Buch bearbeiten → Reihe und Band). Fehlende Bände zwischen 1 und dem höchsten vorhandenen Band werden angezeigt.") }}</p>
+{% if series %}<ul class="wlist">{% for s in series %}<li><span class="wmain"><a href="{{ base }}/books/series?name={{ s.series|urlencode }}"><strong>{{ s.series }}</strong></a><span class="sub">{{ (s.authors or '').split(';')[0] }} · {{ _("§ Bücher", s.n) }}{% if s.gaps %} · <b class="miss">{{ _("es fehlen Band §", s.gaps|join(', ')) }}</b>{% endif %}</span></span></li>{% endfor %}</ul>
+{% else %}<p class="muted">{{ _("Noch keine Buchreihen.") }}</p>{% endif %}
+{% endif %}
+{% include '_books_foot.html' %}
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/watchlist">{{ _("MediaDB / Merkliste") }}</a></p>
+<h1>{{ _("*Erledigt*") }}</h1>
+{% if items %}<ul class="wlist">{% for x in items %}<li><span class="wdate">{{ x.done_at[:10]|fdate }}</span>
+ <span class="wmain"><strong>{{ x.title }}</strong>{% if x.year %} <span class="muted">({{ x.year }})</span>{% endif %}<span class="sub">{{ _("Serie") if x.kind=='tv' else _("Film") }}{% if x.note %} · {{ x.note }}{% endif %}</span></span>
+ <form method="post" action="{{ base }}/watchlist/{{ x.kind }}/{{ x.id }}/done"><input type="hidden" name="on" value="0"><button class="quiet small">{{ _("Wieder vormerken") }}</button></form>
+ <form method="post" action="{{ base }}/watchlist/{{ x.kind }}/{{ x.id }}/delete"><button class="linkbtn">{{ _("entfernen") }}</button></form></li>{% endfor %}</ul>
+{% else %}<p class="muted">{{ _("Keine erledigten Einträge.") }}</p>{% endif %}
+<p class="muted"><a href="{{ base }}/watchlist">{{ _("← Zur Merkliste") }}</a></p>
+{% endblock %}

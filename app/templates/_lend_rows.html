@@ -1,0 +1,8 @@
+{% from '_lend.html' import when with context %}
+<div class="tablewrap"><table class="lendtable">{% for r in rows %}<tr{% if r.overdue %} class="isoverdue"{% endif %}>
+<td><span class="badge">{{ _(LEND_AREAS[r.area][0]) }}</span></td>
+<td><a href="{{ base }}{{ r.url }}"><strong>{{ r.title }}</strong></a>{% if r.subtitle %} <span class="sub">{{ r.subtitle }}</span>{% endif %}{% if r.detail %}<br><span class="muted">{{ r.detail }}</span>{% endif %}{% if r.note %}<br><span class="muted">{{ r.note }}</span>{% endif %}</td>
+<td>{{ when(r.lent_at) }}{% if r.due_at %}<br><span class="{{ 'overdue' if r.overdue else 'muted' }}">{{ _("zurück bis §", r.due_at|fdate) }}</span>{% endif %}</td>
+<td class="lendact"><form method="post" action="{{ base }}/lend/{{ r.id }}/return" class="inline-form"><input type="hidden" name="back" value="{{ back_to or '/lend' }}"><input name="date" value="{{ lend_today() }}" class="short date" inputmode="numeric" aria-label="{{ _('Zurückbekommen am') }}"><button class="quiet small">{{ _("Zurückbekommen") }}</button></form>
+<form method="post" action="{{ base }}/lend/{{ r.id }}/delete" onsubmit="return confirm({{ _t('Eintrag löschen? (Nur bei einem Versehen; sonst „Zurückbekommen“.)')|tojson|forceescape }})"><input type="hidden" name="back" value="{{ back_to or '/lend' }}"><button class="linkbtn">{{ _("löschen") }}</button></form></td>
+</tr>{% endfor %}</table></div>

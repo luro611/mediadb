@@ -1,0 +1,15 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/series">{{ _("MediaDB / Serien") }}</a></p>
+<h1>{{ _("Was *fehlt*?") }}</h1>
+<p class="intro">{{ _("Vergleich deiner Dateien und Boxen mit dem Episodenführer von TMDB. Gezählt werden nur Folgen, die schon ausgestrahlt wurden; Specials (Staffel 0) nicht.") }} <a href="{{ base }}/series/missing?format=txt" target="_blank" rel="noopener">{{ _("Als Text zum Kopieren ›") }}</a></p>
+{% if items %}
+{% for s in items %}<section class="card missing">
+ <div class="mhead">{% if s.poster %}<img src="{{ base }}/film-images/{{ s.poster }}" alt="" class="mposter" loading="lazy">{% endif %}
+  <div><h3><a href="{{ base }}/series/{{ s.id }}#staffeln">{{ s.title }}</a>{% if s.year %} <span class="muted">({{ s.year }})</span>{% endif %}</h3>
+  <p class="muted">{{ _("§ von § ausgestrahlten Folgen vorhanden, § fehlt", s.have, s.aired, s.missing) if s.missing == 1 else _("§ von § ausgestrahlten Folgen vorhanden, § fehlen", s.have, s.aired, s.missing) }}</p></div></div>
+ <ul class="gaps">{% for g in s.gaps %}{% if g.absent %}<li><strong>{{ _("Staffel §", g.season) }}</strong> {{ _("fehlt komplett (§ Folgen)", g.n_aired) }}</li>
+  {% else %}<li><strong>{{ _("Staffel §", g.season) }}</strong>: {% for e in g.episodes %}<span class="gap">E{{ '%02d' % e.episode }}{% if e.name %} · {{ e.name }}{% endif %}</span>{{ ', ' if not loop.last }}{% endfor %}</li>{% endif %}{% endfor %}</ul>
+</section>{% endfor %}
+{% else %}<div class="ok"><p>{{ _("Bei keiner Serie fehlen ausgestrahlte Folgen.") }}</p></div>{% endif %}
+{% include '_films_foot.html' %}
+{% endblock %}

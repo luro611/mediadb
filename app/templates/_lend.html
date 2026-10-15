@@ -1,0 +1,27 @@
+{# Kasten "Verleihen" fuer die Detailseiten. Aufruf: {% from '_lend.html' import lend_box with context %}{{ lend_box('film', f.id, f.title, f.year) }} #}
+{% macro when(iso) %}{% if iso %}{{ iso|fdate }}{% set s = lend_since(iso) %}{% if s and s[0] > 0 %} <span class="muted">({% if s[1]=='Jahre' %}{{ _("seit § Jahren", s[0]) }}{% elif s[1]=='Monate' %}{{ _("seit § Monaten", s[0]) }}{% elif s[0]==1 %}{{ _("seit gestern") }}{% else %}{{ _("seit § Tagen", s[0]) }}{% endif %})</span>{% endif %}{% else %}{{ _("Datum unbekannt") }}{% endif %}{% endmacro %}
+{% macro copy_label(p) %}{{ _(p.kind) }}{% if p.seasons %} · {{ _("Staffeln:") }} {{ p.seasons }}{% endif %}{% if p.extra %} · {{ p.extra }}{% endif %}{% endmacro %}
+{% macro lend_box(area, item_id, title, subtitle='') %}{% if lend_info is defined %}{% set I = lend_info(area, item_id) %}
+<section class="card lendbox{% if I.open %} islent{% endif %}" id="verliehen" aria-label="{{ _('Verliehen') }}">
+ {% for o in I.open %}<div class="lendrow">
+  <p><strong>{{ _("Verliehen an") }} <a href="{{ base }}/lend/person/{{ o.person_id }}">{{ o.person }}</a></strong>{% if o.detail and I.phys|length > 1 %} <span class="badge">{{ o.detail }}</span>{% endif %}<br>
+   <span class="muted">{{ _("am") }}</span> {{ when(o.lent_at) }}{% if o.due_at %} · <span class="{{ 'overdue' if o.overdue else 'muted' }}">{{ _("zurück bis §", o.due_at|fdate) }}</span>{% endif %}{% if o.note %}<br><span class="muted">{{ o.note }}</span>{% endif %}</p>
+  <form method="post" action="{{ base }}/lend/{{ o.id }}/return" class="inline-form"><input type="hidden" name="back" value="{{ LEND_AREAS[area][1] }}{{ item_id }}#verliehen">
+   <label for="rd{{ o.id }}" class="vh">{{ _("Zurückbekommen am") }}</label><input id="rd{{ o.id }}" name="date" value="{{ lend_today() }}" class="short date" inputmode="numeric">
+   <button>{{ _("Zurückbekommen") }}</button></form>
+ </div>{% endfor %}
+ {% if I.free %}<details{% if not I.open %} class="lendform"{% endif %}><summary>{% if I.open %}{{ _("Weiteres Exemplar verleihen") }}{% else %}{{ _("Verleihen …") }}{% endif %}</summary>
+ <form method="post" action="{{ base }}/lend/add">
+  <input type="hidden" name="area" value="{{ area }}"><input type="hidden" name="item_id" value="{{ item_id }}"><input type="hidden" name="title" value="{{ title }}"><input type="hidden" name="subtitle" value="{{ subtitle or '' }}">
+  <input type="hidden" name="back" value="{{ LEND_AREAS[area][1] }}{{ item_id }}#verliehen">
+  <div class="row2"><span><label for="lp{{ item_id }}">{{ _("An wen?") }}</label><input id="lp{{ item_id }}" name="person" list="lendnames" required autocomplete="off"></span>
+  <span><label for="ld{{ item_id }}">{{ _("Verliehen am") }}</label><input id="ld{{ item_id }}" name="date" value="{{ lend_today() }}" inputmode="numeric"></span></div>
+  {% if I.free|length > 1 %}<label for="lc{{ item_id }}">{{ _("Exemplar") }}</label><select id="lc{{ item_id }}" name="copy_id">{% for p in I.free %}<option value="{{ p.copy_id }}">{{ copy_label(p) }}</option>{% endfor %}</select>{% elif I.free %}<input type="hidden" name="copy_id" value="{{ I.free[0].copy_id or '' }}">{% endif %}
+  <div class="row2"><span><label for="lu{{ item_id }}">{{ _("Zurück bis (optional)") }}</label><input id="lu{{ item_id }}" name="due" placeholder="{{ _('TT.MM.JJJJ') }}" inputmode="numeric"></span>
+  <span><label for="ln{{ item_id }}">{{ _("Notiz (optional)") }}</label><input id="ln{{ item_id }}" name="note"></span></div>
+  <p class="muted hint">{{ _("Weißt du das Datum nicht mehr? Feld leeren oder nur das Jahr eintragen, z. B. 2015.") }}</p>
+  <button>{{ _("Als verliehen eintragen") }}</button>
+ </form></details>
+ <datalist id="lendnames">{% for n in I.names %}<option value="{{ n }}">{% endfor %}</datalist>
+ {% elif not I.phys %}<p class="muted">{{ _("Nur digital vorhanden – nichts zum Verleihen.") }}</p>{% endif %}
+</section>{% endif %}{% endmacro %}

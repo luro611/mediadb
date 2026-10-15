@@ -10,3 +10,7 @@ data/settings.json
 data/backup/
 data/secret.key
 *.zip
+data/film_images/
+website/dist/
+website/preview.html
+website/*.zip

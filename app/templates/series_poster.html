@@ -1,0 +1,34 @@
+{% extends 'base.html' %}{% block content %}
+{% set f = s %}
+<p class="eyebrow"><a href="{{ base }}/series">{{ _("MediaDB / Serien") }}</a></p>
+<h1>{{ _("Poster *ändern*") }}</h1>
+<p class="intro"><a href="{{ base }}/series/{{ f.id }}">{{ f.title }}{% if f.year %} ({{ f.year }}){% endif %}</a></p>
+{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+{% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
+
+<div class="posterrow">
+ <div><p class="eyebrow">{{ _("Aktuelles Poster") }}</p><div class="pimg cur">{% if f.poster %}<img src="{{ base }}/film-images/{{ f.poster }}" alt="">{% else %}<span class="pph">{{ _("Kein Poster") }}</span>{% endif %}</div>
+  {% if f.poster %}<form method="post" action="{{ base }}/series/{{ f.id }}/poster/set"><input type="hidden" name="source" value="remove"><input type="hidden" name="kind" value="poster"><button class="linkbtn">{{ _("Poster entfernen") }}</button></form>{% endif %}</div>
+ <div class="upload card">
+  <h3>{{ _("Eigenes Bild hochladen") }}</h3>
+  <p class="muted">{{ _("JPG, PNG oder WebP, höchstens 15 MB. Zum Beispiel ein Foto oder Scan deiner DVD-Hülle.") }}</p>
+  <form method="post" action="{{ base }}/series/{{ f.id }}/poster/upload" enctype="multipart/form-data">
+   <input type="file" name="file" id="pfile" accept="image/jpeg,image/png,image/webp" required>
+   <div class="row2"><label class="checkbox"><input type="radio" name="kind" value="poster" checked> {{ _("als Poster") }}</label><label class="checkbox"><input type="radio" name="kind" value="backdrop"> {{ _("als Hintergrundbild") }}</label></div>
+   <button>{{ _("Hochladen") }}</button></form> 
+ </div>
+</div>
+
+{% if f.tmdb_id %}
+<h2>{{ _("Poster von TMDB") }} <span class="muted">({{ tmdb.posters|length }})</span></h2>
+{% if tmdb.posters %}<p class="muted">{{ _("Zum Übernehmen auf ein Bild klicken. Deutsch zuerst, dann ohne Text, dann Englisch.") }}</p>
+<div class="posters small">{% for x in tmdb.posters[:40] %}<form method="post" action="{{ base }}/series/{{ f.id }}/poster/set" class="pick"><input type="hidden" name="source" value="tmdb"><input type="hidden" name="kind" value="poster"><input type="hidden" name="path" value="{{ x.path }}"><button class="pickbtn"><span class="pimg"><img src="{{ img_base }}w185{{ x.path }}" alt="" loading="lazy" referrerpolicy="no-referrer"></span><span class="pmeta">{{ x.lang|upper if x.lang else _('ohne Text') }}</span></button></form>{% endfor %}</div>
+{% else %}<p class="muted">{{ _("TMDB hat für diese Serie keine Poster.") }}</p>{% endif %}
+{% if tmdb.backdrops %}<h2>{{ _("Hintergrundbilder von TMDB") }}</h2>
+<div class="backdrops">{% for x in tmdb.backdrops[:24] %}<form method="post" action="{{ base }}/series/{{ f.id }}/poster/set" class="pick"><input type="hidden" name="source" value="tmdb"><input type="hidden" name="kind" value="backdrop"><input type="hidden" name="path" value="{{ x.path }}"><button class="pickbtn"><img src="{{ img_base }}w300{{ x.path }}" alt="" loading="lazy" referrerpolicy="no-referrer"></button></form>{% endfor %}</div>{% endif %}
+{% else %}
+<div class="warn">{{ _("Diese Serie ist keinem TMDB-Eintrag zugeordnet, deshalb gibt es keine Poster von TMDB.") }} <a href="{{ base }}/series/search?attach={{ f.id }}&amp;q={{ f.title|urlencode }}&amp;year={{ f.year or '' }}">{{ _("Andere Serie zuordnen ›") }}</a></div>
+{% endif %}
+<p class="muted"><a href="{{ base }}/series/{{ f.id }}">{{ _("← Zurück zur Serie") }}</a></p>
+{% include '_films_foot.html' %}
+{% endblock %}

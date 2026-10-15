@@ -1,0 +1,36 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Bücher / Hinzufügen") }}</p>
+<h1>{% if attach %}{{ _("Anderes Buch *zuordnen*") }}{% else %}{{ _("Treffer *wählen*") }}{% endif %}</h1>
+{% if attach %}<p class="intro">{{ _("Wähle die richtige Ausgabe für „§“. Die Angaben werden neu übernommen; Exemplare, gelesen, Bewertung und Notiz bleiben.", attach.title) }}</p>{% endif %}
+{% if isbn %}<p class="muted">{{ _("ISBN") }} <code>{{ isbn|isbn }}</code></p>{% endif %}
+{% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
+{% if local %}
+<div class="ok"><p>{{ _("Diese ISBN steht schon in deiner Sammlung:") }}</p><ul>{% for b in local %}<li><a href="{{ base }}/books/{{ b.id }}">{{ b.title }}{% if b.authors %} · {{ b.authors }}{% endif %}</a></li>{% endfor %}</ul></div>
+<p class="muted">{{ _("Ein weiteres Exemplar fügst du auf der Seite des Buchs hinzu.") }}</p>
+{% else %}
+{% if isbn and not cands and not err %}<div class="warn">{{ _("Zu dieser ISBN wurde nichts gefunden. Bitte nach Titel und Autor suchen oder das Buch von Hand anlegen; die ISBN wird mit gespeichert.") }}</div>{% endif %}
+<form method="get" action="{{ base }}/books/search" class="card inline-form">
+ <input type="hidden" name="isbn" value="{{ isbn or '' }}"><input type="hidden" name="kind" value="{{ kind }}">{% if attach %}<input type="hidden" name="attach" value="{{ attach.id }}">{% endif %}
+ <label for="cq">{{ _("Titel") }}</label><input id="cq" name="q" value="{{ query }}"><label for="ca">{{ _("Autor") }}</label><input id="ca" name="author" value="{{ author }}" class="mid"><button>{{ _("Suchen") }}</button>
+</form>
+{% if cands %}
+<div class="cands">{% for c in cands %}
+<form method="post" action="{{ base }}{{ '/books/%d/rematch' % attach.id if attach else '/books/save' }}" class="cand card">
+ <input type="hidden" name="data" value="{{ cand_json(c) }}">
+ {% if c.cover_url %}<img src="{{ c.cover_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<span class="pph small">{{ c.title }}</span>{% endif %}
+ <div><h3>{{ c.title }}{% if c.year %} <span class="muted">({{ c.year }})</span>{% endif %}</h3>
+  {% if c.subtitle %}<p class="sub">{{ c.subtitle }}</p>{% endif %}
+  <p>{{ c.authors or '' }}</p>
+  <p class="muted">{% for x in [c.publisher, c.edition, (_('§ Seiten', c.pages) if c.pages else ''), (_(BOOK_LANGS.get(c.language, c.language)) if c.language else ''), (c.isbn|isbn if c.isbn else ''), ('DNB' if c.source=='dnb' else 'Open Library')] if x %}{{ x }}{{ ' · ' if not loop.last }}{% endfor %}</p>
+  {% if c.have %}<p class="badge">{{ _("schon in der Sammlung") }}</p>{% endif %}
+  {% if not attach %}<div class="row3">
+   <span><label for="k{{ loop.index }}">{{ _("Format") }}</label><select name="kind" id="k{{ loop.index }}">{% for k,l in kinds.items() %}<option value="{{ k }}"{% if k==(c._kind or kind) %} selected{% endif %}>{{ _(l) }}</option>{% endfor %}</select></span>
+   <span><label for="e{{ loop.index }}">{{ _("Ausgabe (optional)") }}</label><input name="edition" id="e{{ loop.index }}" placeholder="{{ _('z. B. Erstausgabe, signiert') }}"></span>
+   <span><label for="i{{ loop.index }}">{{ _("ISBN") }}</label><input name="isbn" id="i{{ loop.index }}" value="{{ isbn or c.isbn or '' }}" inputmode="numeric"></span></div>{% endif %}
+  <button>{% if attach %}{{ _("Dieses Buch zuordnen") }}{% elif c.have %}{{ _("Als weiteres Exemplar hinzufügen") }}{% else %}{{ _("Das ist mein Buch") }}{% endif %}</button>
+ </div></form>{% endfor %}</div>
+{% elif query or author %}<div class="card"><p>{{ _("Keine Treffer. Andere Schreibweise versuchen, nur den Nachnamen des Autors eingeben, oder das Buch von Hand anlegen.") }}</p></div>{% endif %}
+{% endif %}
+<p class="muted">{% if attach %}<a href="{{ base }}/books/{{ attach.id }}">{{ _("← Zurück zum Buch") }}</a>{% else %}<a href="{{ base }}/books/add">{{ _("← Zurück") }}</a>{% endif %}</p>
+{% include '_books_foot.html' %}
+{% endblock %}

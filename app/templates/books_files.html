@@ -1,0 +1,117 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Bücher / Hinzufügen") }}</p><h1>{{ _("Bücher-*Import*") }}</h1>
+<p class="intro">{{ _("E-Books und Hörbücher aus einem Ordner einlesen, oder viele gedruckte Bücher auf einmal über eine ISBN-Liste oder eine Tabelle. Zuerst wird nur gelesen und gesucht; gespeichert wird erst, wenn du unten auf „Übernehmen“ klickst.") }}</p>
+{% if message %}<div class="warn">{{ _(message) }}</div>{% endif %}
+
+{% if job.state in ('scanning','applying') %}
+{% set PH = {'collect': _t('Schritt 1 von 3: Ordner durchsuchen'), 'read': _t('Schritt 2 von 3: Dateien lesen'), 'match': _t('Schritt 3 von 3: bei der Nationalbibliothek und Open Library suchen'), 'apply': _t('Speichere und lade Titelbilder …')} %}
+<div class="card"><h3 id="ph">{{ PH.get(job.phase, _t('Lese und suche …')) }}</h3>
+<p id="pt">{% if job.phase=='collect' %}{{ _("§ Bücher gefunden", job.found) }}{% else %}{{ _("§ von §", job.done, job.total if job.total else '…') }}{% endif %}</p>
+<progress id="pb" max="{{ job.total or 1 }}"{% if job.phase!='collect' %} value="{{ job.done }}"{% endif %} style="width:100%"></progress>
+<p class="muted" id="pc">{{ job.current or '' }}</p>
+<p class="muted">{{ _("Der Fortschritt aktualisiert sich still, am Ende lädt die Seite einmal neu.") }} {{ _("Große Ordner auf dem NAS zu durchsuchen kann einige Minuten dauern.") }} {{ _("Bei langen Listen dauert die Suche etwa eine Sekunde pro Buch.") }}</p></div>
+<script>(function(){var PH={{ PH|tojson }},TXT={{ _t("§ von §","%D","%T")|tojson }},FOUND={{ _t("§ Bücher gefunden","%N")|tojson }};var st="{{ job.state }}",H=document.getElementById("ph"),T=document.getElementById("pt"),P=document.getElementById("pb"),C=document.getElementById("pc");
+function poll(){fetch("{{ base }}/books/files/status").then(function(r){return r.json()}).then(function(d){if(d.state!==st){location.reload();return}
+if(PH[d.phase])H.textContent=PH[d.phase];C.textContent=d.current||"";
+if(d.phase==="collect"){T.textContent=FOUND.replace("%N",d.found);P.removeAttribute("value")}else{T.textContent=TXT.replace("%D",d.done).replace("%T",d.total||"…");P.max=d.total||1;P.value=d.done}
+setTimeout(poll,1500)}).catch(function(){setTimeout(poll,4000)})}setTimeout(poll,1500)})()</script>
+
+{% elif job.state=='error' %}
+<div class="warn"><strong>{{ _("Fehler:") }}</strong> {{ _(job.error) }}</div>
+<form method="post" action="{{ base }}/books/files/reset"><button>{{ _("Zurück") }}</button></form>
+
+{% elif job.state=='done' %}
+<div class="ok"><h3>{{ _("Fertig") }}</h3><p>{{ _("§ Bücher neu angelegt, § zu vorhandenen Büchern ergänzt, § ohne Datenbank angelegt, § übersprungen.", job.result.new, job.result.attached, job.result.plain, job.result.skipped) }}</p></div>
+<div class="actions"><a href="{{ base }}/books?view=recent_added">{{ _("Zuletzt hinzugefügt ansehen") }}</a><form method="post" action="{{ base }}/books/files/reset"><button>{{ _("Weitere Bücher einlesen") }}</button></form></div>
+
+{% elif job.state=='ready' %}
+{% set total = job['items']|length %}
+<div class="card"><strong>{{ _("§ Bücher gefunden", total) }}</strong>{% if job.source=='files' %} {{ _("in") }} {% for f in job.folders %}<code>{{ host_label(f) }}</code>{{ ', ' if not loop.last }}{% endfor %}.
+<p class="muted">{{ _("Bereits erfasste Dateien werden nicht noch einmal angezeigt.") }}</p>{% else %} {{ _("aus der Liste") }}.{% endif %}</div>
+{% if total==0 %}<div class="warn">{{ _("Keine neuen Bücher gefunden.") }}</div><form method="post" action="{{ base }}/books/files/reset"><button>{{ _("Zurück") }}</button></form>
+{% else %}
+<form method="post" action="{{ base }}/books/files/apply">
+{% macro rows(list, kind) %}{% for it in list %}{% set m = it.meta %}
+<div class="card albumrow">
+ <div class="albhead"><strong>{{ m.title or '?' }}</strong>{% if m.authors %} <span class="sub">{{ m.authors }}</span>{% endif %} <span class="badge">{{ _(BOOK_KINDS.get(it.kind, it.kind)) }}</span>{% if it.fmt %} <span class="badge">{{ it.fmt }}</span>{% endif %}{% if m.isbn %} <span class="badge">{{ m.isbn|isbn }}</span>{% endif %}{% if it.opf %} <span class="badge">Calibre</span>{% endif %}</div>
+ <p class="muted">{% if it.path %}<code class="path">{{ host_label(it.path) }}</code>{% else %}{{ _("Zeile aus der Liste") }}{% endif %}{% if it.note %} · {{ _(it.note) }}{% endif %}{% if m.series %} · {{ m.series }}{% if m.series_no %} {{ m.series_no }}{% endif %}{% endif %}</p>
+ {% if kind=='known' %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="c:0"{% if it.default=='c:0' %} checked{% endif %}> {{ _("Als Exemplar zu „§“ hinzufügen", it.book_title) }}</label>
+ {% else %}{% for c in it.cands %}<label class="checkbox bookcand"><input type="radio" name="d_{{ it.idx }}" value="c:{{ loop.index0 }}"{% if it.default == 'c:%d' % loop.index0 %} checked{% endif %}>
+  {% if c._cover_id %}<img src="{{ cand_cover(c._cover_id, 'S') }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% endif %}
+  <span>{{ c.title }}{% if c.authors %} · {{ c.authors }}{% endif %}{% if c.year %} ({{ c.year }}){% endif %} <span class="sub">{% for x in [c.publisher, (c.isbn|isbn if c.isbn else ''), ('DNB' if c.source=='dnb' else 'Open Library')] if x %}{{ x }}{{ ' · ' if not loop.last }}{% endfor %}</span></span></label>{% endfor %}
+  <label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="plain"{% if it.default=='plain' %} checked{% endif %}> {{ _("Ohne Datenbank anlegen (Angaben aus der Datei)") if it.path else _("Ohne Datenbank anlegen (Angaben aus der Liste)") }}</label>{% endif %}
+ <label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="skip"{% if it.default=='skip' %} checked{% endif %}> {{ _("Überspringen") }}</label>
+ {% if not it.path %}<label class="inline-label">{{ _("Format") }} <select name="k_{{ it.idx }}">{% for k,l in kinds.items() if k not in ('ebook','audiobook') or k==it.kind %}<option value="{{ k }}"{% if k==it.kind %} selected{% endif %}>{{ _(l) }}</option>{% endfor %}</select></label>{% endif %}
+</div>{% endfor %}{% endmacro %}
+{% set G = [('unsure', _t('Bitte prüfen (§)', groups.unsure|length)), ('nf', _t('Nicht gefunden (§)', groups.nf|length)), ('match', _t('Erkannt (§)', groups.match|length)), ('known', _t('Buch schon vorhanden (§)', groups.known|length))] %}
+<div class="fold impgroups">{% for k, label in G if groups[k] %}
+<details id="grp-{{ k }}"{% if k in ('unsure','nf') or groups[k]|length <= 30 %} open{% endif %}><summary><span>{{ label }}</span></summary>
+{% if k=='unsure' %}<p class="muted">{{ _("Hier war die Zuordnung nicht ganz sicher. Vorgewählt ist der beste Vorschlag, wenn er gut genug passt, sonst die Angaben aus Datei oder Liste.") }}</p>{% endif %}
+{{ rows(groups[k], k) }}
+</details>{% endfor %}</div>
+<div class="importbar">
+ <p class="tally" id="tally" aria-live="polite"></p>
+ <div class="ibtns">{% if groups.unsure %}<button type="button" class="quiet" data-pick="first">{{ _("Bei „Bitte prüfen“: überall den ersten Vorschlag") }}</button><button type="button" class="quiet" data-pick="skip">{{ _("Bei „Bitte prüfen“: alle überspringen") }}</button>{% endif %}
+ <button type="submit">{{ _("Übernehmen") }}</button><button type="submit" class="quiet" form="resetform">{{ _("Verwerfen") }}</button></div>
+</div>
+</form>
+<form method="post" action="{{ base }}/books/files/reset" id="resetform"></form>
+<script>(function(){var L={{ {'take':_t('§ übernehmen','%N'),'plain':_t('§ ohne Datenbank','%N'),'skip':_t('§ überspringen','%N'),'set':_t('Bei § Einträgen geändert.','%N')}|tojson }};
+var T=document.getElementById('tally');
+function tally(extra){var n={take:0,plain:0,skip:0};document.querySelectorAll('.impgroups input[type=radio]:checked').forEach(function(i){var v=i.value;n[v.indexOf('c:')===0?'take':(v==='plain'?'plain':'skip')]++});
+var s=[L.take.replace('%N',n.take)];if(n.plain)s.push(L.plain.replace('%N',n.plain));s.push(L.skip.replace('%N',n.skip));T.innerHTML=(extra?'<b>✓ '+extra+'</b> · ':'')+s.join(' · ')}
+document.querySelector('.impgroups').addEventListener('change',function(){tally()});
+document.querySelectorAll('[data-pick]').forEach(function(b){b.onclick=function(){var c=0;document.querySelectorAll('#grp-unsure .albumrow').forEach(function(r){var i=b.dataset.pick==='first'?r.querySelector('input[value^="c:"]'):r.querySelector('input[value="skip"]');if(i&&!i.checked){i.checked=true;c++}});
+var g=document.getElementById('grp-unsure');if(g)g.open=true;tally(L.set.replace('%N',c))}});tally()})()</script>
+{% endif %}
+
+{% else %}
+<div class="grid importchoice">
+<form method="post" action="{{ base }}/books/files/list" class="card" enctype="multipart/form-data">
+ <h3>{{ _("Liste oder Tabelle") }}</h3>
+ <p class="muted">{{ _("Eine ISBN pro Zeile, zum Beispiel nacheinander mit dem Scanner erfasst. Oder eine CSV- oder Excel-Datei mit Spalten wie ISBN, Titel, Autor, Format, Gelesen, Bewertung, Notiz.") }}</p>
+ <label for="isbns">{{ _("ISBN-Liste") }}</label><textarea name="isbns" id="isbns" rows="6" inputmode="numeric" placeholder="9783423214124&#10;9783551354037"></textarea>
+ <label for="tfile">{{ _("oder Datei (CSV, XLSX)") }}</label><input type="file" name="file" id="tfile" accept=".csv,.txt,.xlsx,.xlsm,text/csv">
+ <label for="tkind">{{ _("Format, wenn nichts anderes angegeben ist") }}</label><select name="kind" id="tkind">{% for k,l in kinds.items() if k not in ('ebook','audiobook') %}<option value="{{ k }}"{% if k=='paperback' %} selected{% endif %}>{{ _(l) }}</option>{% endfor %}</select>
+ <button>{{ _("Einlesen und suchen") }}</button>
+</form>
+<form method="post" action="{{ base }}/books/files/scan" id="scanform" class="card" style="scroll-margin-top:20px">
+ <h3>{{ _("E-Books und Hörbücher aus Ordnern") }}</h3>
+ <ul id="chosen"><li class="muted" id="none">{{ _("Noch keiner – wähle unten einen Ordner und klicke „Diesen Ordner wählen“.") }}</li></ul>
+ <label for="manual">{{ _("Oder Pfad eintippen (ein Pfad pro Zeile, z. B. /Volumes/Bücher)") }}</label><textarea name="manual" id="manual" rows="2"></textarea>
+ <label class="checkbox"><input type="checkbox" name="audio" value="1" checked> {{ _("Audiodateien als Hörbücher einlesen (nur Hörbuch-Ordner wählen, nicht die Musiksammlung)") }}</label>
+ <button>{{ _("Einlesen und erkennen") }}</button>
+ <p class="muted">{{ _("EPUB, PDF, MOBI/AZW3, Calibre-Bibliotheken (metadata.opf), M4B und Ordner mit MP3/M4A. Schon erfasste Dateien werden übersprungen.") }}</p>
+</form>
+</div>
+<div class="card"><h3>{{ _("Ordner suchen") }}</h3><p class="muted" id="where">…</p><div id="browser"></div></div>
+<script>
+const L={{ {'drives':_t('Laufwerke und Ordner'),'up':_t('⬆ eine Ebene hoch'),'choose':_t('Diesen Ordner wählen'),'nodirs':_t('Keine Unterordner.'),'remove':_t('entfernen')}|tojson }};
+const B=document.getElementById('browser'),W=document.getElementById('where'),C=document.getElementById('chosen'),F=document.getElementById('scanform');
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function add(path,label){
+  if([...F.querySelectorAll('input[name=folders]')].some(i=>i.value===path))return;
+  const n=document.getElementById('none'); if(n)n.remove();
+  const li=document.createElement('li');
+  li.innerHTML='<strong class="chosenpath">'+esc(label)+'</strong> <a href="#">'+esc(L.remove)+'</a><input type="hidden" name="folders" value="'+esc(path)+'">';
+  li.querySelector('a').onclick=e=>{e.preventDefault();li.remove()};
+  C.appendChild(li); F.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function go(path){
+  const r=await fetch('{{ base }}/books/files/browse?path='+encodeURIComponent(path)); const d=await r.json();
+  W.textContent=d.path?d.label:L.drives;
+  let h='';
+  if(d.error)h+='<div class="warn">'+esc(d.error)+'</div>';
+  if(d.path)h+='<p><a href="#" data-go="'+esc(d.parent)+'">'+esc(L.up)+'</a> · <button type="button" id="addcur" style="margin:0;padding:8px 12px">'+esc(L.choose)+'</button></p>';
+  h+='<ul>'+d.dirs.map(x=>'<li><a href="#" data-go="'+esc(x.path)+'">📁 '+esc(x.name)+'</a></li>').join('')+'</ul>';
+  if(!d.dirs.length&&!d.error)h+='<p class="muted">'+esc(L.nodirs)+'</p>';
+  B.innerHTML=h;
+  B.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.go)});
+  const b=document.getElementById('addcur'); if(b)b.onclick=()=>add(d.path,d.label);
+}
+go('');
+</script>
+{% endif %}
+<p class="muted"><a href="{{ base }}/books/add">{{ _("← Zurück") }}</a></p>
+{% include '_books_foot.html' %}
+{% endblock %}

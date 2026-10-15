@@ -1,0 +1,29 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Bücher / Hinzufügen") }}</p><h1>{{ _("Buch *hinzufügen*") }}</h1>
+<p class="intro">{{ _("Per ISBN (der Strichcode auf der Rückseite), über Titel und Autor, aus einem Ordner mit E-Books oder Hörbüchern, aus einer Liste oder von Hand. Die Daten kommen von der Deutschen Nationalbibliothek und von Open Library.") }}</p>
+{% if message %}<div class="warn">{{ _(message) }}</div>{% endif %}
+<div class="grid addgrid">
+<div class="card"><h3>{{ _("Mit ISBN") }}</h3><p>{{ _("Strichcode scannen oder die ISBN eintippen (10 oder 13 Stellen, Striche egal).") }}</p>
+<form method="post" action="{{ base }}/books/scan"><input autofocus class="wide" name="isbn" id="bisbn" inputmode="numeric" placeholder="{{ _('ISBN scannen oder eingeben') }}" required>
+<label for="bik">{{ _("Format") }}</label><select name="kind" id="bik"><option value="">{{ _("automatisch erkennen") }}</option>{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select>
+<button>{{ _("Suchen") }}</button></form></div>
+<div class="card"><h3>{{ _("Nach Titel und Autor") }}</h3><p>{{ _("Ohne Scanner: Titel und am besten den Nachnamen des Autors eingeben.") }}</p>
+<form method="get" action="{{ base }}/books/search"><input class="wide" name="q" id="bsq" placeholder="{{ _('Titel, z. B. Der Schwarm') }}">
+<div class="row2"><span><label for="bsa">{{ _("Autor (optional)") }}</label><input name="author" id="bsa" placeholder="{{ _('z. B. Schätzing') }}"></span>
+<span><label for="bsk">{{ _("Format") }}</label><select name="kind" id="bsk">{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span></div>
+<button>{{ _("Suchen") }}</button></form></div>
+<div class="card"><h3>{{ _("E-Books, Hörbücher, Listen") }}</h3><p>{{ _("Einen Ordner mit E-Books (EPUB, PDF, MOBI, Calibre-Bibliothek) oder Hörbüchern einlesen. Oder viele Bücher auf einmal: eine ISBN-Liste (z. B. nacheinander gescannt), eine CSV- oder Excel-Tabelle.") }}</p><p><a href="{{ base }}/books/files">{{ _("Bücher-Import öffnen ›") }}</a></p></div>
+<div class="card"><h3>{{ _("Von Hand") }}</h3><p>{{ _("Für Bücher, die keine Datenbank kennt, etwa Selbstverlegtes oder sehr alte Ausgaben.") }}</p>
+<details><summary>{{ _("Formular öffnen") }}</summary>
+<form method="post" action="{{ base }}/books/manual">
+<label for="mt">{{ _("Titel") }}</label><input name="title" id="mt" required>
+<label for="ma">{{ _("Autor (mehrere mit ; trennen)") }}</label><input name="authors" id="ma">
+<div class="row3"><span><label for="my">{{ _("Jahr") }}</label><input name="year" id="my" inputmode="numeric" maxlength="4"></span><span><label for="mk">{{ _("Format") }}</label><select name="kind" id="mk">{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span><span><label for="mi">{{ _("ISBN") }}</label><input name="isbn" id="mi" inputmode="numeric"></span></div>
+<div class="row2"><span><label for="ms">{{ _("Reihe") }}</label><input name="series" id="ms"></span><span><label for="mn">{{ _("Band") }}</label><input name="series_no" id="mn" class="short"></span></div>
+<label for="mp">{{ _("Verlag") }}</label><input name="publisher" id="mp">
+<label for="md">{{ _("Inhalt") }}</label><textarea name="description" id="md" rows="3"></textarea>
+<button>{{ _("Speichern") }}</button></form></details></div>
+</div>
+<p class="muted"><a href="{{ base }}/books">{{ _("← Zu den Büchern") }}</a></p>
+{% include '_books_foot.html' %}
+{% endblock %}

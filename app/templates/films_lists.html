@@ -1,0 +1,14 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Filme") }}</p><h1>{{ _("Eigene *Listen*") }}</h1>
+<p class="intro">{{ _("Stelle Filme nach eigenen Ideen zusammen, zum Beispiel „Weihnachtsfilme“ oder „Filmabend mit Freunden“. Ein Film kann in beliebig vielen Listen stehen; hinzufügen kannst du ihn auf seiner Seite.") }}</p>
+{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+<div class="tabs"><a class="tab" href="{{ base }}/films">{{ _("← Alle Filme") }}</a></div>
+<form method="post" action="{{ base }}/films/lists/create" class="card inline-form"><label for="newlist">{{ _("Neue Liste") }}</label><input id="newlist" name="name" maxlength="80" required placeholder="{{ _('Name der Liste') }}"><button>{{ _("Anlegen") }}</button></form>
+{% if lists %}<ul class="artistlist filmlists">{% for l in lists %}<li>
+ <a href="{{ base }}/films?list={{ l.id }}"><strong>{{ l.name }}</strong></a> <span class="muted">{{ _("§ Filme", l.n) }}</span>
+ <details><summary>{{ _("Umbenennen oder löschen") }}</summary>
+  <form method="post" action="{{ base }}/films/lists/{{ l.id }}/rename" class="inline-form"><input name="name" id="rename{{ l.id }}" value="{{ l.name }}" maxlength="80" required aria-label="{{ _('Neuer Name') }}"><button>{{ _("Umbenennen") }}</button></form>
+  <form method="post" action="{{ base }}/films/lists/{{ l.id }}/delete" onsubmit="return confirm({{ _t('Liste wirklich löschen? Die Filme bleiben erhalten.')|tojson|forceescape }})"><button class="quiet">{{ _("Liste löschen") }}</button></form>
+ </details></li>{% endfor %}</ul>
+{% else %}<div class="card"><p>{{ _("Noch keine eigenen Listen.") }}</p></div>{% endif %}
+{% endblock %}

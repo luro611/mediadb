@@ -1,0 +1,35 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Serien / Hinzufügen") }}</p>
+<h1>{% if attach %}{{ _("Andere Serie *zuordnen*") }}{% else %}{{ _("Treffer *wählen*") }}{% endif %}</h1>
+{% if attach %}<p class="intro">{{ _("Wähle die richtige Serie für „§“. Episodenführer und Angaben werden neu von TMDB übernommen; Dateien, Boxen, gesehen und Notizen bleiben.", attach.title) }}</p>{% endif %}
+{% if barcode %}<p class="muted">{{ _("Barcode") }} <code>{{ barcode }}</code>{% if product %} · {{ _("Produkt laut Barcode-Dienst:") }} „{{ product }}“{% endif %}</p>{% endif %}
+{% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
+{% if local %}
+<div class="ok"><p>{{ _("Dieser Barcode steht schon in deiner Sammlung:") }}</p><ul>{% for f in local %}<li><a href="{{ base }}/series/{{ f.id }}">{{ f.title }}{% if f.year %} ({{ f.year }}){% endif %}</a></li>{% endfor %}</ul></div>
+{% else %}
+{% if barcode and not product and not err %}<div class="warn">{{ _("Zu diesem Barcode wurde kein Produkt gefunden. Bitte nach dem Titel suchen; der Barcode wird mit gespeichert.") }}</div>{% endif %}
+<form method="get" action="{{ base }}/series/search" class="card inline-form">
+ <input type="hidden" name="barcode" value="{{ barcode }}"><input type="hidden" name="kind" value="{{ kind }}"><input type="hidden" name="seasons" value="{{ seasons }}">{% if attach %}<input type="hidden" name="attach" value="{{ attach.id }}">{% endif %}
+ <label for="cq">{{ _("Titel") }}</label><input id="cq" name="q" value="{{ query }}" required><label for="cy">{{ _("Jahr") }}</label><input id="cy" name="year" value="{{ year }}" inputmode="numeric" maxlength="4" class="short"><button>{{ _("Suchen") }}</button>
+</form>
+{% if cands %}
+<div class="cands">{% for c in cands %}
+<form method="post" action="{{ base }}{{ '/series/%d/rematch' % attach.id if attach else '/series/save' }}" class="cand card">
+ <input type="hidden" name="tmdb_id" value="{{ c.tmdb_id }}">
+ {% if c.poster_url %}<img src="{{ c.poster_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<span class="pph small">{{ c.title }}</span>{% endif %}
+ <div><h3>{{ c.title }}{% if c.year %} <span class="muted">({{ c.year }})</span>{% endif %}</h3>
+  {% if c.original_title and c.original_title!=c.title %}<p class="sub">{{ c.original_title }}</p>{% endif %}
+  {% if c.overview %}<p class="ov">{{ c.overview }}{% if c.overview|length>=280 %} …{% endif %}</p>{% endif %}
+  {% if c.have %}<p class="badge">{{ _("schon in der Sammlung") }}</p>{% endif %}
+  {% if not attach %}<div class="row3">
+   <span><label for="k{{ loop.index }}">{{ _("Box") }}</label><select name="kind" id="k{{ loop.index }}"><option value="">{{ _("keine, nur Dateien") }}</option>{% for k,l in kinds.items() %}<option value="{{ k }}"{% if k==kind %} selected{% endif %}>{{ _(l) }}</option>{% endfor %}</select></span>
+   <span><label for="s{{ loop.index }}">{{ _("Staffeln in der Box") }}</label><input name="seasons" id="s{{ loop.index }}" value="{{ seasons }}" placeholder="{{ _('z. B. 1-3 oder komplett') }}"></span>
+   <span><label for="b{{ loop.index }}">{{ _("Barcode") }}</label><input name="barcode" id="b{{ loop.index }}" value="{{ barcode }}" inputmode="numeric"></span></div>
+   <label for="e{{ loop.index }}">{{ _("Ausgabe (optional)") }}</label><input name="edition" id="e{{ loop.index }}" placeholder="{{ _('z. B. Steelbook, Collector’s Edition') }}">{% endif %}
+  <button>{% if attach %}{{ _("Diese Serie zuordnen") }}{% elif c.have %}{{ _("Box zur vorhandenen Serie hinzufügen") }}{% else %}{{ _("Das ist meine Serie") }}{% endif %}</button>
+ </div></form>{% endfor %}</div>
+{% elif query %}<div class="card"><p>{{ _("Keine Treffer bei TMDB. Andere Schreibweise oder den Originaltitel versuchen, oder die Serie von Hand anlegen.") }}</p></div>{% endif %}
+{% endif %}
+<p class="muted">{% if attach %}<a href="{{ base }}/series/{{ attach.id }}">{{ _("← Zurück zur Serie") }}</a>{% else %}<a href="{{ base }}/series/add">{{ _("← Zurück") }}</a>{% endif %}</p>
+{% include '_films_foot.html' %}
+{% endblock %}

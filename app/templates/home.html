@@ -1,0 +1,51 @@
+{% extends 'base.html' %}{% block content %}
+<section class="homehero">
+ <p class="eyebrow">{{ _("MediaDB / Start") }}</p>
+ <h1>{{ _("Deine *Sammlung*") }}</h1>
+ <form method="get" action="{{ base }}/search" class="homesearch" role="search">
+  <input type="search" name="q" id="hq" placeholder="{{ _('Interpret, Album, Film, Serie, Buch, Person …') }}" aria-label="{{ _('Suche in allen Bereichen') }}" autofocus>
+  <button>{{ _("Suchen") }}</button>
+ </form>
+</section>
+
+<div class="areas">
+ <a class="area card" href="{{ base }}/media">
+  <p class="kicker">{{ _("Musik") }}</p>
+  <p class="big">{{ music.n|num if music else '–' }}</p>
+  <p class="muted">{% if music %}{{ _("Alben, davon § CDs und § digital", music.cd|num, music.digital|num) }}<br>{{ _("insgesamt § Lieder von § Interpreten", music.songs|num, music.artists|num) }}{% else %}{{ _("CDs und Musikdateien") }}{% endif %}</p>
+ </a>
+ <a class="area card" href="{{ base }}/films">
+  <p class="kicker">{{ _("Filme") }}</p>
+  <p class="big">{{ films.films|num if films else '–' }}</p>
+  <p class="muted">{% if films %}{{ _("§ gesehen · § bewertet", films.watched, films.rated) }}{% else %}{{ _("DVD, Blu-ray, 4K und Dateien") }}{% endif %}</p>
+ </a>
+ <a class="area card" href="{{ base }}/series">
+  <p class="kicker">{{ _("Serien") }}</p>
+  <p class="big">{{ series.series|num if series else '–' }}</p>
+  <p class="muted">{% if series %}{{ _("§ Folgen als Datei · § fehlen", series.files, series.missing) }}{% else %}{{ _("Boxen und Folgen") }}{% endif %}</p>
+ </a>
+ <a class="area card" href="{{ base }}/books">
+  <p class="kicker">{{ _("Bücher") }}</p>
+  <p class="big">{{ books.books|num if books else '–' }}</p>
+  <p class="muted">{% if books and books.books %}{{ _("§ gelesen · § E-Books · § Hörbücher", books.read|num, books.ebooks|num, books.audiobooks|num) }}{% else %}{{ _("Gedruckt, E-Book und Hörbuch") }}{% endif %}</p>
+ </a>
+</div>
+{% set LS = lend_stats() if lend_stats is defined else none %}{% if LS and LS.n %}<p class="homelend"><a href="{{ base }}/lend">{{ _("Verliehen: § Sachen bei § Personen", LS.n|num, LS.people|num) }} ›</a>{% if LS.overdue %} · <span class="overdue">{{ _("§ überfällig", LS.overdue) }}</span>{% endif %}</p>{% endif %}
+
+{% macro posterrow(items, seen=false, date=false) %}<div class="posters small">{% for f in items %}<a class="pcard{% if seen or f.watched %} seen{% endif %}" href="{{ base }}/films/{{ f.id }}"><span class="pimg">{% if f.poster %}<img src="{{ base }}/film-images/{{ f.poster }}" alt="" loading="lazy">{% else %}<span class="pph">{{ f.title }}</span>{% endif %}{% if f.rating %}<span class="prating">{{ f.rating }}</span>{% endif %}</span><span class="ptitle">{{ f.title }}</span><span class="pmeta">{{ f.watched_at|fdate if date else (f.year or '') }}</span></a>{% endfor %}</div>{% endmacro %}
+{% macro seriesrow(items) %}<div class="posters small">{% for s in items %}<a class="pcard" href="{{ base }}/series/{{ s.id }}"><span class="pimg">{% if s.poster %}<img src="{{ base }}/film-images/{{ s.poster }}" alt="" loading="lazy">{% else %}<span class="pph">{{ s.title }}</span>{% endif %}{% if s.n_missing %}<span class="pmiss">{{ s.n_missing }}</span>{% endif %}</span><span class="ptitle">{{ s.title }}</span><span class="pmeta">{{ _("§ / § gesehen", s.n_seen, s.n_aired) if s.n_aired else (s.year or '') }}</span></a>{% endfor %}</div>{% endmacro %}
+{% macro bookrow(items) %}<div class="posters small books">{% for b in items %}<a class="pcard" href="{{ base }}/books/{{ b.id }}"><span class="pimg">{% if b.cover %}<img src="{{ base }}/film-images/{{ b.cover }}" alt="" loading="lazy">{% else %}<span class="pph">{{ b.title }}</span>{% endif %}</span><span class="ptitle">{{ b.title }}</span><span class="pmeta">{{ (b.authors or '').split(';')[0] }}</span></a>{% endfor %}</div>{% endmacro %}
+<div class="fold">
+{% if films and films.mustsee %}<details id="fold-mustsee"><summary><span>{{ _("Top 10: Muss ich sehen") }}</span><span class="n">{{ films.mustsee|length }}</span></summary>{{ posterrow(films.mustsee) }}<p><a href="{{ base }}/films?view=mustsee">{{ _("Alle anzeigen ›") }}</a></p></details>{% endif %}
+{% if films and films.recent %}<details id="fold-recent"><summary><span>{{ _("Zuletzt gesehen") }}</span><span class="n">{{ films.recent|length }}</span></summary>{{ posterrow(films.recent, seen=true, date=true) }}<p><a href="{{ base }}/films?view=recent_watched">{{ _("Alle anzeigen ›") }}</a></p></details>{% endif %}
+{% if films and films.latest %}<details id="fold-newfilms"><summary><span>{{ _("Zuletzt hinzugefügt: Filme") }}</span><span class="n">{{ films.latest|length }}</span></summary>{{ posterrow(films.latest) }}<p><a href="{{ base }}/films?view=recent_added">{{ _("Alle anzeigen ›") }}</a></p></details>{% endif %}
+{% if series and series.watching %}<details id="fold-watching"><summary><span>{{ _("Serien, die ich gerade schaue") }}</span><span class="n">{{ series.watching|length }}</span></summary>{{ seriesrow(series.watching) }}<p><a href="{{ base }}/series?view=watching">{{ _("Alle anzeigen ›") }}</a></p></details>{% endif %}
+{% if series and series.latest %}<details id="fold-newseries"><summary><span>{{ _("Zuletzt hinzugefügt: Serien") }}</span><span class="n">{{ series.latest|length }}</span></summary>{{ seriesrow(series.latest) }}<p><a href="{{ base }}/series?view=recent_added">{{ _("Alle anzeigen ›") }}</a></p></details>{% endif %}
+{% if books and books.reading %}<details id="fold-reading"><summary><span>{{ _("Lese ich gerade") }}</span><span class="n">{{ books.reading|length }}</span></summary>{{ bookrow(books.reading) }}</details>{% endif %}
+{% if books and books.latest %}<details id="fold-newbooks"><summary><span>{{ _("Zuletzt hinzugefügt: Bücher") }}</span><span class="n">{{ books.latest|length }}</span></summary>{{ bookrow(books.latest) }}<p><a href="{{ base }}/books?view=recent_added">{{ _("Alle anzeigen ›") }}</a></p></details>{% endif %}
+{% if music and music.latest %}<details id="fold-newmusic"><summary><span>{{ _("Zuletzt hinzugefügt: Musik") }}</span><span class="n">{{ music.latest|length }}</span></summary>
+<ul class="artistlist homealbums">{% for m in music.latest %}<li><a class="artistitem" href="{{ base }}/media/{{ m.id }}">{% if m.cover_path %}<img class="thumb" width="40" height="40" src="{{ base }}/covers/{{ m.cover_path }}" alt="" loading="lazy">{% else %}<span class="thumb ph">♪</span>{% endif %}<span><strong>{{ m.artist or '' }}</strong><br><span class="sub">{{ m.title }}</span></span></a></li>{% endfor %}</ul></details>{% endif %}
+</div>
+<script>(function(){var K='mediadb-home-open',o={};try{o=JSON.parse(localStorage.getItem(K)||'{}')}catch(e){}
+document.querySelectorAll('.fold details').forEach(function(d){if(o[d.id])d.open=true;d.addEventListener('toggle',function(){o[d.id]=d.open;try{localStorage.setItem(K,JSON.stringify(o))}catch(e){}})})})()</script>
+{% endblock %}

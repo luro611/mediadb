@@ -1,0 +1,100 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Filme / Hinzufügen") }}</p><h1>{{ _("Film-*Import*") }}</h1>
+<p class="intro">{{ _("Wähle den Ordner mit deinen Filmen. Zuerst wird nur gelesen und bei TMDB nachgeschlagen; gespeichert wird erst, wenn du unten auf „Übernehmen“ klickst. Liegt neben einem Film eine .nfo-Datei von Jellyfin oder Kodi, ist die Zuordnung sicher. Sonst helfen Namen wie „Titel (Jahr)“.") }}</p>
+{% if message %}<div class="warn">{{ _(message) }}</div>{% endif %}
+{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+
+{% if job.state in ('scanning','applying') %}
+<div class="card"><h3>{{ _('Lese Dateien und frage TMDB …') if job.state=='scanning' else _('Speichere und lade Poster …') }}</h3>
+<p id="pt">{{ _("§ von §", job.done, job.total if job.total else '…') }}</p>
+<progress id="pb" max="{{ job.total or 1 }}" value="{{ job.done }}" style="width:100%"></progress>
+<p class="muted">{{ _("Der Fortschritt aktualisiert sich still, am Ende lädt die Seite einmal neu.") }}</p></div>
+<script>(function(){var TXT={{ _t("§ von §","%D","%T")|tojson }};var st="{{ job.state }}",T=document.getElementById("pt"),P=document.getElementById("pb");function poll(){fetch("{{ base }}/films/files/status").then(function(r){return r.json()}).then(function(d){if(d.state!==st){location.reload();return}T.textContent=TXT.replace("%D",d.done).replace("%T",d.total||"…");P.max=d.total||1;P.value=d.done;setTimeout(poll,1500)}).catch(function(){setTimeout(poll,4000)})}setTimeout(poll,1500)})()</script>
+
+{% elif job.state=='error' %}
+<div class="warn"><strong>{{ _("Fehler:") }}</strong> {{ _(job.error) }}</div>
+<form method="post" action="{{ base }}/films/files/reset"><button>{{ _("Zurück") }}</button></form>
+
+{% elif job.state=='done' %}
+<div class="ok"><h3>{{ _("Fertig") }}</h3><p>{{ _("§ Filme neu angelegt, § als weiteres Exemplar zu vorhandenen Filmen, § ohne TMDB angelegt, § übersprungen.", job.result.new, job.result.attached, job.result.plain, job.result.skipped) }}</p></div>
+<div class="actions"><a href="{{ base }}/films?view=recent_added">{{ _("Zuletzt hinzugefügt ansehen") }}</a><form method="post" action="{{ base }}/films/files/reset"><button>{{ _("Weiteren Ordner einlesen") }}</button></form></div>
+
+{% elif job.state=='ready' %}
+{% set total = job['items']|length %}
+<div class="card"><strong>{{ _("§ neue Videodateien gefunden", total) }}</strong> {{ _("in") }} {% for f in job.folders %}<code>{{ host_label(f) }}</code>{{ ', ' if not loop.last }}{% endfor %}.
+<p class="muted">{{ _("Bereits erfasste Dateien werden nicht noch einmal angezeigt. Trailer, Samples und Extras werden übersprungen.") }}</p></div>
+{% if total==0 %}<div class="warn">{{ _("Keine neuen Videodateien gefunden.") }}</div><form method="post" action="{{ base }}/films/files/reset"><button>{{ _("Zurück") }}</button></form>
+{% else %}
+<form method="post" action="{{ base }}/films/files/apply">
+{% macro rows(list, kind) %}{% for it in list %}
+<div class="card albumrow">
+ <div class="albhead"><strong>{{ it.title or it.name }}</strong>{% if it.year %} <span class="badge">{{ it.year }}</span>{% endif %}{% if it.edition %} <span class="badge">{{ it.edition }}</span>{% endif %}{% if it.disc %} <span class="badge">{{ _('Blu-ray-Ordner') if it.disc=='bluray' else _('DVD-Ordner') }}</span>{% endif %}{% if it.source=='nfo' %} <span class="badge">.nfo</span>{% endif %}</div>
+ <p class="muted"><code class="path">{{ host_label(it.path) }}</code>{% if it.note %} · {{ _(it.note) }}{% endif %}</p>
+ {% if kind=='known' %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ it.tmdb_id }}" checked> {{ _("Als weiteres Exemplar zu „§“ hinzufügen", it.film_title) }}</label>
+ {% elif kind=='match' %}{% set c0 = (it.cands|selectattr('tmdb_id','equalto',it.tmdb_id)|list or [None])[0] %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ it.tmdb_id }}" checked> {{ _("Übernehmen als:") }} <strong>{{ c0.title if c0 else 'TMDB ' ~ it.tmdb_id }}</strong>{% if c0 and c0.year %} ({{ c0.year }}){% endif %}</label>
+  {% for c in it.cands if c.tmdb_id != it.tmdb_id %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ c.tmdb_id }}"> {{ _("Stattdessen:") }} {{ c.title }}{% if c.year %} ({{ c.year }}){% endif %}</label>{% endfor %}
+ {% else %}{% for c in it.cands %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ c.tmdb_id }}"{% if it.default == 'tmdb:%s' % c.tmdb_id %} checked{% endif %}> {{ c.title }}{% if c.year %} ({{ c.year }}){% endif %}{% if c.original_title and c.original_title!=c.title %} <span class="sub">{{ c.original_title }}</span>{% endif %}</label>{% endfor %}
+  <label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="plain"{% if it.default=='plain' %} checked{% endif %}> {{ _("Ohne TMDB anlegen (Titel aus dem Dateinamen)") }}</label>{% endif %}
+ <label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="skip"{% if it.default=='skip' %} checked{% endif %}> {{ _("Überspringen") }}</label>
+</div>{% endfor %}{% endmacro %}
+{% set G = [('unsure', _t('Bitte prüfen (§)', groups.unsure|length)), ('nf', _t('Nicht gefunden (§)', groups.nf|length)), ('match', _t('Erkannt (§)', groups.match|length)), ('known', _t('Film schon vorhanden (§)', groups.known|length))] %}
+<div class="fold impgroups">{% for k, label in G if groups[k] %}
+<details id="grp-{{ k }}"{% if k in ('unsure','nf') or groups[k]|length <= 30 %} open{% endif %}><summary><span>{{ label }}</span></summary>
+{% if k=='unsure' %}<p class="muted">{{ _("Hier war die Zuordnung nicht sicher, deshalb steht „Überspringen“ vorgewählt: Übersprungenes wird nicht gespeichert und erscheint beim nächsten Einlesen wieder.") }}</p>{% endif %}
+{{ rows(groups[k], k) }}
+</details>{% endfor %}</div>
+<div class="importbar">
+ <p class="tally" id="tally" aria-live="polite"></p>
+ <div class="ibtns">{% if groups.unsure %}<button type="button" class="quiet" data-pick="first">{{ _("Bei „Bitte prüfen“: überall den ersten Vorschlag") }}</button><button type="button" class="quiet" data-pick="skip">{{ _("Bei „Bitte prüfen“: alle überspringen") }}</button>{% endif %}
+ <button type="submit">{{ _("Übernehmen") }}</button><button type="submit" class="quiet" form="resetform">{{ _("Verwerfen") }}</button></div>
+</div>
+</form>
+<form method="post" action="{{ base }}/films/files/reset" id="resetform"></form>
+<script>(function(){var L={{ {'take':_t('§ übernehmen','%N'),'plain':_t('§ ohne TMDB','%N'),'skip':_t('§ überspringen','%N'),'set':_t('Bei § Einträgen geändert.','%N')}|tojson }};
+var T=document.getElementById('tally');
+function tally(extra){var n={take:0,plain:0,skip:0};document.querySelectorAll('.impgroups input[type=radio]:checked').forEach(function(i){var v=i.value;n[v.indexOf('tmdb:')===0?'take':(v==='plain'?'plain':'skip')]++});
+var s=[L.take.replace('%N',n.take)];if(n.plain)s.push(L.plain.replace('%N',n.plain));s.push(L.skip.replace('%N',n.skip));T.innerHTML=(extra?'<b>✓ '+extra+'</b> · ':'')+s.join(' · ')}
+document.querySelector('.impgroups').addEventListener('change',function(){tally()});
+document.querySelectorAll('[data-pick]').forEach(function(b){b.onclick=function(){var c=0;document.querySelectorAll('#grp-unsure .albumrow').forEach(function(r){var i=b.dataset.pick==='first'?r.querySelector('input[value^="tmdb:"]'):r.querySelector('input[value="skip"]');if(i&&!i.checked){i.checked=true;c++}});
+var g=document.getElementById('grp-unsure');if(g)g.open=true;tally(L.set.replace('%N',c))}});tally()})()</script>
+{% endif %}
+
+{% else %}
+<form method="post" action="{{ base }}/films/files/scan" id="scanform" class="card" style="scroll-margin-top:20px">
+ <h3>{{ _("1. Ausgewählte Ordner") }}</h3>
+ <ul id="chosen"><li class="muted" id="none">{{ _("Noch keiner – wähle unten einen Ordner und klicke „Diesen Ordner wählen“.") }}</li></ul>
+ <label for="manual">{{ _("Oder Pfad eintippen (ein Pfad pro Zeile, z. B. /Volumes/Filme)") }}</label><textarea name="manual" id="manual" rows="2"></textarea>
+ <button>{{ _("2. Einlesen und erkennen") }}</button>
+ <p class="muted">{{ _("Schon erfasste Dateien werden übersprungen. Derselbe Film in mehreren Dateien (z. B. 1080p und 4K) wird ein Film mit mehreren Exemplaren.") }}</p>
+</form>
+<div class="card"><h3>{{ _("Ordner suchen") }}</h3><p class="muted" id="where">…</p><div id="browser"></div></div>
+<script>
+const L={{ {'drives':_t('Laufwerke und Ordner'),'up':_t('⬆ eine Ebene hoch'),'choose':_t('Diesen Ordner wählen'),'nodirs':_t('Keine Unterordner.'),'remove':_t('entfernen')}|tojson }};
+const B=document.getElementById('browser'),W=document.getElementById('where'),C=document.getElementById('chosen'),F=document.getElementById('scanform');
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function add(path,label){
+  if([...F.querySelectorAll('input[name=folders]')].some(i=>i.value===path))return;
+  const n=document.getElementById('none'); if(n)n.remove();
+  const li=document.createElement('li');
+  li.innerHTML='<strong class="chosenpath">'+esc(label)+'</strong> <a href="#">'+esc(L.remove)+'</a><input type="hidden" name="folders" value="'+esc(path)+'">';
+  li.querySelector('a').onclick=e=>{e.preventDefault();li.remove()};
+  C.appendChild(li); F.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function go(path){
+  const r=await fetch('{{ base }}/films/files/browse?path='+encodeURIComponent(path)); const d=await r.json();
+  W.textContent=d.path?d.label:L.drives;
+  let h='';
+  if(d.error)h+='<div class="warn">'+esc(d.error)+'</div>';
+  if(d.path)h+='<p><a href="#" data-go="'+esc(d.parent)+'">'+esc(L.up)+'</a> · <button type="button" id="addcur" style="margin:0;padding:8px 12px">'+esc(L.choose)+'</button></p>';
+  h+='<ul>'+d.dirs.map(x=>'<li><a href="#" data-go="'+esc(x.path)+'">📁 '+esc(x.name)+'</a></li>').join('')+'</ul>';
+  if(!d.dirs.length&&!d.error)h+='<p class="muted">'+esc(L.nodirs)+'</p>';
+  B.innerHTML=h;
+  B.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.go)});
+  const b=document.getElementById('addcur'); if(b)b.onclick=()=>add(d.path,d.label);
+}
+go('');
+</script>
+{% endif %}
+<p class="muted"><a href="{{ base }}/films/add">{{ _("← Zurück") }}</a></p>
+{% include '_films_foot.html' %}
+{% endblock %}

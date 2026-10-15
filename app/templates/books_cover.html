@@ -1,0 +1,19 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/books">{{ _("MediaDB / Bücher") }}</a></p>
+<h1>{{ _("Titelbild *ändern*") }}</h1>
+<p class="intro"><a href="{{ base }}/books/{{ b.id }}">{{ b.title }}</a></p>
+{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+<div class="posterrow">
+ <div><p class="eyebrow">{{ _("Aktuelles Titelbild") }}</p><div class="pimg cur">{% if b.cover %}<img src="{{ base }}/film-images/{{ b.cover }}" alt="">{% else %}<span class="pph">{{ _("Kein Bild") }}</span>{% endif %}</div>
+  {% if b.cover %}<form method="post" action="{{ base }}/books/{{ b.id }}/cover/set"><input type="hidden" name="source" value="remove"><button class="linkbtn">{{ _("Bild entfernen") }}</button></form>{% endif %}</div>
+ <div class="upload card">
+  <h3>{{ _("Eigenes Bild hochladen") }}</h3>
+  <p class="muted">{{ _("JPG, PNG oder WebP, höchstens 15 MB. Zum Beispiel ein Foto des Umschlags.") }}</p>
+  <form method="post" action="{{ base }}/books/{{ b.id }}/cover/upload" enctype="multipart/form-data"><input type="file" name="file" accept="image/jpeg,image/png,image/webp" required><button>{{ _("Hochladen") }}</button></form>
+  {% if b.isbn %}<form method="post" action="{{ base }}/books/{{ b.id }}/cover/set"><input type="hidden" name="source" value="ol"><button class="quiet">{{ _("Bei Open Library suchen") }}</button></form>{% endif %}
+  {% if has_files %}<form method="post" action="{{ base }}/books/{{ b.id }}/cover/set"><input type="hidden" name="source" value="file"><button class="quiet">{{ _("Aus der Datei nehmen (E-Book, Hörbuch)") }}</button></form>{% endif %}
+ </div>
+</div>
+<p class="muted"><a href="{{ base }}/books/{{ b.id }}">{{ _("← Zurück zum Buch") }}</a></p>
+{% include '_books_foot.html' %}
+{% endblock %}

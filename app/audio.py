@@ -7,6 +7,7 @@ import re
 import unicodedata
 from collections import Counter
 from difflib import SequenceMatcher
+from . import fs, nas
 
 # Endungen, die eingelesen werden (Tags liest die Bibliothek mutagen)
 AUDIO_EXT = {'.mp3', '.m4a', '.flac', '.ogg', '.oga', '.opus', '.wav', '.aac', '.aif', '.aiff', '.wma', '.ape', '.wv'}
@@ -15,13 +16,24 @@ AUDIO_EXT = {'.mp3', '.m4a', '.flac', '.ogg', '.oga', '.opus', '.wav', '.aac', '
 # (Pfad im Container, Anzeige auf dem Mac, Beschriftung)
 # (Pfad im Container, Anzeige, Beschreibung). /host/music ist fuer Homelab/Linux gedacht: dort den Musikordner
 # lesend einhaengen (siehe docker-compose.homelab.yml); erscheint nur, wenn es den Ordner gibt.
-ROOTS = [('/host/volumes', '/Volumes', 'Externe Laufwerke'), ('/host/home', '~', 'Benutzerordner'), ('/host/music', '/music', 'Musikordner')]
+ROOTS = [('/host/volumes', '/Volumes', 'Externe Laufwerke'), ('/host/home', '~', 'Benutzerordner'), ('/host/music', '/music', 'Musikordner'), ('/host/movies', '/movies', 'Filmordner'), ('/host/series', '/series', 'Serienordner'), ('/host/books', '/books', 'Buchordner')]
+
+
+def all_roots():
+    """Feste Ordner und die NAS-Freigaben aus den Einstellungen (/nas/<name>)."""
+    return ROOTS + nas.roots()
+
+
+def available_roots():
+    """Wurzeln fuer die Ordnerauswahl: vorhandene lokale Ordner und alle eingerichteten NAS-Freigaben
+    (die NAS wird dafuer nicht gefragt, damit die Seite auch bei ausgeschalteter NAS sofort laedt)."""
+    return [r for r in all_roots() if nas.is_nas(r[0]) or os.path.isdir(r[0])]
 
 
 # ---------------------------------------------------------------- Pfade
 def host_label(path):
     """Container-Pfad so anzeigen, wie er auf dem Mac heisst."""
-    for c, h, _ in ROOTS:
+    for c, h, _ in all_roots():
         if path == c or str(path).startswith(c + '/'):
             return h + str(path)[len(c):]
     return path
@@ -38,6 +50,12 @@ def to_container_path(p, host_home=''):
         return ROOTS[0][0] + p[len('/Volumes'):]
     if p == '/music' or p.startswith('/music/'):
         return ROOTS[2][0] + p[len('/music'):]
+    if p == '/movies' or p.startswith('/movies/'):
+        return ROOTS[3][0] + p[len('/movies'):]
+    if p == '/series' or p.startswith('/series/'):
+        return ROOTS[4][0] + p[len('/series'):]
+    if p == '/books' or p.startswith('/books/'):
+        return ROOTS[5][0] + p[len('/books'):]
     hh = (host_home or '').rstrip('/')
     if hh and (p == hh or p.startswith(hh + '/')):
         return ROOTS[1][0] + p[len(hh):]
@@ -46,6 +64,9 @@ def to_container_path(p, host_home=''):
 
 def safe_dir(p):
     """Gibt den echten Pfad zurueck, wenn er ein Ordner innerhalb der freigegebenen Wurzeln ist, sonst None."""
+    if nas.is_nas(p):
+        np = nas.norm(p)
+        return np if np and any(np == c or np.startswith(c + '/') for c, _, _ in nas.roots()) and fs.isdir(np) else None
     try:
         rp = os.path.realpath(p)
     except Exception:
@@ -60,27 +81,23 @@ def list_dirs(path):
     """Unterordner und Anzahl Audiodateien direkt im Ordner. Links und versteckte Eintraege werden uebergangen."""
     dirs, audio = [], 0
     try:
-        with os.scandir(path) as it:
-            for e in it:
-                if e.name.startswith('.'):
-                    continue
-                try:
-                    if e.is_symlink():
-                        continue
-                    if e.is_dir():
-                        dirs.append(e.name)
-                    elif os.path.splitext(e.name)[1].lower() in AUDIO_EXT:
-                        audio += 1
-                except OSError:
-                    continue
+        for name, is_dir, _ in fs.scandir(path):
+            if name.startswith('.'):
+                continue
+            if is_dir:
+                dirs.append(name)
+            elif os.path.splitext(name)[1].lower() in AUDIO_EXT:
+                audio += 1
     except OSError as ex:
+        if nas.is_nas(path):
+            return [], 0, nas.describe(ex) if getattr(ex, 'ntstatus', None) is not None else (ex.strerror or nas.describe(ex))
         return [], 0, f'Kein Zugriff auf diesen Ordner ({ex.__class__.__name__}). Unter macOS ggf. in den Systemeinstellungen den Zugriff für OrbStack erlauben.'
     return sorted(dirs, key=str.casefold), audio, ''
 
 
 def collect_files(folder):
     """Alle Audiodateien unterhalb von folder (ohne versteckte Ordner/Dateien, ohne Links), sortiert."""
-    for root, dirs, names in os.walk(folder):
+    for root, dirs, names in fs.walk(folder):
         dirs[:] = sorted((d for d in dirs if not d.startswith('.')), key=str.casefold)
         for n in sorted(names, key=str.casefold):
             if n.startswith('.'):
@@ -101,8 +118,7 @@ def read_tags(path):
     rec = {'path': path, 'fmt': ext.upper(), 'artist': '', 'albumartist': '', 'album': '', 'title': '',
            'track': 0, 'disc': 0, 'length': 0, 'date': '', 'genre': ''}
     try:
-        import mutagen
-        f = mutagen.File(path, easy=True)
+        f = fs.mutagen_file(path, easy=True)
     except Exception:
         f = None
     if f is not None:
@@ -337,8 +353,7 @@ COVER_NAMES = {'cover', 'folder', 'front', 'album', 'albumart', 'artwork', 'albu
 def embedded_cover(path):
     """Eingebettetes Cover einer Audiodatei (MP3/ID3, M4A, FLAC). Gibt (bytes, 'jpg'|'png') oder None zurueck."""
     try:
-        import mutagen
-        f = mutagen.File(path)
+        f = fs.mutagen_file(path)
         if f is None:
             return None
         tags = getattr(f, 'tags', None)
@@ -365,7 +380,7 @@ def find_cover(paths, max_files=4):
             dirs.append(d)
     for d in dirs:
         try:
-            names = sorted(os.listdir(d), key=str.casefold)
+            names = sorted(fs.listdir(d), key=str.casefold)
         except OSError:
             continue
         for n in names:
@@ -373,8 +388,8 @@ def find_cover(paths, max_files=4):
             if stem.lower() in COVER_NAMES and ext.lower() in ('.jpg', '.jpeg', '.png'):
                 fp = os.path.join(d, n)
                 try:
-                    if 500 < os.path.getsize(fp) < 15_000_000:
-                        with open(fp, 'rb') as fh:
+                    if 500 < fs.getsize(fp) < 15_000_000:
+                        with fs.open(fp, 'rb') as fh:
                             return fh.read(), ('png' if ext.lower() == '.png' else 'jpg')
                 except OSError:
                     continue

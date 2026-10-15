@@ -1,0 +1,15 @@
+{% macro hit(x, show_ep=true) %}<li class="mtrow"><span class="mtch">{{ x.channel }}</span>
+ <a href="{{ x.website }}" target="_blank" rel="noopener noreferrer">{% if show_ep and x.episode %}<strong>{{ 'S%02dE%02d'|format(x.season, x.episode) }}</strong> {{ x.ep_name or x.title }}{% else %}{{ x.title }}{% endif %}</a>
+ <span class="muted">{% if x.date %}{{ x.date|fdate }}{% endif %}{% if x.duration_s %} · {{ (x.duration_s // 60) }} min{% endif %}{% if x.variants %} · {{ _("auch mit Audiodeskription oder in anderen Fassungen") }}{% endif %}</span>
+ {% if x.state == 'missing' %}<span class="badge mtmiss">{{ _("fehlt dir") }}</span>{% elif x.state == 'have' %}<span class="badge">{{ _("vorhanden") }}</span>{% endif %}</li>{% endmacro %}
+{% if kind == 'watchlist' %}
+ {% if found %}<h2>{{ _("Jetzt in der Mediathek") }}</h2><ul class="mtlist">{% for f in found %}<li class="mtrow"><strong>{{ f.item.title }}</strong>{% if f.item.year %} <span class="muted">({{ f.item.year }})</span>{% endif %}
+  <ul class="mtsub">{% for x in f.hits %}{{ hit(x) }}{% endfor %}</ul>{% if f.n > 3 %}<p class="muted small">{{ _("und § weitere", f.n - 3) }}</p>{% endif %}</li>{% endfor %}</ul>
+  <p class="muted small">{{ _("Gefunden über MediathekViewWeb. Die Links führen zur Sendung in der Mediathek des Senders.") }}</p>{% endif %}
+{% elif hits %}
+ <h2>{{ _("In der Mediathek") }} <span class="muted">{{ hits|length }}</span></h2>
+ {% if kind == 'series' and n_missing %}<p class="ok">{{ _("§ Folgen, die dir fehlen, gibt es gerade in einer Mediathek.", n_missing) }}</p>{% endif %}
+ <ul class="mtlist">{% for x in hits[:40] %}{{ hit(x) }}{% endfor %}</ul>
+ {% if hits|length > 40 %}<p class="muted small">{{ _("und § weitere", hits|length - 40) }}</p>{% endif %}
+ <p class="muted small">{{ _("Gefunden über MediathekViewWeb. Die Links führen zur Sendung in der Mediathek des Senders. Manche Sendungen sind nur in Deutschland, Österreich oder der Schweiz abrufbar.") }}</p>
+{% else %}<h2>{{ _("In der Mediathek") }}</h2><p class="muted">{{ _(err) if err else _("Zurzeit in keiner Mediathek gefunden.") }}</p>{% endif %}

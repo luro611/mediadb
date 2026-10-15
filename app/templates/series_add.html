@@ -1,0 +1,28 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Serien / Hinzufügen") }}</p><h1>{{ _("Serie *hinzufügen*") }}</h1>
+<p class="intro">{{ _("Per Barcode einer DVD- oder Blu-ray-Box, über die Titelsuche, aus einem Ordner mit Folgen oder von Hand. Der Episodenführer kommt von TMDB; daraus ergibt sich, welche Folgen fehlen.") }}</p>
+{% if message %}<div class="warn">{{ _(message) }}</div>{% endif %}
+{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+<div class="grid addgrid">
+<div class="card"><h3>{{ _("Mit Barcode") }}</h3><p>{{ _("Box scannen oder die Nummer eintippen. Steht im Produktnamen etwa „Staffel 1-3“, wird das übernommen.") }}{% if not barcode_lookup %} {{ _("Die Online-Barcode-Suche ist ausgeschaltet; gefunden werden nur Barcodes, die schon in deiner Sammlung stehen.") }}{% endif %}</p>
+<form method="post" action="{{ base }}/series/scan"><input autofocus class="wide" name="barcode" id="sbarcode" inputmode="numeric" placeholder="{{ _('Barcode scannen oder eingeben') }}" required>
+<label for="sbkind">{{ _("Format") }}</label><select name="kind" id="sbkind"><option value="auto">{{ _("automatisch erkennen") }}</option>{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select>
+<button>{{ _("Suchen") }}</button></form></div>
+<div class="card"><h3>{{ _("Nach Titel suchen") }}</h3><p>{{ _("Titel eingeben; das Jahr der ersten Ausstrahlung hilft bei gleichnamigen Serien.") }}</p>
+<form method="get" action="{{ base }}/series/search"><input class="wide" name="q" id="ssq" placeholder="{{ _('Titel, z. B. Dark') }}" required>
+<div class="row2"><span><label for="ssy">{{ _("Jahr (optional)") }}</label><input name="year" id="ssy" inputmode="numeric" maxlength="4"></span>
+<span><label for="ssk">{{ _("Box (optional)") }}</label><select name="kind" id="ssk"><option value="">{{ _("keine, nur Dateien") }}</option>{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span></div>
+<button>{{ _("Suchen") }}</button></form></div>
+<div class="card"><h3>{{ _("Aus Seriendateien") }}</h3><p>{{ _("Einen Ordner mit Folgen einlesen, etwa vom NAS. Erkannt werden S01E01, 1x01, E01 und Staffelordner; tvshow.nfo von Jellyfin oder Kodi wird genutzt. Die Episodennamen kommen aus dem Episodenführer, auch wenn der Dateiname keinen enthält.") }}</p><p><a href="{{ base }}/series/files">{{ _("Serien-Import öffnen ›") }}</a></p></div>
+<div class="card"><h3>{{ _("Von Hand") }}</h3><p>{{ _("Für Serien, die TMDB nicht kennt. Ohne Episodenführer gibt es keinen Vergleich der Folgen.") }}</p>
+<details><summary>{{ _("Formular öffnen") }}</summary>
+<form method="post" action="{{ base }}/series/manual">
+<label for="mt">{{ _("Titel") }}</label><input name="title" id="mt" required>
+<div class="row2"><span><label for="my">{{ _("Jahr") }}</label><input name="year" id="my" inputmode="numeric" maxlength="4"></span><span><label for="mk">{{ _("Box (optional)") }}</label><select name="kind" id="mk"><option value="">{{ _("keine") }}</option>{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span></div>
+<div class="row2"><span><label for="ms">{{ _("Staffeln") }}</label><input name="seasons" id="ms" placeholder="{{ _('z. B. 1-3 oder komplett') }}"></span><span><label for="mb">{{ _("Barcode") }}</label><input name="barcode" id="mb" inputmode="numeric"></span></div>
+<label for="mo">{{ _("Handlung") }}</label><textarea name="overview" id="mo" rows="3"></textarea>
+<button>{{ _("Speichern") }}</button></form></details></div>
+</div>
+<p class="muted"><a href="{{ base }}/series">{{ _("← Zu den Serien") }}</a></p>
+{% include '_films_foot.html' %}
+{% endblock %}

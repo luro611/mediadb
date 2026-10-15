@@ -1,0 +1,87 @@
+{% extends 'base.html' %}{% from '_lend.html' import lend_box with context %}{% block content %}
+<p class="eyebrow"><a href="{{ base }}/books">{{ _("MediaDB / Bücher") }}</a></p>
+{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+<div class="filmhead bookhead">
+ <div class="filmposter">{% if b.cover %}<img src="{{ base }}/film-images/{{ b.cover }}" alt="{{ _('Titelbild') }} {{ b.title }}">{% else %}<span class="pph">{{ b.title }}</span>{% endif %}<p><a href="{{ base }}/books/{{ b.id }}/cover" class="small">{{ _("Titelbild ändern ›") }}</a></p></div>
+ <div class="filmmain">
+  <h1 class="booktitle">{{ b.title }}</h1>
+  {% if b.subtitle %}<p class="subtitle">{{ b.subtitle }}</p>{% endif %}
+  <p class="byline">{% for p in people.aut %}<a href="{{ base }}/books/author/{{ p.id }}">{{ p.name }}</a>{{ ', ' if not loop.last }}{% else %}{{ b.authors or '' }}{% endfor %}</p>
+  <p class="filmline">{% for x in [b.year, b.publisher, b.edition, (_('§ Seiten', b.pages) if b.pages else ''), (b.duration_s|hours), (_(BOOK_LANGS.get(b.language, b.language)) if b.language else ''), b.genres] if x %}<span>{{ x }}</span>{% endfor %}</p>
+  {% if b.series %}<p class="seriesline">{{ _("Reihe:") }} <a href="{{ base }}/books/series?name={{ b.series|urlencode }}">{{ b.series }}</a>{% if b.series_no %} · {{ _("Band §", b.series_no) }}{% endif %}</p>{% endif %}
+
+  <section class="watch card" id="gelesen" aria-label="{{ _('Gelesen') }}">
+   <div class="watchstate">{% if b.status=='read' %}<strong class="isseen">✓ {{ _("Gelesen") }}</strong>{% if b.read_at %} <span class="muted">{{ _("zuletzt am §", b.read_at|fdate) }}</span>{% endif %}{% if b.read_count > 1 %} <span class="badge">{{ _("§ × gelesen", b.read_count) }}</span>{% endif %}
+    {% elif b.status=='reading' %}<strong>{{ _("Lese ich gerade") }}</strong>{% else %}<strong>{{ _("Noch nicht gelesen") }}</strong>{% endif %}</div>
+   <form method="post" action="{{ base }}/books/{{ b.id }}/status" class="actions">
+    <input type="hidden" name="anchor" value="gelesen">
+    {% if b.status!='reading' %}<button name="status" value="reading" class="quiet">{{ _("Lese ich gerade") }}</button>{% endif %}
+    <button name="status" value="read">{{ _("Heute nochmal fertig gelesen") if b.status=='read' else _("Heute fertig gelesen") }}</button>
+    {% if b.status %}<button name="status" value="" class="quiet">{{ _("Als ungelesen markieren") }}</button>{% endif %}
+   </form>
+   <form method="post" action="{{ base }}/books/{{ b.id }}/{{ 'read-date' if b.status=='read' else 'status' }}" class="inline-form watchdate">
+    <input type="hidden" name="anchor" value="gelesen"><input type="hidden" name="status" value="read">
+    <label for="rdate">{{ _("Gelesen am") }}</label>
+    <input id="rdate" name="date" value="{{ b.read_at|fdate if b.status=='read' else '' }}" placeholder="{{ _('TT.MM.JJJJ') }}" inputmode="numeric" class="short date">
+    <button class="quiet">{{ _("Datum ändern") if b.status=='read' else _("Mit Datum als gelesen eintragen") }}</button>
+   </form>
+   <p class="muted hint">{{ _("Genaues Datum unbekannt? Dann reicht das Jahr, z. B. 1999.") }}</p>
+   <form method="post" action="{{ base }}/books/{{ b.id }}/rating" class="rating">
+    <input type="hidden" name="anchor" value="gelesen">
+    <p class="rlabel">{{ _("Eigene Bewertung") }}{% if b.rating %}: <strong>{{ b.rating }}</strong>{% if BOOK_RATING_LABELS.get(b.rating) %} · {{ _(BOOK_RATING_LABELS[b.rating]) }}{% endif %}{% endif %}</p>
+    <div class="scale">{% for n in range(1,11) %}<button name="rating" value="{{ n }}" class="r{% if b.rating==n %} on{% endif %}" aria-pressed="{{ 'true' if b.rating==n else 'false' }}">{{ n }}</button>{% endfor %}</div>
+    <p class="scalelabels"><span>1 · {{ _("5× löschen") }}</span><span>10 · {{ _("Unbedingt lesen") }}</span></p>
+    {% if b.rating %}<button name="rating" value="" class="linkbtn">{{ _("Bewertung entfernen") }}</button>{% endif %}
+   </form>
+  </section>
+
+  {% if b.description %}<h2>{{ _("Inhalt") }}</h2>{% if b.description|length > 700 %}<details class="bio"><summary>{{ b.description[:600] }} … <span class="more">{{ _("weiterlesen") }}</span></summary><p class="overview">{{ b.description }}</p></details>{% else %}<p class="overview">{{ b.description }}</p>{% endif %}
+  {% if b.description_src in ('dnb','openlibrary') %}<p class="muted srcline">{{ _("Quelle: Verlagstext über die Deutsche Nationalbibliothek") if b.description_src=='dnb' else _("Quelle: Open Library") }}</p>{% endif %}{% endif %}
+  <dl class="facts">
+  {% for role in ('trl','ill','nrr','edt') if people[role] %}<dt>{{ _(BOOK_ROLES[role]) }}</dt><dd>{% for p in people[role] %}<a href="{{ base }}/books/author/{{ p.id }}">{{ p.name }}</a>{{ ', ' if not loop.last }}{% endfor %}</dd>{% endfor %}
+  {% for label,val in [('Originaltitel', b.original_title), ('ISBN', b.isbn|isbn if b.isbn else ''), ('Verlag', [b.publisher, b.place]|select|join(', ')), ('Schlagworte', b.subjects)] if val %}<dt>{{ _(label) }}</dt><dd>{{ val }}</dd>{% endfor %}</dl>
+  <p class="links">{% if b.dnb_id %}<a href="https://d-nb.info/{{ b.dnb_id }}" target="_blank" rel="noopener">DNB ›</a>{% endif %}{% if b.ol_key %}<a href="https://openlibrary.org/books/{{ b.ol_key }}" target="_blank" rel="noopener">Open Library ›</a>{% endif %}{% if b.toc_url %}<a href="{{ b.toc_url }}" target="_blank" rel="noopener">{{ _("Inhaltsverzeichnis (PDF)") }} ›</a>{% endif %}</p>
+
+  <section class="sources" id="quellen" aria-label="{{ _('Aus anderen Quellen') }}">
+   {% if b.wiki_extract %}<h2>Wikipedia</h2>
+   <p class="overview">{{ b.wiki_extract }}</p>
+   <p class="muted srcline"><a href="{{ b.wiki_url }}" target="_blank" rel="noopener">{{ _("Weiterlesen bei Wikipedia: „§“", b.wiki_title) }} ›</a>{% if b.wiki_lang and b.wiki_lang != lang %} ({{ b.wiki_lang|upper }}){% endif %} · {{ _("Text: Wikipedia, Lizenz CC BY-SA 4.0") }}</p>
+   <form method="post" action="{{ base }}/books/{{ b.id }}/wiki-remove"><input type="hidden" name="anchor" value="quellen"><button class="linkbtn">{{ _("Passt nicht zum Buch? Entfernen") }}</button></form>{% endif %}
+   <h2>{{ _("Bewertungen und Rezensionen") }}</h2>
+   {% if b.ol_rating %}{% set r = '%.1f'|format(b.ol_rating) %}<p>{{ _("Open Library: § von 5 Sternen (§ Stimmen)", r if lang=='en' else r|replace('.', ','), b.ol_rating_count|num) }}</p>{% endif %}
+   {% set qs = b.title ~ ' ' ~ ((b.authors or '').split(';')[0]) %}
+   <p class="links">{{ _("Rezensionen suchen:") }} <a href="https://duckduckgo.com/?q={{ ('site:perlentaucher.de ' ~ qs)|urlencode }}" target="_blank" rel="noopener noreferrer">Perlentaucher ›</a>
+    <a href="https://www.goodreads.com/search?q={{ (b.isbn or qs)|urlencode }}" target="_blank" rel="noopener noreferrer">Goodreads ›</a>
+    <a href="https://duckduckgo.com/?q={{ (qs ~ ' ' ~ _t('Rezension'))|urlencode }}" target="_blank" rel="noopener noreferrer">{{ _("im Web") }} ›</a></p>
+   <form method="post" action="{{ base }}/books/{{ b.id }}/extras"><button class="quiet small">{{ _("Zusammenfassung und Bewertungen neu laden") if b.extras_at else _("Zusammenfassung und Bewertungen laden") }}</button></form>
+   {% if not b.extras_at %}<p class="muted hint">{{ _("Wird nach dem Speichern automatisch im Hintergrund geladen.") }}</p>{% endif %}
+  </section>
+ </div>
+</div>
+
+{% if series_books|length > 1 %}<h2>{{ _("Aus der Reihe „§“", b.series) }}</h2>
+<div class="posters small">{% for s in series_books %}<a class="pcard{% if s.status=='read' %} seen{% endif %}{% if s.id==b.id %} current{% endif %}" href="{{ base }}/books/{{ s.id }}"><span class="pimg">{% if s.cover %}<img src="{{ base }}/film-images/{{ s.cover }}" alt="" loading="lazy">{% else %}<span class="pph">{{ s.title }}</span>{% endif %}{% if s.status=='read' %}<span class="pseen">✓</span>{% endif %}</span><span class="ptitle">{{ s.title }}</span><span class="pmeta">{{ _("Band §", s.series_no) if s.series_no else (s.year or '') }}</span></a>{% endfor %}</div>{% endif %}
+
+<h2 id="exemplare">{{ _("Exemplare") }}</h2>
+{% if copies %}<div class="tablewrap"><table class="copies">{% for k in copies %}<tr><td><span class="badge">{{ _(kinds.get(k.kind,k.kind)) }}</span>{% if k.file_format %} <span class="badge">{{ k.file_format }}</span>{% endif %}</td>
+<td>{% if k.path %}<code class="path">{{ host_label(k.path) }}</code>{% endif %}{% if k.isbn %}<code>{{ k.isbn|isbn }}</code>{% endif %} {{ k.edition or '' }}{% if k.duration_s %} · {{ k.duration_s|hours }}{% endif %}{% if k.size_bytes %} · {{ (k.size_bytes / 1048576)|round(1) }} MB{% endif %}</td>
+<td><form method="post" action="{{ base }}/books/copies/{{ k.id }}/delete" onsubmit="return confirm({{ _t('Exemplar entfernen?')|tojson|forceescape }})"><button class="quiet small">{{ _("entfernen") }}</button></form></td></tr>{% endfor %}</table></div>{% else %}<p class="muted">{{ _("Kein Exemplar eingetragen.") }}</p>{% endif %}
+<details class="card"><summary>{{ _("Exemplar hinzufügen") }}</summary>
+<form method="post" action="{{ base }}/books/{{ b.id }}/copies"><input type="hidden" name="anchor" value="exemplare">
+<div class="row3"><span><label for="ck">{{ _("Format") }}</label><select name="kind" id="ck">{% for k,l in kinds.items() %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span>
+<span><label for="ci">{{ _("ISBN") }}</label><input name="isbn" id="ci" inputmode="numeric"></span>
+<span><label for="ce">{{ _("Ausgabe (optional)") }}</label><input name="edition" id="ce"></span></div>
+<button>{{ _("Hinzufügen") }}</button></form></details>
+
+{{ lend_box('book', b.id, b.title, (b.authors or '').split(';')[0]) }}
+<h2 id="notiz">{{ _("Notiz") }}</h2>
+<form method="post" action="{{ base }}/books/{{ b.id }}/notes"><input type="hidden" name="anchor" value="notiz"><textarea name="notes" rows="3" aria-label="{{ _('Notiz') }}">{{ b.notes or '' }}</textarea><button>{{ _("Notiz speichern") }}</button></form>
+
+<div class="actions filmactions">
+ <form method="get" action="{{ base }}/books/{{ b.id }}/edit"><button class="quiet">{{ _("Bearbeiten") }}</button></form>
+ {% if b.isbn %}<form method="post" action="{{ base }}/books/{{ b.id }}/refresh"><button class="quiet">{{ _("Leere Felder ergänzen") }}</button></form>{% endif %}
+ <form method="get" action="{{ base }}/books/search"><input type="hidden" name="attach" value="{{ b.id }}"><input type="hidden" name="q" value="{{ b.title }}"><input type="hidden" name="author" value="{{ (b.authors or '').split(';')[0].split(' ')[-1] }}"><button class="quiet">{{ _("Anderes Buch zuordnen") }}</button></form>
+ <form method="post" action="{{ base }}/books/{{ b.id }}/delete" onsubmit="return confirm({{ _t('Buch wirklich löschen? Die Dateien selbst bleiben unberührt.')|tojson|forceescape }})"><button class="quiet">{{ _("Löschen") }}</button></form>
+</div>
+{% include '_books_foot.html' %}
+{% endblock %}
