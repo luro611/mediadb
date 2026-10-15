@@ -5,4 +5,4 @@ Statische Seite ohne Cookies, Tracking oder externe Schriften.
 - Quellen: `src/index.src.html` (Startseite, Deutsch und Englisch nebeneinander), `src/impressum.src.html` (Impressum und Datenschutz)
 - Bauen: `python3 website/src/build.py` erzeugt `dist/` (zum Hochladen), `mediadb-website-<Version>.zip` und `preview.html` (nur zur Vorschau, lädt Google Fonts; nicht hochladen)
 - Hochladen: den Inhalt von `dist/` (bzw. der Zip) per FTP in das Hauptverzeichnis der Subdomain
-- Vor der Veröffentlichung: Platzhalter in `impressum.html` ausfüllen (gestrichelt markiert), Codeberg-Links eintragen
+- Vor der Veröffentlichung: Platzhalter in `impressum.html` ausfüllen (gestrichelt markiert). Codeberg-Links: https://codeberg.org/luro61/mediadb

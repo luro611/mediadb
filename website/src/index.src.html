@@ -148,7 +148,7 @@ footer .sp{margin-right:auto}
     <h1><span lang="de">Deine Sammlung.<br><em>Bei dir.</em></span><span lang="en">Your collection.<br><em>At home.</em></span></h1>
     <p class="intro"><span lang="de">MediaDB verwaltet deine CDs und Musikdateien im Browser. Barcode scannen, und Titelliste, Cover und Genre kommen von selbst. Filme und Serien hat es auch im Griff, mit Poster, Handlung, „gesehen“ und eigener Bewertung, bei Serien samt Liste der fehlenden Folgen. Eine Merkliste zeigt, wann deine Serien weitergehen und wo sie laufen. Alles läuft auf deinem eigenen Rechner oder Homeserver, nichts liegt in fremden Clouds.</span><span lang="en">MediaDB keeps track of your CDs and music files in the browser. Scan a barcode and the track list, cover and genre fill in by themselves. It handles films and TV shows too, with posters, plot, watched status and your own rating, and for shows a list of missing episodes. A watchlist shows when your shows continue and where they stream. It runs on your own computer or home server, nothing lives in someone else's cloud.</span></p>
     <div class="actions">
-      <a class="btn" href="https://codeberg.org/"><span lang="de">Quellcode auf Codeberg</span><span lang="en">Source on Codeberg</span></a>
+      <a class="btn" href="https://codeberg.org/luro61/mediadb"><span lang="de">Quellcode auf Codeberg</span><span lang="en">Source on Codeberg</span></a>
       <a class="btn ghost" href="#homelab"><span lang="de">Installation</span><span lang="en">Install</span></a>
     </div>
   </div>
@@ -233,20 +233,19 @@ footer .sp{margin-right:auto}
   <p class="lead"><span lang="de">Ein Docker-Container, eine SQLite-Datei, ein Ordner mit Covern. Läuft auf dem Mac, auf jedem Linux-Server, im Proxmox-LXC und auf dem Raspberry Pi.</span><span lang="en">One Docker container, one SQLite file, one folder of covers. Runs on a Mac, any Linux server, a Proxmox LXC and a Raspberry Pi.</span></p>
   <div class="two">
     <div>
-      <h3><span lang="de">In vier Schritten</span><span lang="en">In four steps</span></h3>
+      <h3><span lang="de">Im Terminal, in vier Schritten</span><span lang="en">In the terminal, in four steps</span></h3>
       <ol class="steps">
-        <li><span><span lang="de">Projekt von Codeberg holen.</span><span lang="en">Get the project from Codeberg.</span></span></li>
-        <li><span><span lang="de"><code class="mono">.env.example</code> als <code class="mono">.env</code> kopieren und deine E-Mail-Adresse eintragen (MusicBrainz verlangt eine Kontaktangabe).</span><span lang="en">Copy <code class="mono">.env.example</code> to <code class="mono">.env</code> and add your e-mail address (MusicBrainz asks for a contact).</span></span></li>
-        <li><span><span lang="de">Container starten.</span><span lang="en">Start the container.</span></span></li>
+        <li><span><span lang="de">Die Datei <code class="mono">docker-compose.homelab.yml</code> von Codeberg holen (Befehle im Kasten).</span><span lang="en">Get <code class="mono">docker-compose.homelab.yml</code> from Codeberg (commands in the box).</span></span></li>
+        <li><span><span lang="de">Container starten. Das fertige Image kommt von Codeberg.</span><span lang="en">Start the container. The ready-made image comes from Codeberg.</span></span></li>
         <li><span><span lang="de">Im Browser <code class="mono">http://&lt;rechner&gt;:8000</code> öffnen.</span><span lang="en">Open <code class="mono">http://&lt;host&gt;:8000</code> in your browser.</span></span></li>
+        <li><span><span lang="de">Unter Einstellungen deine E-Mail-Adresse (für MusicBrainz), einen kostenlosen TMDB-Schlüssel und deine NAS-Freigaben eintragen.</span><span lang="en">Under Settings, add your e-mail address (for MusicBrainz), a free TMDB key and your NAS shares.</span></span></li>
       </ol>
-      <p class="small" style="margin-top:22px"><span lang="de">Updates: <code class="mono">git pull</code> und neu starten. Der Ordner <code class="mono">data</code> mit Datenbank und Covern bleibt dabei unberührt.</span><span lang="en">Updates: <code class="mono">git pull</code> and restart. The <code class="mono">data</code> folder with your database and covers is left alone.</span></p>
+      <p class="small" style="margin-top:22px"><span lang="de">Updates: in Dockhand <em>Pull</em> und <em>Redeploy</em>, sonst <code class="mono">docker compose pull</code> und neu starten. Der Ordner <code class="mono">data</code> mit Datenbanken und Covern bleibt dabei unberührt.</span><span lang="en">Updates: <em>Pull</em> and <em>Redeploy</em> in Dockhand, or <code class="mono">docker compose pull</code> and restart. The <code class="mono">data</code> folder with your databases and covers is left alone.</span></p>
     </div>
     <div>
 <pre><span class="c"># Proxmox-LXC, Linux, NAS</span>
-git clone https://codeberg.org/…/mediadb.git
-cd mediadb
-cp .env.example .env
+mkdir -p /opt/mediadb/data && cd /opt/mediadb
+curl -O https://codeberg.org/luro61/mediadb/raw/branch/main/docker-compose.homelab.yml
 docker compose -f docker-compose.homelab.yml up -d</pre>
       <dl class="facts" style="margin-top:26px">
         <dt><span lang="de">Zugriff</span><span lang="en">Access</span></dt><dd><span lang="de">Ab Werk nur aus dem Heimnetz und über VPN. Optional mit Passwort.</span><span lang="en">Home network and VPN only by default. Optional password.</span></dd>
@@ -254,6 +253,43 @@ docker compose -f docker-compose.homelab.yml up -d</pre>
         <dt>Home Assistant</dt><dd><span lang="de">Vorbereitet, Add-on geplant</span><span lang="en">Prepared, add-on planned</span></dd>
         <dt><span lang="de">Lizenz</span><span lang="en">License</span></dt><dd>GPL-3.0</dd>
       </dl>
+    </div>
+  </div>
+  <div class="two" style="margin-top:48px">
+    <div>
+      <h3><span lang="de">Mit Dockhand oder Portainer</span><span lang="en">With Dockhand or Portainer</span></h3>
+      <ol class="steps">
+        <li><span><span lang="de">Auf dem Server einmal den Datenordner anlegen: <code class="mono">mkdir -p /opt/mediadb/data</code></span><span lang="en">On the server, create the data folder once: <code class="mono">mkdir -p /opt/mediadb/data</code></span></span></li>
+        <li><span><span lang="de">In Dockhand bzw. Portainer einen neuen Stack „mediadb“ anlegen.</span><span lang="en">In Dockhand or Portainer, create a new stack called “mediadb”.</span></span></li>
+        <li><span><span lang="de">Die Compose-Datei aus dem Kasten einfügen. Nur wenn du willst: Port oder Passwort anpassen.</span><span lang="en">Paste the compose file from the box. Only if you like: change the port or password.</span></span></li>
+        <li><span><span lang="de"><em>Deploy</em> klicken, dann im Browser öffnen und unter Einstellungen E-Mail-Adresse, TMDB-Schlüssel und NAS-Freigaben eintragen.</span><span lang="en">Click <em>Deploy</em>, open it in the browser and add your e-mail address, TMDB key and NAS shares under Settings.</span></span></li>
+      </ol>
+      <p class="small" style="margin-top:22px"><span lang="de">Neue Version: Stack öffnen, <em>Pull</em> und <em>Redeploy</em>. Welche Version läuft, steht unten auf jeder Seite.</span><span lang="en">New version: open the stack, <em>Pull</em> and <em>Redeploy</em>. The running version is shown at the bottom of every page.</span></p>
+    </div>
+    <div>
+<pre>services:
+  mediadb:
+    image: codeberg.org/luro61/mediadb:latest
+    container_name: mediadb
+    ports:
+      <span class="c"><span lang="de"># links: Port im Browser, z. B. "80:8000" für http://&lt;rechner&gt;</span><span lang="en"># left: port in the browser, e.g. "80:8000" for http://&lt;host&gt;</span></span>
+      - "8000:8000"
+    environment:
+      <span class="c"><span lang="de"># Passwort für die Anmeldung, leer = keins</span><span lang="en"># sign-in password, empty = none</span></span>
+      - APP_PASSWORD=
+      <span class="c"><span lang="de"># 0 = nur Heimnetz und VPN</span><span lang="en"># 0 = home network and VPN only</span></span>
+      - ALLOW_PUBLIC=0
+      - BASE_PATH=
+      - TZ=Europe/Berlin
+    volumes:
+      <span class="c"><span lang="de"># deine Daten: Datenbanken, Cover, Einstellungen</span><span lang="en"># your data: databases, covers, settings</span></span>
+      - /opt/mediadb/data:/app/data
+      <span class="c"><span lang="de"># optional, nur lesend; NAS lieber unter Einstellungen</span><span lang="en"># optional, read-only; for a NAS use Settings instead</span></span>
+      - /opt/mediadb/medien/musik:/host/music:ro
+      - /opt/mediadb/medien/filme:/host/movies:ro
+      - /opt/mediadb/medien/serien:/host/series:ro
+      - /opt/mediadb/medien/buecher:/host/books:ro
+    restart: unless-stopped</pre>
     </div>
   </div>
 </section>
@@ -269,7 +305,7 @@ docker compose -f docker-compose.homelab.yml up -d</pre>
     <div class="done"><p class="v">1.4 · 1.5</p><h3><span lang="de">Merkliste, Einstellungen</span><span lang="en">Watchlist, settings</span></h3><span class="tag on s"><span lang="de">fertig</span><span lang="en">done</span></span></div>
     <div class="done"><p class="v">1.6</p><h3><span lang="de">Bücher</span><span lang="en">Books</span></h3><span class="tag on s"><span lang="de">fertig</span><span lang="en">done</span></span></div>
     <div class="done"><p class="v">1.7 · 1.8</p><h3><span lang="de">Verliehen, Mediatheken</span><span lang="en">Lending, media libraries</span></h3><span class="tag on s"><span lang="de">fertig</span><span lang="en">done</span></span></div>
-    <div><p class="v">+</p><h3>Codeberg</h3><span class="tag s"><span lang="de">geplant</span><span lang="en">planned</span></span></div>
+    <div class="done"><p class="v">1.9</p><h3><span lang="de">NAS-Freigaben, Codeberg</span><span lang="en">NAS shares, Codeberg</span></h3><span class="tag on s"><span lang="de">fertig</span><span lang="en">done</span></span></div>
     <div><p class="v">+</p><h3>Home Assistant</h3><span class="tag s"><span lang="de">geplant</span><span lang="en">planned</span></span></div>
   </div>
 </section>
@@ -285,7 +321,7 @@ docker compose -f docker-compose.homelab.yml up -d</pre>
 
 <footer>
   <span class="sp">MediaDB 1.0.0 · GPL-3.0</span>
-  <a href="https://codeberg.org/">Codeberg</a>
+  <a href="https://codeberg.org/luro61/mediadb">Codeberg</a>
   <a href="impressum.html"><span lang="de">Impressum</span><span lang="en">Legal notice</span></a>
   <a href="impressum.html#datenschutz"><span lang="de">Datenschutz</span><span lang="en">Privacy</span></a>
   <span><span lang="de">Idee: Betreiber · Umsetzung: Claude (Anthropic)</span><span lang="en">Idea: site owner · Built by Claude (Anthropic)</span></span>
