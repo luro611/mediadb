@@ -1,0 +1,11 @@
+Schriften auf dieser Seite
+
+Alle Schriften stehen unter der SIL Open Font License 1.1 (OFL-1.1):
+https://openfontlicense.org
+
+- Inter: Rasmus Andersson und Mitwirkende, https://rsms.me/inter/
+- Instrument Serif: Instrument, https://github.com/Instrument/instrument-serif
+- Archivo: Omnibus-Type, https://www.omnibus-type.com/fonts/archivo/
+- Geist Mono: Vercel, https://vercel.com/font
+
+Die Urheberrechtsvermerke stehen zusätzlich in den Schriftdateien selbst.

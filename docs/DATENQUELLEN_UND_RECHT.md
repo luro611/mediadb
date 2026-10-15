@@ -13,10 +13,18 @@
 | iTunes Search API (optional) | Cover-Ausweichquelle | Suche, Bild wird gespeichert | Grauzone | Abschaltbar (`COVER_WEB=0`) |
 | Deezer API (optional) | Cover-Ausweichquelle | Suche, Bild wird gespeichert | Grauzone (Nutzung „nicht-kommerziell, privat“) | Abschaltbar (`COVER_WEB=0`) |
 | Eigene Musikdateien | Tags, eingebettete Cover | Lokal gelesen, nichts wird übertragen | Ja | – |
+| TMDB (Filme) | Filmdaten, Poster, Hintergrundbilder | API mit eigenem kostenlosem Schlüssel, Bilder lokal gespeichert | Ja (nicht kommerziell) | Jeder Nutzer braucht einen eigenen Schlüssel; Quellenhinweis Pflicht; keine Bilder weitergeben |
+| UPCitemdb (optional) | Produktname zu DVD-/Blu-ray-Barcodes | Testschnittstelle ohne Schlüssel, ca. 100 Abfragen pro Tag | Ja | Abschaltbar (`BARCODE_LOOKUP=0`) |
+| Deutsche Nationalbibliothek | Buchdaten zu ISBN, Titel, Autor | SRU-Schnittstelle, ohne Anmeldung | Ja (Metadaten CC0) | Ja, kein Problem |
+| Open Library | Buchdaten, Beschreibung, Cover | API ohne Schlüssel, gedrosselt, Cover lokal gespeichert | Ja | Hinweis auf Open Library erwünscht; keine Cover weitergeben |
+| DNB-Inhaltstexte (Verlagstexte) | Klappentext zum Buch | Abruf über den Verweis im DNB-Datensatz, lokal gespeichert | Ja, zur privaten Nutzung | Texte gehören den Verlagen: nicht weitergeben |
+| Wikipedia | Einleitung des Artikels zum Buch | REST-Schnittstelle, mit Link und Lizenzhinweis | Ja (CC BY-SA 4.0) | Namensnennung und Lizenzhinweis nötig (steht dabei) |
+| MediathekViewWeb (optional) | Sendungen in den Mediatheken von ARD, ZDF, Arte & Co. | Öffentlicher Such-Feed, nur Anzeige und Link | Ja | Abschaltbar (`MEDIATHEK=0`); keine Downloads |
+| Eigene Filmdateien | Dateiname, Jellyfin-/Kodi-.nfo, Technikdaten per ffprobe | Lokal gelesen, nichts wird übertragen | Ja | – |
 
 ## Was die App nach außen sendet
 
-Nur **Suchbegriffe** (Interpret, Albumtitel, Barcode, ggf. MusicBrainz-/Discogs-Nummern) an die genannten Dienste. Die Datenbank, deine Dateinamen und deine Musikdateien verlassen den Rechner nicht. Außerdem wird die IP-Adresse deines Internetanschlusses von den Diensten wie bei jedem Webzugriff gesehen.
+Nur **Suchbegriffe** (Interpret, Albumtitel, Filmtitel und Jahr, Buchtitel und Autor, ISBN, Barcode, ggf. MusicBrainz-/Discogs-/TMDB-/IMDb-Nummern) an die genannten Dienste. Die Datenbank, deine Dateinamen und deine Musikdateien verlassen den Rechner nicht. Außerdem wird die IP-Adresse deines Internetanschlusses von den Diensten wie bei jedem Webzugriff gesehen.
 
 ## Die Dienste im Einzelnen
 
@@ -53,6 +61,50 @@ Nur **Suchbegriffe** (Interpret, Albumtitel, Barcode, ggf. MusicBrainz-/Discogs-
 ### Eigene Musikdateien
 - Die Tags (Interpret, Album, Titel, Genre, Jahr) und eingebettete Cover werden **nur lokal** gelesen. Die Bibliothek `mutagen` ist freie Software.
 
+### TMDB – The Movie Database (Filme und Serien)
+- Quelle für Titel, Originaltitel, Handlung, Laufzeit, Genres, Regie, Darsteller, Altersfreigabe, Filmreihen, Trailer-Links, Poster und Hintergrundbilder; bei Serien zusätzlich Sender, Staffeln und der Episodenführer (Folgentitel, Inhalt, Ausstrahlungsdatum).
+- Die API ist für **nicht kommerzielle Projekte kostenlos**; nötig ist ein eigener API-Schlüssel (themoviedb.org → Einstellungen → API). Bei der Beantragung bestätigst du die Nutzungsbedingungen von TMDB. **Jeder Nutzer der Software beantragt seinen eigenen Schlüssel**; der Schlüssel gehört in die eigene `.env` und nie ins Repository.
+- **Pflicht laut [TMDB-FAQ](https://developer.themoviedb.org/docs/faq):** der Hinweis „This product uses the TMDB API but is not endorsed or certified by TMDB.“ (steht unten auf jeder Filmseite der App) und ein TMDB-Logo, das weniger auffällt als das eigene Logo. Erledigt seit 1.8.2: das offizielle Logo (`static/tmdb/`, Variante „Alt short“, 11 Pixel hoch) steht vor dem Hinweis.
+- Poster (342 Pixel breit) und ein Hintergrundbild (780 Pixel) werden lokal in `data/film_images/` gespeichert, damit nicht bei jedem Seitenaufruf neu geladen wird. Die Bilder bleiben urheberrechtlich geschützt (Studios, Verleiher): **nicht weitergeben, nicht ins Repository**. Die Regeln zum Zwischenspeichern stehen in den TMDB-Nutzungsbedingungen, die du beim Beantragen des Schlüssels bestätigst; sie ließen sich bei der Erstellung nicht automatisch abrufen und sollten vor der Veröffentlichung von Hand gelesen werden.
+- Auf der Trefferauswahl lädt dein Browser kleine Vorschaubilder direkt von `image.tmdb.org`; dabei sieht TMDB die IP-Adresse deines Browsers.
+
+### JustWatch (Streamingdienste, über TMDB)
+- Welche Streamingdienste einen Film oder eine Serie anbieten, liefert TMDB über die Schnittstelle „Watch Providers“; die Daten stammen von [JustWatch](https://www.justwatch.com/). TMDB verlangt dafür einen Hinweis auf JustWatch; er steht auf der Merkliste („Streaming-Angaben: JustWatch (über TMDB)“). Die Links „Wo ansehen?“ führen zur TMDB-Seite mit den Anbietern.
+- Übertragen wird dabei nichts Zusätzliches: Es ist dieselbe TMDB-Abfrage wie für die Serie selbst. Gespeichert werden nur die Namen der Dienste.
+
+### UPCitemdb (optional, Barcode von DVD/Blu-ray)
+- TMDB kennt keine Barcodes. Deshalb fragt die App beim Scannen den Produktnamen bei der kostenlosen Testschnittstelle von [UPCitemdb](https://www.upcitemdb.com/) ab (etwa 100 Abfragen pro Tag, ohne Anmeldung) und sucht mit dem bereinigten Namen bei TMDB. Ergebnisse werden in `filme.db` bzw. `serien.db` zwischengespeichert, jeder Barcode wird also nur einmal abgefragt.
+- Übertragen wird nur die Barcode-Nummer. Abschaltbar mit `BARCODE_LOOKUP=0`; dann werden nur Barcodes erkannt, die schon in der eigenen Sammlung stehen.
+- Deutsche Ausgaben sind dort lückenhaft erfasst. Ein weiterer Kandidat ist [Disq](https://docs.disqapis.com/) (rund 400.000 DVD-/Blu-ray-Barcodes, derzeit kostenlose Testphase); er ließe sich später zusätzlich anbinden, sobald die Schnittstelle vollständig dokumentiert ist.
+
+### Deutsche Nationalbibliothek (Bücher)
+- Die [SRU-Schnittstelle](https://www.dnb.de/sru) der DNB liefert zu einer ISBN oder zu Titel und Autor die Katalogdaten (Titel, Autoren mit Rolle, Verlag, Jahr, Seiten, Reihe, Sachgruppe, Originaltitel). Sie ist **kostenlos und ohne Anmeldung** nutzbar; die Metadaten stehen unter **CC0** (gemeinfrei).
+- Übertragen wird nur die ISBN bzw. der Suchbegriff. Gespeichert werden die Angaben in `buecher.db`, jede ISBN wird zwischengespeichert und nur einmal abgefragt.
+
+- **Inhaltstexte:** Zu vielen neueren Büchern verweist der DNB-Datensatz auf einen „Inhaltstext“. Das sind Klappentexte der Verlage, die die DNB über den Branchendienst MVB bekommt und in ihrem Katalog öffentlich zeigt. Die Metadaten der DNB sind CC0, diese Texte aber nicht: Sie bleiben urheberrechtlich geschützt (Verlage). Die App ruft sie wie ein Katalogbesucher ab und speichert sie für die eigene Sammlung; **nicht weitergeben, nicht ins Repository**.
+
+### Wikipedia (Bücher)
+- Zu Büchern mit eigenem Wikipedia-Artikel lädt die App die Einleitung über die [REST-Schnittstelle](https://www.mediawiki.org/wiki/API:REST_API) (`/api/rest_v1/page/summary`). Gesendet werden nur Titel und Autor. Die Texte stehen unter [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de); verlangt sind Namensnennung, Link und Lizenzhinweis. Alle drei stehen auf der Buchseite.
+- Rezensionen selbst lädt die App nicht (Zeitungskritiken und Goodreads-Texte sind geschützt, Goodreads hat keine offene Schnittstelle mehr). Sie bietet nur Links, die eine Suche bei Perlentaucher, Goodreads oder einer Suchmaschine öffnen.
+
+### Open Library (Bücher)
+- [Open Library](https://openlibrary.org/) (Internet Archive) ergänzt Beschreibung, Themen, die **Bewertung** der Open-Library-Nutzer (`/works/…/ratings.json`) und vor allem **Cover**; für englischsprachige Bücher ist sie oft die bessere Quelle. Die Schnittstelle braucht keinen Schlüssel, die Daten sind frei nutzbar. Open Library bittet um einen Hinweis auf die Quelle; er steht unten auf jeder Bücherseite.
+- Cover-Abrufe über die ISBN sind auf **100 Abrufe in 5 Minuten** begrenzt. Die App hält deshalb mindestens drei Sekunden Abstand zwischen Abrufen; beim Import langer Listen dauert es entsprechend.
+- Cover werden lokal in `data/` gespeichert. Die Umschläge sind urheberrechtlich geschützt (Verlage, Illustratoren): **nicht weitergeben, nicht ins Repository**. Auf der Trefferauswahl lädt dein Browser kleine Vorschaubilder direkt von `covers.openlibrary.org`.
+
+### Eigene E-Books und Hörbücher
+- Gelesen werden die Angaben in den Dateien (EPUB/OPF, Calibre-`metadata.opf`, MOBI-Kopf, PDF-Info, Audio-Tags per `ffprobe`) und eingebettete Cover. Nichts davon verlässt den Rechner; gesucht wird nur mit ISBN bzw. Titel und Autor. Die Dateien werden nie verändert.
+
+### MediathekViewWeb (Mediatheken, optional)
+- [MediathekViewWeb](https://mediathekviewweb.de/) ist der Web-Ableger von [MediathekView](https://mediathekview.de/), freie Software (GPL-3.0), betrieben von Freiwilligen. Es durchsucht die Mediatheken der öffentlich-rechtlichen Sender. MediaDB nutzt den öffentlichen RSS-Feed, den die Seite zu jeder Suche anbietet. Gesendet werden nur Serien- bzw. Filmtitel; Ergebnisse werden sechs Stunden zwischengespeichert, Abfragen mit Abstand gestellt.
+- MediaDB zeigt nur Titel, Sender, Datum und Dauer und verlinkt auf die Seite der Sendung in der Mediathek des Senders. **Es wird nichts heruntergeladen oder gespeichert.** Die Sendungen gehören den Sendern bzw. Produzenten.
+- Zum Herunterladen selbst (in MediaDB bewusst nicht eingebaut): Für den rein privaten Gebrauch in Deutschland gilt das Herunterladen frei zugänglicher Mediathek-Inhalte ohne Kopierschutz nach verbreiteter Ansicht als Privatkopie (§ 53 UrhG); gerichtlich geklärt ist das nicht. Weitergabe, Veröffentlichung und das Umgehen von Kopierschutz sind nicht erlaubt; in Österreich und der Schweiz gelten andere Regeln.
+- Abschaltbar unter Einstellungen oder mit `MEDIATHEK=0`.
+
+### Eigene Film- und Seriendateien
+- Gelesen werden Ordner- und Dateinamen, `.nfo`- bzw. `tvshow.nfo`-Dateien von Jellyfin/Kodi und mit `ffprobe` die Technikdaten (Auflösung, Codec, HDR, Tonspuren, Untertitel). Nichts davon verlässt den Rechner; an TMDB gehen nur der erkannte Titel und das Jahr bzw. die TMDB-/IMDb-Nummer.
+- Die Dateien selbst werden nie verändert, verschoben oder gelöscht.
+
 ## Darf ich das alles privat nutzen?
 Für die **eigene, private Sammlung** (Katalog deiner CDs und Dateien, lokal auf deinem Rechner, nicht öffentlich im Netz): im Rahmen der Bedingungen ja. Abfragen einzelner Daten und ihre Speicherung in der eigenen Datenbank sind üblich, die Hauptquelle MusicBrainz ist weitgehend gemeinfrei. Ausnahmen sind Grauzonen bei iTunes/Deezer-Covern (siehe oben); wer sie meiden will, setzt `COVER_WEB=0`.
 
@@ -80,6 +132,7 @@ Alle werden beim Bau des Docker-Images per `pip` installiert und nicht mitgelief
 | openpyxl | Excel lesen/schreiben | MIT |
 | requests | Web-Abfragen | Apache-2.0 |
 | mutagen | Audio-Tags | GPL-2.0-oder-später |
+| ffmpeg / ffprobe | Technikdaten von Filmdateien lesen (nur im Docker-Image, als eigenes Programm aufgerufen) | LGPL-2.1 / GPL-2.0 (je nach Bau, Debian-Paket) |
 
 Dazu kommen Python selbst (PSF-Lizenz), Docker und SQLite (gemeinfrei).
 
