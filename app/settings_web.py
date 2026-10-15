@@ -38,7 +38,7 @@ def _view():
     cfg = {k: C.get(k) for k in C.KEYS}
     return dict(cfg=cfg, src={k: C.source(k) for k in C.KEYS}, masked={k: C.mask(cfg[k]) for k in C.SECRET},
                 languages=C.DATA_LANGUAGES, data_lang=T.language(), contact=C.get('MB_CONTACT') or C.contact_from_agent(),
-                flags={k: C.flag(k) for k in ('BARCODE_LOOKUP', 'COVER_WEB', 'AUTO_UPDATE', 'MEDIATHEK')}, relang=RELANG,
+                flags={k: C.flag(k) for k in ('BARCODE_LOOKUP', 'COVER_WEB', 'AUTO_UPDATE', 'MEDIATHEK', 'UPDATE_CHECK')}, relang=RELANG,
                 stored_lang=C.stored().get('TMDB_LANGUAGE'),
                 password_on=bool(os.getenv('APP_PASSWORD')), public=os.getenv('ALLOW_PUBLIC', '0') in ('1', 'true', 'yes', 'ja', 'on'),
                 ui_langs=i18n.LANGS,
@@ -66,7 +66,7 @@ async def save(request):
     if contact and ('@' not in contact or ' ' in contact or len(contact) > 120):
         return go('/settings', 'Bitte eine gültige E-Mail-Adresse eintragen.')
     values['MB_CONTACT'] = contact
-    for k in ('BARCODE_LOOKUP', 'COVER_WEB', 'AUTO_UPDATE', 'MEDIATHEK'):
+    for k in ('BARCODE_LOOKUP', 'COVER_WEB', 'AUTO_UPDATE', 'MEDIATHEK', 'UPDATE_CHECK'):
         values[k] = '1' if f.get(k) == '1' else '0'
     ok = await run_in_threadpool(C.save, values)
     if not ok:

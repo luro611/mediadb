@@ -18,7 +18,7 @@ DATA_LANGUAGES = [
     ('es-ES', 'Spanisch (Spanien)'), ('es-MX', 'Spanisch (Mexiko)'), ('es-AR', 'Spanisch (Argentinien)'),
 ]
 UI_FOR_DATA = {'de': 'de-DE', 'en': 'en-US', 'fr': 'fr-FR', 'es': 'es-ES'}
-KEYS = ['TMDB_API_KEY', 'TMDB_LANGUAGE', 'MB_CONTACT', 'DISCOGS_TOKEN', 'BARCODE_LOOKUP', 'COVER_WEB', 'AUTO_UPDATE', 'MEDIATHEK']
+KEYS = ['TMDB_API_KEY', 'TMDB_LANGUAGE', 'MB_CONTACT', 'DISCOGS_TOKEN', 'BARCODE_LOOKUP', 'COVER_WEB', 'AUTO_UPDATE', 'MEDIATHEK', 'UPDATE_CHECK']
 SECRET = {'TMDB_API_KEY', 'DISCOGS_TOKEN'}
 
 

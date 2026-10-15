@@ -1,5 +1,9 @@
 # Änderungen
 
+## MediaDB 1.9.1 – Hinweis auf neue Versionen
+- **Neue Version verfügbar:** MediaDB schaut einmal am Tag bei Codeberg nach dem neuesten Release. Gibt es ein neueres, steht unten auf jeder Seite neben der Versionsnummer „Neue Version … verfügbar“, mit Link zu den Neuerungen. Aktualisieren wie gewohnt in Dockhand mit *Pull* und *Redeploy*.
+- Abgefragt wird nur die öffentliche Release-Liste, ohne Angaben zu dir oder deiner Sammlung. Abschaltbar unter Einstellungen → „Dienste und Automatik“ (`UPDATE_CHECK=0`).
+
 ## MediaDB 1.9.0 – NAS-Freigaben direkt lesen
 - **Einstellungen → NAS-Freigaben:** MediaDB liest Musik, Filme, Serien und Bücher direkt von der NAS über SMB (wie Finder oder Windows-Explorer). Eintragen: Name, NAS-Adresse, Freigabe, optional Unterordner, Benutzer und Passwort; „Verbindung prüfen“ sagt verständlich, was nicht stimmt (Anmeldung, Name der Freigabe, Unterordner, NAS nicht erreichbar).
 - **Kein Einhängen mehr nötig**, auch nicht im Proxmox-LXC: Dort lassen sich Netzwerkfreigaben weder im LXC noch im Container einhängen; der Umweg über den Proxmox-Host entfällt.

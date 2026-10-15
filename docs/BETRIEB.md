@@ -98,7 +98,9 @@ Die Datei `~/Desktop/mediadb-data.tar.gz` auf dem Mac ist zugleich eine Sicherun
 
 ## Neue Version einspielen
 
-**Mit Dockhand:** Stack „mediadb“ → *Pull* (lädt das neue Image von Codeberg) → *Redeploy*. Welche Version läuft, steht unten auf jeder Seite (z. B. „MediaDB 1.9.0“).
+Gibt es eine neue Version, steht unten auf jeder Seite „Neue Version … verfügbar“ (einmal am Tag bei Codeberg nachgesehen, abschaltbar unter Einstellungen). Der Link führt zu den Neuerungen.
+
+**Mit Dockhand:** Stack „mediadb“ → *Pull* (lädt das neue Image von Codeberg) → *Redeploy*. Welche Version läuft, steht unten auf jeder Seite (z. B. „MediaDB 1.9.1“).
 
 **Im Terminal des LXC:**
 ```

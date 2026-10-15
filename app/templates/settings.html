@@ -39,6 +39,7 @@
  <label class="checkbox"><input type="checkbox" name="COVER_WEB" value="1"{% if flags.COVER_WEB %} checked{% endif %}> {{ _("Fehlende CD-Cover bei iTunes und Deezer suchen") }}</label>
  <label class="checkbox"><input type="checkbox" name="AUTO_UPDATE" value="1"{% if flags.AUTO_UPDATE %} checked{% endif %}> {{ _("Serien und Merkliste einmal am Tag aktualisieren") }}</label>
  <label class="checkbox"><input type="checkbox" name="MEDIATHEK" value="1"{% if flags.MEDIATHEK %} checked{% endif %}> {{ _("In den Mediatheken von ARD, ZDF, Arte und Co. suchen (MediathekViewWeb, nur Links)") }}</label>
+ <label class="checkbox"><input type="checkbox" name="UPDATE_CHECK" value="1"{% if flags.UPDATE_CHECK %} checked{% endif %}> {{ _("Einmal am Tag bei Codeberg nachsehen, ob es eine neue Version von MediaDB gibt") }}</label>
 </section>
 <div class="actions"><button>{{ _("Speichern") }}</button></div>
 </form>
