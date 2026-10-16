@@ -608,10 +608,13 @@ async def files_page(request):
 async def files_browse(request):
     path = request.query_params.get('path', '')
     if not path:
-        return JSONResponse({'path': '', 'label': '', 'parent': '', 'dirs': [{'name': h, 'path': c} for c, h, _ in au.available_roots()], 'error': ''})
-    p = au.safe_dir(au.to_container_path(path, HOST_HOME))
+        return JSONResponse({'path': '', 'label': '', 'parent': '', 'dirs': [{'name': h, 'path': c, 'nas': fs.is_nas(c)} for c, h, _ in au.available_roots()], 'error': ''})
+    p = await run_in_threadpool(au.safe_dir, au.to_container_path(path, HOST_HOME))
     if not p:
-        return JSONResponse({'path': path, 'label': path, 'parent': '', 'dirs': [], 'error': 'Ordner nicht gefunden oder nicht freigegeben.'})
+        off = await run_in_threadpool(fs.nas.offline_message, path) if fs.is_nas(path) else ''
+        t = ctx(request)['_t']
+        return JSONResponse({'path': path, 'label': au.host_label(path), 'parent': '', 'dirs': [],
+                             'error': t(*off) if off else t('Ordner nicht gefunden oder nicht freigegeben.')})
     err = ''
     try:
         dirs = sorted((n for n, is_dir, _ in await run_in_threadpool(fs.scandir, p) if is_dir and not n.startswith('.')), key=str.casefold)
@@ -633,7 +636,7 @@ async def files_scan(request):
             fl.append(p)
     if not fl:
         return go('/films/files', 'Kein gültiger Ordner ausgewählt.')
-    X.JOB.update(folders=fl, done=0, total=0, items=[], error='', result=None)
+    X.JOB.update(folders=fl, done=0, total=0, items=[], error='', result=None, unreadable=[])
     X.start(X.scan_worker, fl)
     return go('/films/files')
 

@@ -473,7 +473,7 @@ async def files_scan(request):
     if not fl:
         return go('/books/files', 'Kein gültiger Ordner ausgewählt.')
     audio = f.get('audio') == '1'
-    X.JOB.update(folders=fl, done=0, total=0, items=[], error='', result=None, audio=audio)
+    X.JOB.update(folders=fl, done=0, total=0, items=[], error='', result=None, audio=audio, unreadable=[])
     X.start(X.scan_worker, fl, audio)
     return go('/books/files')
 

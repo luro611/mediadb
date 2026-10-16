@@ -414,7 +414,9 @@ def scan_worker(folders, audio=True):
         with B.db() as c:
             known = B.known_paths(c)
         JOB.update(phase='collect', found=0, current='', total=0, done=0, source='files')
-        items = collect(folders, audio, lambda root, n: JOB.update(current=root, found=n))
+        with fs.unreadable() as bad:
+            items = collect(folders, audio, lambda root, n: JOB.update(current=root, found=n))
+        JOB['unreadable'] = bad
         items = [it for it in items if it['path'] not in known]
         JOB.update(phase='read', total=len(items), done=0, found=len(items))
         for it in items:

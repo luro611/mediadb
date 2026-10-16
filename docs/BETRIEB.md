@@ -64,7 +64,9 @@ Die NAS muss **SMB2 oder SMB3** anbieten (bei Synology, QNAP, UGREEN, TrueNAS, U
 **Wenn es nicht klappt:**
 - Die **IP-Adresse** der NAS eintragen, nicht ihren Namen. Namen wie `diskstation.local` findet der Docker-Container meist nicht.
 - Ein **Benutzer mit Passwort** ist nötig; ein Gastzugang ohne Passwort geht nicht.
-- Unter der Meldung steht eine **technische Angabe**. Die hilft bei der Fehlersuche. Am besten legst du auf der NAS einen eigenen Benutzer an, der die Freigaben nur lesen darf.
+- Unter der Meldung steht eine **technische Angabe**. Die hilft bei der Fehlersuche.
+
+**NAS, die nicht immer an ist:** Kein Problem. Was eingelesen ist, steht in der Datenbank von MediaDB und bleibt, auch wenn die NAS aus ist. In der Ordnerauswahl zeigt ein Punkt neben „NAS: …“, ob sie gerade erreichbar ist. Vor dem Einlesen die NAS einschalten und warten, bis der Punkt grün ist. Geht sie während des Einlesens aus, nennt MediaDB danach die Ordner, die fehlen; einfach später noch einmal einlesen. Am besten legst du auf der NAS einen eigenen Benutzer an, der die Freigaben nur lesen darf.
 
 **Ohne NAS:** Neue Ordner in `/opt/mediadb/medien/…` kopieren, einlesen und danach wieder löschen.
 

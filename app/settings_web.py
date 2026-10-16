@@ -115,6 +115,11 @@ async def nas_test(request):
     return JSONResponse({'ok': ok, 'message': t, 'detail': detail})
 
 
+async def nas_status(request):
+    """Fuer den Punkt neben „NAS: …“ in der Ordnerauswahl: {'/nas/<id>': true/false}."""
+    return JSONResponse(await run_in_threadpool(nas.online))
+
+
 async def nas_delete(request):
     f, _ = await _form(request)
     await run_in_threadpool(nas.delete_share, f.get('id') or '')
@@ -197,6 +202,6 @@ def activity():
 routes = [Route('/', page), Route('/save', save, methods=['POST']), Route('/test-tmdb', test_tmdb, methods=['POST']),
           Route('/relang', relang, methods=['POST']), Route('/relang/status', relang_status),
           Route('/nas/save', nas_save, methods=['POST']), Route('/nas/check', nas_check, methods=['POST']),
-          Route('/nas/test', nas_test, methods=['POST']),
+          Route('/nas/test', nas_test, methods=['POST']), Route('/nas/status', nas_status),
           Route('/nas/delete', nas_delete, methods=['POST'])]
 app = Starlette(routes=routes)

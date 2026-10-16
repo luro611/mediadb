@@ -28,6 +28,7 @@ setTimeout(poll,1500)}).catch(function(){setTimeout(poll,4000)})}setTimeout(poll
 {% set total = job['items']|length %}
 <div class="card"><strong>{{ _("§ Bücher gefunden", total) }}</strong>{% if job.source=='files' %} {{ _("in") }} {% for f in job.folders %}<code>{{ host_label(f) }}</code>{{ ', ' if not loop.last }}{% endfor %}.
 <p class="muted">{{ _("Bereits erfasste Dateien werden nicht noch einmal angezeigt.") }}</p>{% else %} {{ _("aus der Liste") }}.{% endif %}</div>
+{% if job.source=='files' %}{% include '_unreadable.html' %}{% endif %}
 {% if total==0 %}<div class="warn">{{ _("Keine neuen Bücher gefunden.") }}</div><form method="post" action="{{ base }}/books/files/reset"><button>{{ _("Zurück") }}</button></form>
 {% else %}
 <form method="post" action="{{ base }}/books/files/apply">
@@ -103,9 +104,10 @@ async function go(path){
   let h='';
   if(d.error)h+='<div class="warn">'+esc(d.error)+'</div>';
   if(d.path)h+='<p><a href="#" data-go="'+esc(d.parent)+'">'+esc(L.up)+'</a> · <button type="button" id="addcur" style="margin:0;padding:8px 12px">'+esc(L.choose)+'</button></p>';
-  h+='<ul>'+d.dirs.map(x=>'<li><a href="#" data-go="'+esc(x.path)+'">📁 '+esc(x.name)+'</a></li>').join('')+'</ul>';
+  h+='<ul>'+d.dirs.map(x=>'<li><a href="#" data-go="'+esc(x.path)+'">📁 '+esc(x.name)+'</a>'+(x.nas?' <span class="nasstate" data-nas="'+esc(x.path)+'"></span>':'')+'</li>').join('')+'</ul>';
   if(!d.dirs.length&&!d.error)h+='<p class="muted">'+esc(L.nodirs)+'</p>';
   B.innerHTML=h;
+  if(!d.path&&window.nasDots)nasDots(B);
   B.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.go)});
   const b=document.getElementById('addcur'); if(b)b.onclick=()=>add(d.path,d.label);
 }

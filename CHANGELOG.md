@@ -1,5 +1,12 @@
 # Änderungen
 
+## MediaDB 1.9.3 – NAS, die nicht immer an ist
+- **Punkt in der Ordnerauswahl:** Neben jeder „NAS: …“ steht, ob sie gerade erreichbar ist (grün) oder aus (orange). Die Liste erscheint sofort, die NAS werden danach im Hintergrund gefragt.
+- **Klare Meldung:** Wer eine ausgeschaltete NAS öffnet, liest jetzt „Die NAS … ist gerade nicht erreichbar. Ist sie eingeschaltet?“ statt „Ordner nicht gefunden oder nicht freigegeben“.
+- **Hinweis nach dem Einlesen:** Konnten Ordner nicht gelesen werden (NAS zwischendurch aus, fehlende Leserechte), steht über der Vorschau, wie viele und welche. Bisher fehlten sie stillschweigend. Gilt für Musik, Filme, Serien und Bücher.
+- **Schneller wieder da:** Ist eine NAS nach dem Ausschalten wieder an, nutzt MediaDB sie sofort, statt bis zu einer Minute weiter „nicht erreichbar“ zu melden.
+- Bereits eingelesene Einträge bleiben wie bisher erhalten, wenn die NAS aus ist.
+
 ## MediaDB 1.9.2 – NAS-Verbindung prüfen
 - **„Verbindung prüfen“ direkt im Formular:** prüft die eingetragenen Angaben, ohne sie zu speichern. Die Prüfung geht Schritt für Schritt vor und sagt genau, woran es hängt: Name der NAS nicht gefunden (Namen mit `.local` funktionieren im Docker-Container nicht, dann die IP-Adresse eintragen), NAS antwortet nicht, SMB ausgeschaltet, nur das alte SMB1, Benutzer unbekannt, Passwort falsch, Freigabe oder Unterordner falsch. Darunter steht eine technische Angabe für die Fehlersuche.
 - **Zugang übernehmen:** Bei einer weiteren Freigabe lässt sich eine schon eingerichtete NAS auswählen; Adresse, Benutzer und Passwort werden übernommen.

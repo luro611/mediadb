@@ -11,6 +11,8 @@ LANGS = ['en', 'fr', 'es']
 PAT = re.compile(r"""\b_t?\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')""")
 # Texte, die ohne _() im Quelltext stehen (Listen, Meldungen aus Python); bei neuen Meldungen hier ergänzen
 EXTRA = [
+    # NAS aus (1.9.3)
+    "Die NAS „§“ ist gerade nicht erreichbar. Ist sie eingeschaltet? Nach dem Einschalten dauert es oft ein bis zwei Minuten, bis sie bereit ist.", "Ordner nicht gefunden oder nicht freigegeben.",
     # NAS-Verbindung pruefen (1.9.2)
     "Bitte Benutzer und Passwort der NAS eintragen. Ein Zugang als Gast ohne Passwort ist nicht möglich.", "Die NAS kennt diesen Benutzer nicht und würde nur einen Gastzugang erlauben. Bitte den Benutzernamen prüfen (genau so, wie er auf der NAS angelegt ist).", "Die NAS spricht wohl nur das alte SMB1. Bitte in der NAS-Oberfläche SMB2 oder SMB3 einschalten.", "Die NAS hat die Verbindung sofort beendet. Meist spricht sie nur das alte SMB1: Bitte in der NAS-Oberfläche SMB2 oder SMB3 einschalten.", "Den Namen „§“ findet MediaDB nicht: Namen mit .local funktionieren im Docker-Container nicht. Bitte die IP-Adresse der NAS eintragen (z. B. 192.168.1.20).", "Den Namen „§“ findet MediaDB im Netz nicht. Bitte die IP-Adresse der NAS eintragen (z. B. 192.168.1.20).", "Die NAS unter § antwortet, aber SMB ist dort nicht eingeschaltet (Port § ist zu). Bitte SMB in der NAS-Oberfläche einschalten.", "Unter § antwortet nichts. Stimmt die Adresse, und ist die NAS eingeschaltet? Läuft MediaDB in einem LXC oder einer VM: Ist die NAS von dort aus erreichbar (Firewall, anderes Netz)?",
     # NAS-Freigaben (1.9)

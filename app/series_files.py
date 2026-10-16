@@ -250,9 +250,11 @@ def scan_worker(folders):
         def prog(root, n):
             JOB.update(current=root, found=base + n)
         paths, base = [], 0
-        for f in folders:
-            paths += collect(f, prog)
-            base = len(paths)
+        with fs.unreadable() as bad:
+            for f in folders:
+                paths += collect(f, prog)
+                base = len(paths)
+        JOB['unreadable'] = bad
         JOB['found'] = len(paths)
         paths = [p for p in paths if p not in known]
         JOB.update(phase='parse', total=len(paths), done=0, current='')

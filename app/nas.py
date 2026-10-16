@@ -19,6 +19,8 @@ PREFIX = '/nas'
 TIMEOUT = 10        # Sekunden fuer den Verbindungsaufbau
 DOWN_PAUSE = 60     # so lange gilt eine NAS nach einem Verbindungsfehler als nicht erreichbar (kein erneutes Warten)
 _down = {}          # host -> (zeitpunkt, fehlertext)
+_seen = {}          # host -> (zeitpunkt, erreichbar) fuer die schnelle Pruefung (reachable)
+SEEN_TTL = 5        # so lange gilt das Ergebnis der schnellen Pruefung
 _lock = threading.Lock()
 
 
@@ -200,7 +202,9 @@ def _call(path, fn):
     host = s['host']
     d = _down.get(host)
     if d and time.time() - d[0] < DOWN_PAUSE:
-        raise OSError(errno.EHOSTUNREACH, d[1], str(path))
+        if not reachable(s):  # wieder eingeschaltet? Dann nicht die volle Minute warten
+            raise OSError(errno.EHOSTUNREACH, d[1], str(path))
+        _down.pop(host, None)
     import smbclient
     try:
         return fn(smbclient, unc, _kw(s))
@@ -286,8 +290,9 @@ def open_file(path, mode='rb', encoding=None, errors=None):
                                                          buffering=256 * 1024 if 'b' in mode else -1, **kw))
 
 
-def walk(top):
-    """Wie os.walk (von oben nach unten); Aenderungen an dirs[:] werden beachtet, Fehler in Unterordnern uebersprungen."""
+def walk(top, onerror=None):
+    """Wie os.walk (von oben nach unten); Aenderungen an dirs[:] werden beachtet, Fehler in Unterordnern uebersprungen
+    und wie bei os.walk an onerror(OSError) gemeldet."""
     top = norm(top)
     if not top:
         return
@@ -295,12 +300,53 @@ def walk(top):
         entries = scandir(top)
     except OSError as e:
         logging.warning('NAS-Ordner nicht lesbar: %s (%s)', top, e)
+        if onerror:
+            e.filename = top
+            onerror(e)
         return
     dirs = [n for n, d, _ in entries if d]
     files = [n for n, d, f in entries if not d]
     yield top, dirs, files
     for d in dirs:
-        yield from walk(top + '/' + d)
+        yield from walk(top + '/' + d, onerror)
+
+
+# ---------------------------------------------------------------- Ist die NAS gerade an?
+def reachable(s, timeout=2):
+    """Schnelle Pruefung ohne Anmeldung: antwortet die NAS auf dem SMB-Port? Ergebnis gilt SEEN_TTL Sekunden."""
+    host = s['host']
+    c = _seen.get(host)
+    if c and time.time() - c[0] < SEEN_TTL:
+        return c[1]
+    try:
+        addr = socket.getaddrinfo(_hostname(s), _port(s), type=socket.SOCK_STREAM)[0][4]
+        socket.create_connection(addr[:2], timeout=timeout).close()
+        ok = True
+    except (OSError, UnicodeError):
+        ok = False
+    _seen[host] = (time.time(), ok)
+    if ok:
+        _down.pop(host, None)
+    return ok
+
+
+def online():
+    """{'/nas/<id>': True/False} fuer alle Freigaben; jede NAS wird nur einmal gefragt, alle gleichzeitig."""
+    from concurrent.futures import ThreadPoolExecutor
+    lst = shares()
+    hosts = {s['host']: s for s in lst}
+    with ThreadPoolExecutor(max_workers=max(1, min(8, len(hosts)))) as ex:
+        ok = dict(zip(hosts, ex.map(reachable, hosts.values())))
+    return {f'{PREFIX}/{s["id"]}': ok[s['host']] for s in lst}
+
+
+def offline_message(path):
+    """Meldung fuer die Ordnerauswahl, wenn die NAS hinter einem /nas-Pfad gerade nicht antwortet, sonst ''."""
+    p = norm(path)
+    s = get_share(p.split('/')[2]) if p else None
+    if not s or reachable(s):
+        return ''
+    return ('Die NAS „§“ ist gerade nicht erreichbar. Ist sie eingeschaltet? Nach dem Einschalten dauert es oft ein bis zwei Minuten, bis sie bereit ist.', s['label'])
 
 
 def probe(s):

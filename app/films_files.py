@@ -271,10 +271,12 @@ def scan_worker(folders):
             known = F.known_paths(c)
             have = {r['tmdb_id']: (r['id'], r['title']) for r in c.execute('SELECT id, tmdb_id, title FROM films WHERE tmdb_id IS NOT NULL')}
         items = []
-        for f in folders:
-            for it in collect(f):
-                if it['path'] not in known and all(i['path'] != it['path'] for i in items):
-                    items.append(it)
+        with fs.unreadable() as bad:
+            for f in folders:
+                for it in collect(f):
+                    if it['path'] not in known and all(i['path'] != it['path'] for i in items):
+                        items.append(it)
+        JOB['unreadable'] = bad
         JOB.update(total=len(items), done=0)
         out = []
         for i, it in enumerate(items):

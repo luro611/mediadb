@@ -884,9 +884,11 @@ def audio_scan_worker(folders):
   for pth,mid in s.query(AudioFile.path,AudioFile.medium_id).all():
    if mid: dir_medium[os.path.dirname(pth)]=mid
   paths=[]
-  for f in folders:
-   for pth in au.collect_files(f):
-    if pth not in known: paths.append(pth)
+  with au.fs.unreadable() as bad:
+   for f in folders:
+    for pth in au.collect_files(f):
+     if pth not in known: paths.append(pth)
+  JOB['unreadable']=bad
   JOB.update(total=len(paths),done=0)
   recs=[]
   for pth in paths:
@@ -957,9 +959,12 @@ def audio_page(request:Request):
  return templates.TemplateResponse(request,'audio.html',ctx(request,job=JOB,groups=groups,roots=roots,n_files=n_files,n_media=n_media,host_label=au.host_label))
 @app.get('/audio/browse')
 def audio_browse(request:Request,path:str=''):
- if not path: return JSONResponse({'path':'','label':'','parent':'','dirs':[{'name':n,'path':c,'label':h} for c,h,n in au.available_roots()],'audio':0,'error':''})
+ if not path: return JSONResponse({'path':'','label':'','parent':'','dirs':[{'name':n,'path':c,'label':h,'nas':au.nas.is_nas(c)} for c,h,n in au.available_roots()],'audio':0,'error':''})
  p=au.safe_dir(au.to_container_path(path,HOST_HOME))
- if not p: return JSONResponse({'path':path,'label':path,'parent':'','dirs':[],'audio':0,'error':i18n.tr_text(get_lang(request),'Ordner nicht gefunden oder nicht freigegeben.')})
+ if not p:
+  off=au.nas.offline_message(path) if au.nas.is_nas(path) else ''
+  err=i18n.tr_text(get_lang(request),*off) if off else i18n.tr_text(get_lang(request),'Ordner nicht gefunden oder nicht freigegeben.')
+  return JSONResponse({'path':path,'label':au.host_label(path),'parent':'','dirs':[],'audio':0,'error':err})
  dirs,n,err=au.list_dirs(p); err=i18n.tr_text(get_lang(request),err) if err else err; roots=[c for c,_,_ in au.all_roots()]
  parent='' if p in roots else os.path.dirname(p)
  return JSONResponse({'path':p,'label':au.host_label(p),'parent':parent,'audio':n,'error':err,'dirs':[{'name':d,'path':os.path.join(p,d),'label':d} for d in dirs]})
@@ -972,7 +977,7 @@ def audio_scan(folders:list[str]=Form([]),manual:str=Form('')):
   if p and p not in fl: fl.append(p)
  if not fl:
   JOB.update(state='error',error='Kein gültiger Ordner ausgewählt.',albums=[]); return RedirectResponse('/audio',303)
- JOB.update(state='scanning',folders=fl,done=0,total=0,albums=[],error='',result=None)
+ JOB.update(state='scanning',folders=fl,done=0,total=0,albums=[],error='',result=None,unreadable=[])
  threading.Thread(target=audio_scan_worker,args=(fl,),daemon=True).start()
  return RedirectResponse('/audio',303)
 @app.post('/audio/apply')

@@ -1,0 +1,4 @@
+{# Ordner, die beim Einlesen nicht lesbar waren (z. B. NAS zwischendurch aus); job.unreadable kommt aus fs.unreadable() #}
+{% set bad = job.unreadable or [] %}
+{% if bad %}<div class="warn"><strong>{{ _("Nicht lesbar: § Ordner.", bad|length) }}</strong> {{ _("Vielleicht war die NAS zwischendurch aus, oder der Benutzer darf diese Ordner nicht lesen. Was darin liegt, fehlt unten. Einfach später noch einmal einlesen: Schon erfasste Dateien werden übersprungen.") }}
+<ul class="unreadable">{% for b in bad[:10] %}<li><code>{{ host_label(b) }}</code></li>{% endfor %}</ul>{% if bad|length > 10 %}<p class="muted">{{ _("… und § weitere.", bad|length - 10) }}</p>{% endif %}</div>{% endif %}

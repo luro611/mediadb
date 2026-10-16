@@ -1,13 +1,33 @@
 """Dateizugriff fuer die Importe: normale Pfade ueber os, NAS-Pfade (/nas/<name>/...) ueber SMB (app/nas.py).
 Die Funktionen verhalten sich wie ihre Vorbilder aus os/os.path/open; Fehler sind OSError."""
-import builtins, os
+import builtins, os, threading
+from contextlib import contextmanager
 from . import nas
 
 is_nas = nas.is_nas
+_tl = threading.local()
+
+
+@contextmanager
+def unreadable():
+    """Sammelt die Ordner, die walk() in diesem Thread nicht lesen konnte (z. B. NAS zwischendurch aus):
+    with fs.unreadable() as bad: ... -> bad ist eine Liste von Pfaden."""
+    bad = []
+    _tl.bad = bad
+    try:
+        yield bad
+    finally:
+        _tl.bad = None
+
+
+def _note(e):
+    bad = getattr(_tl, 'bad', None)
+    if bad is not None:
+        bad.append(str(e.filename or '?'))
 
 
 def walk(top):
-    return nas.walk(top) if is_nas(top) else os.walk(top)
+    return nas.walk(top, onerror=_note) if is_nas(top) else os.walk(top, onerror=_note)
 
 
 def listdir(path):

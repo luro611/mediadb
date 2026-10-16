@@ -437,7 +437,7 @@ async def files_scan(request):
             fl.append(p)
     if not fl:
         return go('/series/files', 'Kein gültiger Ordner ausgewählt.')
-    X.JOB.update(folders=fl, done=0, total=0, items=[], error='', result=None)
+    X.JOB.update(folders=fl, done=0, total=0, items=[], error='', result=None, unreadable=[])
     X.start(X.scan_worker, fl)
     return go('/series/files')
 
