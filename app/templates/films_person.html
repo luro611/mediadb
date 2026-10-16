@@ -12,8 +12,8 @@
  </div>
 </div>
 
-<h2>{{ _("In deiner Sammlung") }} <span class="muted">({{ mine|length + series|length }})</span></h2>
-{% if mine %}{% if series %}<h3>{{ _("Filme") }} <span class="muted">({{ mine|length }})</span></h3>{% endif %}<div class="posters">{% for f in mine %}
+<div class="listhead"><h2>{{ _("In deiner Sammlung") }} <span class="muted">({{ mine|length + series|length }})</span></h2>{% if mine or series %}{% set larea='films' %}{% include '_layout.html' %}{% endif %}</div>
+{% if mine %}{% if series %}<h3>{{ _("Filme") }} <span class="muted">({{ mine|length }})</span></h3>{% endif %}<div class="posters{{ ' rows' if layout('films')=='list' }}">{% for f in mine %}
  <a class="pcard{% if f.watched %} seen{% endif %}" href="{{ base }}/films/{{ f.id }}">
   <span class="pimg">{% if f.poster %}<img src="{{ base }}/film-images/{{ f.poster }}" alt="" loading="lazy">{% else %}<span class="pph">{{ f.title }}</span>{% endif %}
    {% if f.rating %}<span class="prating">{{ f.rating }}</span>{% endif %}{% if f.watched %}<span class="pseen" title="{{ _('Gesehen') }}">✓</span>{% endif %}</span>
@@ -22,7 +22,7 @@
  </a>{% endfor %}</div>
 {% elif not series %}<p class="muted">{{ _("Noch kein Film und keine Serie mit dieser Person in deiner Sammlung.") }}</p>{% endif %}
 {% if series %}<h3>{{ _("Serien") }} <span class="muted">({{ series|length }})</span></h3>
-<div class="posters">{% for s in series %}
+<div class="posters{{ ' rows' if layout('films')=='list' }}">{% for s in series %}
  <a class="pcard" href="{{ base }}/series/{{ s.id }}">
   <span class="pimg">{% if s.poster %}<img src="{{ base }}/film-images/{{ s.poster }}" alt="" loading="lazy">{% else %}<span class="pph">{{ s.title }}</span>{% endif %}{% if s.rating %}<span class="prating">{{ s.rating }}</span>{% endif %}<span class="ptype">{{ _("Serie") }}</span></span>
   <span class="ptitle">{{ s.title }}</span>

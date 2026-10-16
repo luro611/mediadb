@@ -1,5 +1,11 @@
 # Änderungen
 
+## MediaDB 1.10.0 – Kacheln oder Liste
+- **Umschalter „Kacheln / Liste“** oben rechts über jeder Liste: Musik, Filme, Serien und Bücher, dazu Personen-, Autoren- und Buchreihen-Seiten.
+- **Listenansicht** für Filme, Serien und Bücher: eine schmale Zeile pro Eintrag mit kleinem Bild, Titel, Jahr, Format, Bewertung, Gesehen/Gelesen und Fortschritt. So passt viel mehr auf eine Seite.
+- **Kachelansicht für Musik:** Interpreten und CDs als Cover-Raster. Die bisherige Tabelle bleibt die Voreinstellung.
+- Die Wahl merkt sich der Browser für jeden Bereich getrennt.
+
 ## MediaDB 1.9.4 – Update-Hinweis und NAS-Status in den Einstellungen
 - **Neue Version?** In den Einstellungen steht jetzt, welche Version läuft, welche die neueste auf Codeberg ist und wann zuletzt nachgesehen wurde, dazu der Knopf **„Jetzt nach neuer Version suchen“**.
 - MediaDB sieht **alle sechs Stunden** nach (bisher einmal am Tag). Der Hinweis „Neue Version … verfügbar“ unten auf der Seite kam deshalb bisher bis zu einen Tag zu spät.

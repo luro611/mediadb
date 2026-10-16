@@ -474,9 +474,21 @@ def get_lang(request):
  if c in i18n.LANGS: return c
  l=load_settings().get('lang')
  return l if l in i18n.LANGS else i18n.DEFAULT
+LAYOUTS={'music':'list','films':'tiles','series':'tiles','books':'tiles'}  # Voreinstellung je Bereich: Kacheln oder Liste
+def get_layout(request,area):
+ """Ansicht eines Bereichs ('tiles' oder 'list'), gemerkt im Cookie des Browsers (Umschalter oben auf den Listen)."""
+ c=request.cookies.get('mediadb_layout_'+area) if request else None
+ return c if c in ('tiles','list') else LAYOUTS.get(area,'tiles')
 def ctx(request,**kw):
  lang=get_lang(request)
- return {'request':request,'lang':lang,'langs':i18n.LANGS,'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on,**kw}
+ return {'request':request,'lang':lang,'langs':i18n.LANGS,'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on,'layout':partial(get_layout,request),**kw}
+@app.get('/layout/{area}/{mode}')
+def set_layout(request:Request,area:str,mode:str,next:str='/'):
+ next=sec.strip_base(next,sec.get_base(request))
+ if not next.startswith('/') or next.startswith('//') or '\\' in next: next='/'
+ r=RedirectResponse(next,303)
+ if area in LAYOUTS and mode in ('tiles','list'): r.set_cookie('mediadb_layout_'+area,mode,max_age=60*60*24*365*5,samesite='lax')
+ return r
 @app.get('/lang/{code}')
 def set_lang(request:Request,code:str,next:str='/'):
  if code not in i18n.LANGS: code=i18n.DEFAULT
