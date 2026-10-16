@@ -1,5 +1,11 @@
 # Änderungen
 
+## MediaDB 1.11.0 – Als Nächstes
+- **Neuer Knopf „☆ Als Nächstes vormerken“** auf jeder CD-, Film-, Serien- und Buchseite: für das, was du als Nächstes hören, sehen oder lesen möchtest. Ein zweiter Klick nimmt es wieder herunter.
+- **Neuer Reiter „Als Nächstes“** in Musik, Filme, Serien und Bücher, mit Anzahl. Die Einträge stehen in der Reihenfolge, in der du sie vorgemerkt hast. Ein ★ auf Kacheln und Zeilen zeigt vorgemerkte Einträge auch in den anderen Listen.
+- **Räumt sich selbst auf:** Ein Film fällt heraus, sobald du ihn als gesehen markierst, ein Buch, sobald es gelesen ist, und eine Serie, sobald keine ausgestrahlte Folge mehr offen ist. CDs nimmst du selbst herunter.
+- Auf der Serienseite heißt die nächste ungesehene Folge jetzt „Weiter mit:“ statt „Als Nächstes:“, damit nichts verwechselt wird.
+
 ## MediaDB 1.10.0 – Kacheln oder Liste
 - **Umschalter „Kacheln / Liste“** oben rechts über jeder Liste: Musik, Filme, Serien und Bücher, dazu Personen-, Autoren- und Buchreihen-Seiten.
 - **Listenansicht** für Filme, Serien und Bücher: eine schmale Zeile pro Eintrag mit kleinem Bild, Titel, Jahr, Format, Bewertung, Gesehen/Gelesen und Fortschritt. So passt viel mehr auf eine Seite.

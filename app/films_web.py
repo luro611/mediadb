@@ -25,7 +25,7 @@ ctx = None
 IMAGES = None
 HOST_HOME = os.getenv('HOST_HOME', '')
 PAGE = 120
-VIEW_NAMES = {'all': 'Alle', 'unseen': 'Noch nicht gesehen', 'mustsee': 'Top 10: Muss ich sehen', 'favorites': 'Lieblingsfilme',
+VIEW_NAMES = {'all': 'Alle', 'next': 'Als Nächstes', 'unseen': 'Noch nicht gesehen', 'mustsee': 'Top 10: Muss ich sehen', 'favorites': 'Lieblingsfilme',
               'recent_watched': 'Zuletzt gesehen', 'recent_added': 'Zuletzt hinzugefügt'}
 SORT_NAMES = {'title': 'Titel', 'year': 'Jahr', 'rating': 'Bewertung', 'added': 'Hinzugefügt', 'watched_at': 'Zuletzt gesehen', 'runtime': 'Laufzeit'}
 

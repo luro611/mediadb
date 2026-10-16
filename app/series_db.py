@@ -80,7 +80,7 @@ SERIES_FIELDS = ['tmdb_id', 'imdb_id', 'tvdb_id', 'title', 'original_title', 'ye
                  'tmdb_votes', 'keywords', 'notes', 'source', 'guide_at', 'providers', 'providers_buy', 'providers_link',
                  'providers_at', 'providers_own', 'next_air_date', 'next_season', 'next_episode']
 NEW_COLUMNS = {'providers': 'TEXT', 'providers_buy': 'TEXT', 'providers_link': 'TEXT', 'providers_at': 'TEXT',
-               'providers_own': 'TEXT', 'next_air_date': 'TEXT', 'next_season': 'INTEGER', 'next_episode': 'INTEGER'}
+               'providers_own': 'TEXT', 'next_air_date': 'TEXT', 'next_season': 'INTEGER', 'next_episode': 'INTEGER', 'next_at': 'TEXT'}
 SCHEMA_VERSION = 2  # 2: Streamingdienste und naechste Folge (1.4)
 FILE_FIELDS = ['season', 'episode', 'episode_end', 'title_hint', 'path', 'container', 'resolution', 'video_codec', 'hdr',
                'duration_s', 'audio', 'subtitles', 'size_bytes']
@@ -344,6 +344,17 @@ def set_watched(c, sid, season, episode, on, when=None):
         c.execute('DELETE FROM watched WHERE series_id=? AND season=? AND episode=?', (sid, season, episode))
 
 
+def set_next(c, sid, on):
+    """Fuer "Als Naechstes" vormerken (on=True) oder davon herunternehmen."""
+    c.execute('UPDATE series SET next_at=? WHERE id=?', (now() if on else None, sid))
+
+
+def drop_next_if_caught_up(c, sid):
+    """Nach "gesehen": Ist keine ausgestrahlte Folge mehr offen, faellt die Serie aus "Als Naechstes" heraus."""
+    if not next_up(c, sid) and c.execute('SELECT 1 FROM watched WHERE series_id=? AND season>0 LIMIT 1', (sid,)).fetchone():
+        set_next(c, sid, False)
+
+
 def set_season_watched(c, sid, season, on, only_aired=True):
     eps = [dict(e) for e in c.execute('SELECT episode, air_date FROM episodes WHERE series_id=? AND season=?', (sid, season))]
     listed = {e['episode'] for e in eps}
@@ -424,7 +435,7 @@ def find_people(c, q, limit=8):
 
 
 # ---------------------------------------------------------------- Uebersicht
-VIEWS = ['all', 'incomplete', 'watching', 'unstarted', 'finished', 'running', 'recent_added']
+VIEWS = ['all', 'next', 'incomplete', 'watching', 'unstarted', 'finished', 'running', 'recent_added']
 LETTER_SQL = "CASE WHEN substr(s.sort_title,1,1) BETWEEN 'a' AND 'z' THEN upper(substr(s.sort_title,1,1)) ELSE '#' END"
 _AIRED = "(SELECT count(*) FROM episodes e WHERE e.series_id=s.id AND e.season>0 AND e.air_date<=:today)"
 _HAVE_FILES = """(SELECT count(DISTINCT e.season||'x'||e.episode) FROM episodes e JOIN ep_files f ON f.series_id=e.series_id AND f.season=e.season
@@ -451,7 +462,9 @@ def query(c, view='all', q='', genre='', letter='', sort='title', direction='asc
     if genre:
         where.append("(', '||coalesce(s.genres,'')||',') LIKE :genre")
         args['genre'] = f'%, {genre},%'
-    if view == 'watching':
+    if view == 'next':
+        where.append('s.next_at IS NOT NULL')
+    elif view == 'watching':
         where.append(f'{_SEEN}>0 AND {_SEEN}<{_AIRED}')
     elif view == 'unstarted':
         where.append(f'{_SEEN}=0')
@@ -465,6 +478,8 @@ def query(c, view='all', q='', genre='', letter='', sort='title', direction='asc
              'added': f's.created_at {d}'}.get(sort, f's.sort_title {d}')
     if view == 'recent_added':
         order = 's.created_at DESC, s.id DESC'
+    elif view == 'next':
+        order = 's.next_at, s.sort_title'
     copies_all = "EXISTS (SELECT 1 FROM copies k WHERE k.series_id=s.id AND (lower(k.seasons) LIKE '%komplett%' OR lower(k.seasons) LIKE '%complete%'))"
     sql = f"""SELECT s.*, {_AIRED} AS n_aired, {_HAVE_FILES} AS n_files, {_SEEN} AS n_seen,
               (SELECT group_concat(DISTINCT k.kind) FROM copies k WHERE k.series_id=s.id) AS kinds,
@@ -493,7 +508,7 @@ def query(c, view='all', q='', genre='', letter='', sort='title', direction='asc
 def view_counts(c):
     rows, n = query(c, 'all', limit=10**6)
     running = ('Returning Series', 'In Production')
-    return {'all': n, 'incomplete': sum(1 for r in rows if r['n_missing'] > 0),
+    return {'all': n, 'next': sum(1 for r in rows if r['next_at']), 'incomplete': sum(1 for r in rows if r['n_missing'] > 0),
             'watching': sum(1 for r in rows if 0 < r['n_seen'] < r['n_aired']),
             'unstarted': sum(1 for r in rows if r['n_seen'] == 0),
             'finished': sum(1 for r in rows if r['n_seen'] > 0 and r['n_seen'] >= r['n_aired']),

@@ -20,7 +20,7 @@ PAGE = 120
 go = FW.go
 _int = FW._int
 _form = FW._form
-VIEW_NAMES = {'all': 'Alle', 'unread': 'Ungelesen', 'reading': 'Lese ich gerade', 'read': 'Gelesen', 'favorites': 'Lieblingsbücher',
+VIEW_NAMES = {'all': 'Alle', 'next': 'Als Nächstes', 'unread': 'Ungelesen', 'reading': 'Lese ich gerade', 'read': 'Gelesen', 'favorites': 'Lieblingsbücher',
               'recent_read': 'Zuletzt gelesen', 'recent_added': 'Zuletzt hinzugefügt', 'ebooks': 'E-Books', 'audiobooks': 'Hörbücher'}
 SORT_NAMES = {'author': 'Autor', 'title': 'Titel', 'year': 'Jahr', 'rating': 'Bewertung', 'added': 'Hinzugefügt'}
 # Felder, die ein Kandidat als JSON im Formular mitbringt (keine grossen Texte)

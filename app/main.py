@@ -27,7 +27,7 @@ engine=create_engine(DB_URL, connect_args={'check_same_thread':False,'timeout':1
 Session=sessionmaker(bind=engine); Base=declarative_base()
 class Medium(Base):
  __tablename__='media'
- id=Column(Integer,primary_key=True); barcode=Column(String,index=True,unique=True); title=Column(String,nullable=False); artist=Column(String); artist_sort=Column(String); artist_mbid=Column(String); year=Column(String); date=Column(String); release_date=Column(String); ownership=Column(String); file_formats=Column(String); country=Column(String); label=Column(String); catalog_number=Column(String); format=Column(String); media_count=Column(Integer); disc_count=Column(Integer); track_count=Column(Integer); status=Column(String); packaging=Column(String); language=Column(String); script=Column(String); release_mbid=Column(String); release_group_mbid=Column(String); release_group_type=Column(String); asin=Column(String); annotation=Column(Text); disambiguation=Column(String); quality=Column(String); genre=Column(Text); genres=Column(Text); tags=Column(Text); styles=Column(Text); notes=Column(Text); cover_path=Column(String); cover_url=Column(String); source=Column(String); source_id=Column(String); created_at=Column(DateTime,default=datetime.utcnow); raw_json=Column(Text)
+ id=Column(Integer,primary_key=True); barcode=Column(String,index=True,unique=True); title=Column(String,nullable=False); artist=Column(String); artist_sort=Column(String); artist_mbid=Column(String); year=Column(String); date=Column(String); release_date=Column(String); ownership=Column(String); file_formats=Column(String); country=Column(String); label=Column(String); catalog_number=Column(String); format=Column(String); media_count=Column(Integer); disc_count=Column(Integer); track_count=Column(Integer); status=Column(String); packaging=Column(String); language=Column(String); script=Column(String); release_mbid=Column(String); release_group_mbid=Column(String); release_group_type=Column(String); asin=Column(String); annotation=Column(Text); disambiguation=Column(String); quality=Column(String); genre=Column(Text); genres=Column(Text); tags=Column(Text); styles=Column(Text); notes=Column(Text); cover_path=Column(String); cover_url=Column(String); source=Column(String); source_id=Column(String); created_at=Column(DateTime,default=datetime.utcnow); raw_json=Column(Text); next_at=Column(String)  # next_at: "Als Naechstes" vorgemerkt am (seit 1.11)
  tracks=relationship('Track',back_populates='medium',cascade='all, delete-orphan',order_by='Track.disc_number,Track.position')
 class Track(Base):
  __tablename__='tracks'; id=Column(Integer,primary_key=True); medium_id=Column(Integer,ForeignKey('media.id')); position=Column(Integer); disc_number=Column(Integer); number=Column(String); title=Column(String); length_ms=Column(Integer); duration=Column(String); recording_mbid=Column(String); artist=Column(String); medium=relationship('Medium',back_populates='tracks')
@@ -614,7 +614,7 @@ SORTS={'genre':('genre','artist','release_date'),'artist':('artist','release_dat
 def qs(**kw): return urlencode({k:v for k,v in kw.items() if v})
 @app.get('/media',response_class=HTMLResponse)
 def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:str='artist',dir:str='asc',view:str='all',message:str='',mode:str='',interpret:str='',l:str=''):
- s=Session(); list_mode=bool(q or artist or genre or year or interpret or mode=='list'); view={'mp3':'digital'}.get(view,view); view=view if view in ('cd','digital') else 'all'; sort=sort if sort in SORTS else 'artist'; dir='desc' if dir=='desc' else 'asc'; stmt=select(Medium)
+ s=Session(); list_mode=bool(q or artist or genre or year or interpret or mode=='list'); view={'mp3':'digital'}.get(view,view); view=view if view in ('cd','digital','next') else 'all'; sort=sort if sort in SORTS else 'artist'; dir='desc' if dir=='desc' else 'asc'; stmt=select(Medium)
  if artist: stmt=stmt.where(or_(Medium.artist.ilike(f'%{artist}%'),Medium.tracks.any(Track.artist.ilike(f'%{artist}%'))))
  for col,val in [(Medium.genre,genre),(Medium.year,year)]:
   if val: stmt=stmt.where(col.ilike(f'%{val}%'))
@@ -625,7 +625,8 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
   like=f'%{tok}%'; stmt=stmt.where(or_(*[getattr(Medium,c).ilike(like) for c in ('title','artist','barcode','genre','tags','styles','label','catalog_number','notes','year','release_date','file_formats')],Medium.tracks.any(or_(Track.title.ilike(like),Track.artist.ilike(like)))))
  if view=='cd': stmt=stmt.where(Medium.ownership.in_(['cd','cd_digital']))
  elif view=='digital': stmt=stmt.where(Medium.ownership=='digital')
- tabs={'all':0,'cd':0,'digital':0}
+ elif view=='next': stmt=stmt.where(Medium.next_at.isnot(None))
+ tabs={'all':0,'cd':0,'digital':0,'next':s.scalar(select(func.count()).select_from(Medium).where(Medium.next_at.isnot(None)))}
  for o,n in s.execute(select(Medium.ownership,func.count()).group_by(Medium.ownership)).all():
   o=o or 'cd'; tabs['all']+=n; tabs['cd']+=(n if o in ('cd','cd_digital') else 0); tabs['digital']+=(n if o=='digital' else 0)
  datekey=func.coalesce(func.nullif(Medium.release_date,''),func.nullif(Medium.year,''),'')
@@ -634,7 +635,7 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
  order=[case((first=='',1),else_=0), first.desc() if dir=='desc' else first]
  for n in names[1:]: order+=[case((kx(n)=='',1),else_=0), kx(n)]
  filt={'q':q,'artist':artist,'genre':genre,'year':year,'interpret':interpret,'mode':'list' if mode=='list' else '','view':'' if view=='all' else view}
- tab_links={k:'/media?'+qs(**{**filt,'view':'' if k=='all' else k},sort=sort,dir=dir) for k in ('all','cd','digital')}
+ tab_links={k:'/media?'+qs(**{**filt,'view':'' if k=='all' else k},sort=sort,dir=dir) for k in ('all','next','cd','digital')}
  links={c:'/media?'+qs(**filt,sort=c,dir=('desc' if sort==c and dir=='asc' else 'asc')) for c in SORTS}
  items=s.scalars(stmt.order_by(*order)).all(); counts={}
  if interpret: ik=au.norm_full(interpret); items=[x for x in items if au.norm_full(x.artist or 'Ohne Künstler')==ik]
@@ -876,6 +877,21 @@ def refresh_cover(id:int):
  s=Session(); x=s.get(Medium,id)
  if x: fetch_cover_for(x,s)
  return RedirectResponse(f'/media/{id}',303)
+@app.post('/next/{area}/{item_id}')
+def set_next(request:Request,area:str,item_id:int,on:str=Form(''),back:str=Form('/')):
+ """Knopf "Als Naechstes" auf den Detailseiten aller Bereiche: vormerken (on=1) oder wieder herunternehmen."""
+ on=on=='1'
+ if area=='music':
+  s=Session(); x=s.get(Medium,item_id)
+  if x: x.next_at=datetime.now().isoformat(timespec='seconds') if on else None; s.commit()
+  s.close()
+ elif area in ('films','series','books'):
+  from . import films_db as _F, series_db as _S, books_db as _B
+  m={'films':_F,'series':_S,'books':_B}[area]
+  with m.db() as c: m.set_next(c,item_id,on)
+ path,_,frag=_safe_next(sec.strip_base(back,sec.get_base(request))).partition('#')
+ msg='Für „Als Nächstes“ vorgemerkt.' if on else 'Von „Als Nächstes“ genommen.'
+ return RedirectResponse(path+('&' if '?' in path else '?')+'message='+quote(msg)+('#'+frag if frag.isalnum() else ''),303)
 @app.post('/media/{id}/delete')
 def delete(id:int):
  s=Session(); x=s.get(Medium,id)

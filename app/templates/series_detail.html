@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% from '_lend.html' import lend_box with context %}{% block content %}
+{% extends 'base.html' %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}
 <p class="eyebrow"><a href="{{ base }}/series">{{ _("MediaDB / Serien") }}</a></p>
 {% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
 {% if s.backdrop %}<div class="backdrop" style="background-image:url('{{ base }}/film-images/{{ s.backdrop }}')" role="img" aria-label=""></div>{% endif %}
@@ -12,6 +12,7 @@
   {% if pv or s.next_air_date %}<p class="streamline">{% if pv %}<span class="muted">{{ _("Streaming:") }}</span> <strong>{{ pv }}</strong>{% if s.providers_link and not s.providers_own %} · <a href="{{ s.providers_link }}" target="_blank" rel="noopener">{{ _("Wo ansehen? ›") }}</a>{% endif %}{% endif %}
    {% if s.next_air_date %}{% if pv %}<br>{% endif %}<span class="muted">{{ _("Nächste Folge:") }}</span> <strong>{{ s.next_air_date|fdate }}</strong> (S{{ '%02d' % (s.next_season or 0) }}E{{ '%02d' % (s.next_episode or 0) }}){% endif %}</p>{% endif %}
 
+  {{ next_btn('series', s.id, s.next_at) }}
   <section class="watch card" id="fortschritt" aria-label="{{ _('Fortschritt') }}">
    <div class="sumgrid">
     <div><span class="big">{{ tot.have }}</span><span class="muted">{{ _("von § Folgen vorhanden", tot.aired) }}</span></div>
@@ -21,7 +22,7 @@
    </div>
    {% if tot.aired %}<span class="progressbar" title="{{ _('§ von § Folgen gesehen', tot.seen, tot.aired) }}"><i style="width:{{ (100 * tot.seen / tot.aired)|round|int }}%"></i></span>{% endif %}
    {% if next %}<form method="post" action="{{ base }}/series/{{ s.id }}/next-seen" class="nextup"><input type="hidden" name="anchor" value="fortschritt">
-    <span><span class="muted">{{ _("Als Nächstes:") }}</span> <strong>S{{ '%02d' % next.season }}E{{ '%02d' % next.episode }}</strong> {{ next.name or '' }}</span><button>{{ _("Gesehen") }}</button></form>{% endif %}
+    <span><span class="muted">{{ _("Weiter mit:") }}</span> <strong>S{{ '%02d' % next.season }}E{{ '%02d' % next.episode }}</strong> {{ next.name or '' }}</span><button>{{ _("Gesehen") }}</button></form>{% endif %}
    <form method="post" action="{{ base }}/series/{{ s.id }}/rating" class="rating"><input type="hidden" name="anchor" value="fortschritt">
     <p class="rlabel">{{ _("Eigene Bewertung") }}{% if s.rating %}: <strong>{{ s.rating }}</strong>{% if RATING_LABELS.get(s.rating) %} · {{ _(RATING_LABELS[s.rating]) }}{% endif %}{% endif %}</p>
     <div class="scale">{% for n in range(1,11) %}<button name="rating" value="{{ n }}" class="r{% if s.rating==n %} on{% endif %}" aria-pressed="{{ 'true' if s.rating==n else 'false' }}">{{ n }}</button>{% endfor %}</div>

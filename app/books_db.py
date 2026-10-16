@@ -64,7 +64,7 @@ BOOK_FIELDS = ['isbn', 'title', 'subtitle', 'original_title', 'authors', 'publis
                'duration_s', 'language', 'series', 'series_no', 'genres', 'subjects', 'description', 'cover', 'dnb_id', 'ol_key',
                'source', 'notes', 'description_src', 'blurb_url', 'toc_url', 'ol_work']
 # seit 1.6.1: Inhaltstext-Quelle, Wikipedia und Bewertung bei Open Library (in bestehenden Datenbanken per ALTER TABLE ergaenzt)
-NEW_COLUMNS = {'description_src': 'TEXT', 'blurb_url': 'TEXT', 'toc_url': 'TEXT', 'ol_work': 'TEXT', 'wiki_extract': 'TEXT',
+NEW_COLUMNS = {'next_at': 'TEXT', 'description_src': 'TEXT', 'blurb_url': 'TEXT', 'toc_url': 'TEXT', 'ol_work': 'TEXT', 'wiki_extract': 'TEXT',
                'wiki_url': 'TEXT', 'wiki_title': 'TEXT', 'wiki_lang': 'TEXT', 'ol_rating': 'REAL', 'ol_rating_count': 'INTEGER',
                'extras_at': 'TEXT'}
 LANG_NAMES = {'ger': 'Deutsch', 'deu': 'Deutsch', 'de': 'Deutsch', 'eng': 'Englisch', 'en': 'Englisch', 'fre': 'Französisch',
@@ -221,14 +221,19 @@ def delete(c, bid):
 def set_status(c, bid, status, when=None):
     """status '' (ungelesen), 'reading' oder 'read' (Anzahl +1, Datum heute oder 'when')."""
     if status == 'read':
-        c.execute('UPDATE books SET status=?, read_count=read_count+1, read_at=?, updated_at=? WHERE id=?',
+        c.execute('UPDATE books SET status=?, read_count=read_count+1, read_at=?, next_at=NULL, updated_at=? WHERE id=?',
                   ('read', when if when is not None else date.today().isoformat(), now(), bid))
     else:
         c.execute('UPDATE books SET status=?, updated_at=? WHERE id=?', (status if status in STATUS else '', now(), bid))
 
 
 def set_read_date(c, bid, when):
-    c.execute("UPDATE books SET status='read', read_count=max(read_count,1), read_at=?, updated_at=? WHERE id=?", (when or None, now(), bid))
+    c.execute("UPDATE books SET status='read', read_count=max(read_count,1), read_at=?, next_at=NULL, updated_at=? WHERE id=?", (when or None, now(), bid))
+
+
+def set_next(c, bid, on):
+    """Fuer "Als Naechstes" vormerken (on=True) oder davon herunternehmen; 'gelesen' nimmt das Buch von selbst herunter."""
+    c.execute('UPDATE books SET next_at=? WHERE id=?', (now() if on else None, bid))
 
 
 def set_rating(c, bid, rating):
@@ -320,6 +325,7 @@ def series_gaps(nos):
 
 # ---------------------------------------------------------------- Uebersicht
 VIEW_RULES = {
+    'next': ('b.next_at IS NOT NULL', 'b.next_at, b.sort_title', None),
     'unread': ("b.status=''", None, None),
     'reading': ("b.status='reading'", 'b.updated_at DESC', None),
     'read': ("b.status='read'", None, None),

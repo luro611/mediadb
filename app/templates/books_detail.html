@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% from '_lend.html' import lend_box with context %}{% block content %}
+{% extends 'base.html' %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}
 <p class="eyebrow"><a href="{{ base }}/books">{{ _("MediaDB / Bücher") }}</a></p>
 {% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
 <div class="filmhead bookhead">
@@ -10,6 +10,7 @@
   <p class="filmline">{% for x in [b.year, b.publisher, b.edition, (_('§ Seiten', b.pages) if b.pages else ''), (b.duration_s|hours), (_(BOOK_LANGS.get(b.language, b.language)) if b.language else ''), b.genres] if x %}<span>{{ x }}</span>{% endfor %}</p>
   {% if b.series %}<p class="seriesline">{{ _("Reihe:") }} <a href="{{ base }}/books/series?name={{ b.series|urlencode }}">{{ b.series }}</a>{% if b.series_no %} · {{ _("Band §", b.series_no) }}{% endif %}</p>{% endif %}
 
+  {{ next_btn('books', b.id, b.next_at) }}
   <section class="watch card" id="gelesen" aria-label="{{ _('Gelesen') }}">
    <div class="watchstate">{% if b.status=='read' %}<strong class="isseen">✓ {{ _("Gelesen") }}</strong>{% if b.read_at %} <span class="muted">{{ _("zuletzt am §", b.read_at|fdate) }}</span>{% endif %}{% if b.read_count > 1 %} <span class="badge">{{ _("§ × gelesen", b.read_count) }}</span>{% endif %}
     {% elif b.status=='reading' %}<strong>{{ _("Lese ich gerade") }}</strong>{% else %}<strong>{{ _("Noch nicht gelesen") }}</strong>{% endif %}</div>

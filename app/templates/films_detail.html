@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% from '_lend.html' import lend_box with context %}{% block content %}
+{% extends 'base.html' %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}
 {% set f = film %}
 <p class="eyebrow"><a href="{{ base }}/films">{{ _("MediaDB / Filme") }}</a></p>
 {% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
@@ -11,6 +11,7 @@
   <p class="filmline">{% for x in [f.year, (_('§ Min.', f.runtime) if f.runtime else ''), f.certification, f.genres] if x %}<span>{{ x }}</span>{% endfor %}</p>
   {% if f.tagline %}<p class="tagline">{{ f.tagline }}</p>{% endif %}
 
+  {{ next_btn('films', f.id, f.next_at) }}
   <section class="watch card" id="gesehen" aria-label="{{ _('Gesehen') }}">
    <div class="watchstate">{% if f.watched %}<strong class="isseen">✓ {{ _("Gesehen") }}</strong>{% if f.watched_at %} <span class="muted">{{ _("zuletzt am §", f.watched_at|fdate) }}</span>{% endif %}{% if f.watch_count > 1 %} <span class="badge">{{ _("§ × gesehen", f.watch_count) }}</span>{% endif %}
     {% else %}<strong>{{ _("Noch nicht gesehen") }}</strong>{% endif %}</div>

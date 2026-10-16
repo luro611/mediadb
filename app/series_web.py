@@ -16,7 +16,7 @@ templates = None
 ctx = None
 IMAGES = None
 PAGE = 120
-VIEW_NAMES = {'all': 'Alle', 'incomplete': 'Unvollständig', 'watching': 'Angefangen', 'unstarted': 'Noch nicht angefangen',
+VIEW_NAMES = {'all': 'Alle', 'next': 'Als Nächstes', 'incomplete': 'Unvollständig', 'watching': 'Angefangen', 'unstarted': 'Noch nicht angefangen',
               'finished': 'Ganz gesehen', 'running': 'Läuft noch', 'recent_added': 'Zuletzt hinzugefügt'}
 SORT_NAMES = {'title': 'Titel', 'year': 'Jahr', 'rating': 'Bewertung', 'added': 'Hinzugefügt'}
 
@@ -230,6 +230,8 @@ def _watched(c, sid, f, raw):
         S.set_season_watched(c, sid, se, f.get('on') == '1')
     else:
         S.set_watched(c, sid, se, ep, f.get('on') == '1')
+    if f.get('on') == '1':
+        S.drop_next_if_caught_up(c, sid)
     return ''
 
 
@@ -237,6 +239,7 @@ def _next_seen(c, sid, f, raw):
     n = S.next_up(c, sid)
     if n:
         S.set_watched(c, sid, n['season'], n['episode'], True)
+        S.drop_next_if_caught_up(c, sid)
     return ''
 
 

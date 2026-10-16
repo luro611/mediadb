@@ -261,3 +261,8 @@ input.mid{max-width:14em}
 .posters.music .pbadge{position:absolute;left:8px;bottom:8px;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--bg);font:600 10px GeistMono,monospace;text-transform:uppercase;letter-spacing:.06em}
 .posters.rows .pmeta .badge{margin-left:6px}
 @media (max-width:720px){.layswitch a span{display:none}.layswitch a{padding:7px 12px}.posters.rows .pcard{column-gap:8px}}
+/* ---- Als Naechstes ---- */
+.nextbtn{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:10px 0 14px}.nextbtn button{margin:0}.nextbtn button b{font-weight:400}.nextbtn .muted{font-size:13px}
+.nextbtn button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pnext{position:absolute;right:8px;top:44px;width:26px;height:26px;border-radius:13px;background:var(--surface);color:var(--accent);border:1px solid var(--accent);font:14px/24px Inter,sans-serif;text-align:center}
+.posters.music .pnext{top:8px}.badge.nextbadge{color:var(--accent);border-color:var(--accent)}

@@ -94,6 +94,8 @@ def init(path):
     DB_PATH = Path(path)
     with _init_lock, db() as c:
         c.executescript(SCHEMA)
+        if 'next_at' not in {r[1] for r in c.execute('PRAGMA table_info(films)')}:  # seit 1.11: "Als Naechstes"
+            c.execute('ALTER TABLE films ADD COLUMN next_at TEXT')
         c.executescript(TRIGGERS)
         if c.execute(f'SELECT count(*) FROM {FTS}').fetchone()[0] != c.execute('SELECT count(*) FROM films').fetchone()[0]:
             c.execute(f'DELETE FROM {FTS}')
@@ -187,17 +189,23 @@ def parse_date(text):
 
 
 def set_watched(c, fid, watched, when=None):
-    """watched=True: (noch einmal) gesehen, Anzahl +1, Datum heute oder 'when'. False: als ungesehen markieren."""
+    """watched=True: (noch einmal) gesehen, Anzahl +1, Datum heute oder 'when'; faellt aus "Als Naechstes" heraus.
+    False: als ungesehen markieren."""
     if watched:
-        c.execute('UPDATE films SET watched=1, watch_count=watch_count+1, watched_at=?, updated_at=? WHERE id=?',
+        c.execute('UPDATE films SET watched=1, watch_count=watch_count+1, watched_at=?, next_at=NULL, updated_at=? WHERE id=?',
                   (when if when is not None else date.today().isoformat(), now(), fid))
     else:
         c.execute('UPDATE films SET watched=0, updated_at=? WHERE id=?', (now(), fid))
 
 
+def set_next(c, fid, on):
+    """Fuer "Als Naechstes" vormerken (on=True) oder davon herunternehmen."""
+    c.execute('UPDATE films SET next_at=? WHERE id=?', (now() if on else None, fid))
+
+
 def set_watched_date(c, fid, when):
     """Nur das Datum aendern (leer = unbekannt); der Film gilt dann als gesehen."""
-    c.execute('UPDATE films SET watched=1, watch_count=max(watch_count,1), watched_at=?, updated_at=? WHERE id=?',
+    c.execute('UPDATE films SET watched=1, watch_count=max(watch_count,1), watched_at=?, next_at=NULL, updated_at=? WHERE id=?',
               (when or None, now(), fid))
 
 
@@ -284,7 +292,7 @@ def lists_of(c, fid):
 
 
 # ---------------------------------------------------------------- Ansichten / Suche
-VIEWS = ['all', 'unseen', 'mustsee', 'favorites', 'recent_watched', 'recent_added']
+VIEWS = ['all', 'next', 'unseen', 'mustsee', 'favorites', 'recent_watched', 'recent_added']
 SORTS = {
     'title': 'f.sort_title {d}, f.year',
     'year': 'f.year IS NULL, f.year {d}, f.sort_title',
@@ -295,6 +303,7 @@ SORTS = {
 }
 # feste Reihenfolge und Grenze fuer bestimmte Ansichten
 VIEW_RULES = {
+    'next': ('f.next_at IS NOT NULL', 'f.next_at, f.sort_title', None),
     'unseen': ('f.watched=0', None, None),
     'mustsee': ('f.watched=0 AND f.rating IS NOT NULL', 'f.rating DESC, f.sort_title', 10),
     'favorites': ('f.watched=1 AND f.rating>=9', 'f.rating DESC, f.sort_title', None),
