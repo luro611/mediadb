@@ -3,7 +3,7 @@
 <h1>{{ a.name }}</h1>
 <p class="links">{% if a.gnd %}<a href="https://d-nb.info/gnd/{{ a.gnd }}" target="_blank" rel="noopener">{{ _("GND (Nationalbibliothek) ›") }}</a>{% endif %}<a href="https://openlibrary.org/search?q={{ a.name|urlencode }}&amp;mode=everything" target="_blank" rel="noopener">{{ _("Weitere Bücher bei Open Library ›") }}</a><a href="{{ base }}/books/search?author={{ a.name.split(' ')[-1]|urlencode }}">{{ _("Buch hinzufügen ›") }}</a></p>
 <div class="listhead"><h2>{{ _("In deiner Sammlung") }} <span class="muted">({{ books|length }})</span></h2>{% set larea='books' %}{% include '_layout.html' %}</div>
-<div class="posters books{{ ' rows' if layout('books')=='list' }}">{% for b in books %}
+<div class="posters books{{ layout_cls('books') }}">{% for b in books %}
  <a class="pcard{% if b.status=='read' %} seen{% endif %}" href="{{ base }}/books/{{ b.id }}">
   <span class="pimg">{% if b.cover %}<img src="{{ base }}/film-images/{{ b.cover }}" alt="" loading="lazy">{% else %}<span class="pph">{{ b.title }}</span>{% endif %}{% if b.rating %}<span class="prating">{{ b.rating }}</span>{% endif %}{% if b.status=='read' %}<span class="pseen">✓</span>{% endif %}</span>
   <span class="ptitle">{{ b.title }}</span>

@@ -212,7 +212,7 @@ nav .actitem .sub{font-size:13px}
 .settingsextra{margin-top:28px}.settingsextra .card{margin:0}.settingsextra h3{font-size:24px}
 .settingsextra .tab{display:inline-block;margin:0 4px 6px 0}
 #nas{margin:16px 0 0}#nas .nasrow{border-top:1px solid var(--line,#ddd);padding:10px 0}#nas .nasrow .actions{display:flex;gap:8px;flex-wrap:wrap}#nas .nasrow form{margin:0}#nas details{margin:8px 0}#nas summary{cursor:pointer;font-weight:600}#nas .nasresult{margin:8px 0 0}#nas .nasresult small{display:block;margin-top:4px;opacity:.75;overflow-wrap:anywhere}#nas select{max-width:100%}
-nav a.navgear:not(.brand){font:400 18px Inter,sans-serif;letter-spacing:0;line-height:1}
+nav a.navgear:not(.brand){font:400 26px Inter,sans-serif;letter-spacing:0;line-height:1;padding:2px 4px}
 .help{color:var(--muted);font-size:14px;line-height:1.5;margin:4px 0 14px;max-width:760px}
 /* Buecher */
 .posters.books .pimg{aspect-ratio:2/3}
@@ -266,3 +266,12 @@ input.mid{max-width:14em}
 .nextbtn button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .pnext{position:absolute;right:8px;top:44px;width:26px;height:26px;border-radius:13px;background:var(--surface);color:var(--accent);border:1px solid var(--accent);font:14px/24px Inter,sans-serif;text-align:center}
 .posters.music .pnext{top:8px}.badge.nextbadge{color:var(--accent);border-color:var(--accent)}
+/* ---- Ansicht "Text": Liste ohne Bilder ---- */
+.posters.rows.text .pcard{grid-template-columns:minmax(0,1fr) auto;padding:5px 6px;min-height:34px}
+.posters.rows.text .pimg img,.posters.rows.text .pph{display:none}
+.posters.rows.text .ptitle{grid-column:1;grid-row:1;align-self:center;font-size:14px}.posters.rows.text .pmeta{grid-column:2;grid-row:1;align-self:center;text-align:right}
+.posters.rows.text .pimg>span:not(.pph){grid-row:1;transform:scale(.8)}
+.textonly .thumblink,.textonly .thumb{display:none}.textonly td{padding-top:6px;padding-bottom:6px}.artistlist.textonly .artistitem{padding-top:4px;padding-bottom:4px}
+@media (max-width:720px){.posters.rows.text .pcard{grid-template-columns:minmax(0,1fr)}.posters.rows.text .pmeta{grid-column:1;grid-row:2;text-align:left}.posters.rows.text .pimg>span:not(.pph){grid-row:1/3}}
+/* ---- Startseite: gemischte Reihen ---- */
+.posters.mixed .pimg.sq{background:var(--soft)}.posters.mixed .pimg.sq img{object-fit:contain}.posters.mixed .pimg.sq .pph{font-size:34px}

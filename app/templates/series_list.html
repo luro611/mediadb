@@ -17,7 +17,7 @@
 {% if view not in ('next','recent_added') and letters|length > 1 %}<nav class="abcbar abcpick" aria-label="{{ _('Anfangsbuchstabe') }}">{% for L in abc %}{% if letters.get(L) %}<a href="{{ base }}{{ url(l=L, page='') }}"{% if letter==L %} class="on" aria-current="true"{% endif %}>{{ L }}</a>{% else %}<span>{{ L }}</span>{% endif %}{% endfor %}<a href="{{ base }}{{ url(l='', page='') }}" class="all{% if not letter %} on{% endif %}">{{ _("Alle") }}</a></nav>{% endif %}
 {% if people_hits %}<div class="personhits"><span class="muted">{{ _("Personen:") }}</span>{% for x in people_hits %}<a class="tab" href="{{ base }}/films/person/{{ x.id }}">{{ x.name }} <span class="n">{{ x.n }}</span></a>{% endfor %}</div>{% endif %}
 {% if rows %}
-{% set LENT = (lent_ids('series') if lent_ids is defined else []) %}<div class="posters{{ ' rows' if layout('series')=='list' }}">{% for s in rows %}
+{% set LENT = (lent_ids('series') if lent_ids is defined else []) %}<div class="posters{{ layout_cls('series') }}">{% for s in rows %}
  <a class="pcard{% if s.n_aired and s.n_seen >= s.n_aired %} seen{% endif %}" href="{{ base }}/series/{{ s.id }}">
   <span class="pimg">{% if s.next_at %}<span class="pnext" title="{{ _('Als Nächstes') }}">★</span>{% endif %}{% if s.poster %}<img src="{{ base }}/film-images/{{ s.poster }}" alt="" loading="lazy">{% else %}<span class="pph">{{ s.title }}</span>{% endif %}
    {% if s.id in LENT %}<span class="plent">{{ _("verliehen") }}</span>{% endif %}{% if s.rating %}<span class="prating">{{ s.rating }}</span>{% endif %}

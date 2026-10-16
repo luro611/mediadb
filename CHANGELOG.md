@@ -1,5 +1,11 @@
 # Änderungen
 
+## MediaDB 1.12.0 – Aufgeräumte Startseite und Text-Ansicht
+- **Startseite aufgeräumt:** Statt acht Auswahllisten gibt es drei Reihen, in denen alle Bereiche gemischt sind: **„Als Nächstes“** (ist offen, in der Reihenfolge des Vormerkens), **„Gerade dabei“** (angefangene Serien und Bücher, die du gerade liest) und **„Zuletzt hinzugefügt“**. Ein kleines Schild zeigt, ob es eine CD, ein Film, eine Serie oder ein Buch ist.
+- „Top 10: Muss ich sehen“ und „Zuletzt gesehen“ findest du weiterhin als Reiter unter **Filme**.
+- **Dritte Ansicht „Text“** im Umschalter: eine Zeile pro Eintrag, ganz ohne Bilder. Bei Musik zeigen Tabelle und Interpretenliste dann keine Cover. Die Wahl merkt sich der Browser wie bisher für jeden Bereich.
+- **Größeres Zahnrad** für die Einstellungen oben in der Leiste.
+
 ## MediaDB 1.11.0 – Als Nächstes
 - **Neuer Knopf „☆ Als Nächstes vormerken“** auf jeder CD-, Film-, Serien- und Buchseite: für das, was du als Nächstes hören, sehen oder lesen möchtest. Ein zweiter Klick nimmt es wieder herunter.
 - **Neuer Reiter „Als Nächstes“** in Musik, Filme, Serien und Bücher, mit Anzahl. Die Einträge stehen in der Reihenfolge, in der du sie vorgemerkt hast. Ein ★ auf Kacheln und Zeilen zeigt vorgemerkte Einträge auch in den anderen Listen.

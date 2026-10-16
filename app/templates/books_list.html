@@ -17,7 +17,7 @@
 {% if view not in ('next','recent_read','recent_added') and letters|length > 1 %}<nav class="abcbar abcpick" aria-label="{{ _('Anfangsbuchstabe') }}">{% for L in abc %}{% if letters.get(L) %}<a href="{{ base }}{{ url(l=L, page='') }}"{% if letter==L %} class="on" aria-current="true"{% endif %}>{{ L }}</a>{% else %}<span>{{ L }}</span>{% endif %}{% endfor %}<a href="{{ base }}{{ url(l='', page='') }}" class="all{% if not letter %} on{% endif %}">{{ _("Alle") }}</a></nav>{% endif %}
 {% if authors_hits %}<div class="personhits"><span class="muted">{{ _("Personen:") }}</span>{% for x in authors_hits %}<a class="tab" href="{{ base }}/books/author/{{ x.id }}">{{ x.name }} <span class="n">{{ x.n }}</span></a>{% endfor %}</div>{% endif %}
 {% if rows %}
-{% set LENT = (lent_ids('book') if lent_ids is defined else []) %}<div class="posters books{{ ' rows' if layout('books')=='list' }}">{% for b in rows %}
+{% set LENT = (lent_ids('book') if lent_ids is defined else []) %}<div class="posters books{{ layout_cls('books') }}">{% for b in rows %}
  <a class="pcard{% if b.status=='read' %} seen{% endif %}" href="{{ base }}/books/{{ b.id }}">
   <span class="pimg">{% if b.next_at %}<span class="pnext" title="{{ _('Als Nächstes') }}">★</span>{% endif %}{% if b.cover %}<img src="{{ base }}/film-images/{{ b.cover }}" alt="" loading="lazy">{% else %}<span class="pph">{{ b.title }}</span>{% endif %}
    {% if b.id in LENT %}<span class="plent">{{ _("verliehen") }}</span>{% endif %}{% if b.rating %}<span class="prating">{{ b.rating }}</span>{% endif %}{% if b.status=='read' %}<span class="pseen" title="{{ _('Gelesen') }}">✓</span>{% elif b.status=='reading' %}<span class="pseen reading" title="{{ _('Lese ich gerade') }}">…</span>{% endif %}
