@@ -4,7 +4,7 @@ Diese Datei ist das Gedächtnis des Projekts. Wenn ein Chat abbricht oder neu be
 **diese Datei und `mediadb.zip` hochladen**, mehr braucht es nicht.
 
 ## Worum es geht
-Private Medien-Datenbank **MediaDB** (Hobbyprojekt, bis Oktober 2026 „MusikDB“). Bereiche, jeder mit eigener Datenbank: Musik (CDs und Audiodateien, seit 1.0), Filme (seit 1.1), Serien (seit 1.3) und Bücher (seit 1.6); dazu Merkliste (1.4) und Einstellungen (1.5). Dazu Verliehen (1.7) über alle Bereiche und Mediatheken (1.8). Läuft auf dem Mac (OrbStack) und im Homelab (Proxmox-LXC), Projektseite online unter https://mediadb.lurohome.de (Quelle im Ordner `website/`, Hochladen per FTP, siehe `website/README.md`); Veröffentlichung des Codes auf Codeberg geplant.
+Private Medien-Datenbank **MediaDB** (Hobbyprojekt, bis Oktober 2026 „MusikDB“). Bereiche, jeder mit eigener Datenbank: Musik (CDs und Audiodateien, seit 1.0), Filme (seit 1.1), Serien (seit 1.3) und Bücher (seit 1.6); dazu Merkliste (1.4) und Einstellungen (1.5). Dazu Verliehen (1.7) über alle Bereiche und Mediatheken (1.8). Läuft auf dem Mac (OrbStack) und im Homelab (Proxmox-LXC), Projektseite online unter https://lurohome.de/mediadb/ (seit Oktober 2026 im eigenen Projekt `lurohome` auf Codeberg, vorher https://mediadb.lurohome.de mit Quelle im Ordner `website/`); Veröffentlichung des Codes auf Codeberg geplant.
 Lief bis 1.8 unter OrbStack/Docker auf dem Mac (http://localhost:8000); ab 1.8.1 im Proxmox-LXC (http://<IP-des-LXC>:8000).
 
 ## Entscheidungen (nicht neu diskutieren)

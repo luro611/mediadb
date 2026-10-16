@@ -1,6 +1,6 @@
 # MediaDB
 
-**Projektseite / Website: [mediadb.lurohome.de](https://mediadb.lurohome.de)** · Docker-Image: `codeberg.org/luro61/mediadb` (amd64, arm64) · Lizenz / License: GPL-3.0
+**Projektseite / Website: [lurohome.de/mediadb](https://lurohome.de/mediadb/)** · Docker-Image: `codeberg.org/luro61/mediadb` (amd64, arm64) · Lizenz / License: GPL-3.0
 
 Private Mediendatenbank für das eigene Heimnetz: CDs, Musikdateien, DVDs, Blu-rays, Filme, Serien und Bücher verwalten. Titellisten, Cover, Filmdaten, Episodenführer, Poster und Buchdaten kommen automatisch aus MusicBrainz, TMDB, der Deutschen Nationalbibliothek und Open Library. Läuft im Docker-Container (Proxmox-LXC, Linux-Server, NAS, Mac), Bedienung im Browser. Die Daten bleiben bei dir.
 
@@ -63,7 +63,7 @@ docker compose up --build
 Dann `http://localhost:8000` öffnen. Daten liegen in `data/` (Datenbanken, Cover, Einstellungen).
 
 ## Dokumentation
-- [Projektseite](https://mediadb.lurohome.de): Überblick mit Bildern, Deutsch und Englisch
+- [Projektseite](https://lurohome.de/mediadb/): Überblick, Deutsch und Englisch (weitere Projekte auf [lurohome.de](https://lurohome.de))
 - [Ausführliche Anleitung](docs/ANLEITUNG.md): Funktionen, Installation, Abläufe, Fehlersuche
 - [Betrieb im Homelab](docs/BETRIEB.md): Proxmox-LXC (auch mit Dockhand), NAS-Freigaben, Umzug vom Mac, Updates, Sicherung, Zugriffsschutz
 - [Datenquellen und Rechtliches](docs/DATENQUELLEN_UND_RECHT.md): welche Dienste genutzt werden, Bedingungen, was bei Weitergabe zu beachten ist
@@ -76,6 +76,11 @@ Dann `http://localhost:8000` öffnen. Daten liegen in `data/` (Datenbanken, Cove
 Für den privaten Betrieb im Heimnetz gedacht, nicht öffentlich ins Internet stellen. Keine Verbindung zu und keine Unterstützung durch MusicBrainz, Discogs, Apple, Deezer, TMDB, die Deutsche Nationalbibliothek oder Open Library. Cover bleiben Eigentum der Rechteinhaber und gehören nicht ins Repository.
 
 Fehler gefunden oder eine Idee? Gern als [Issue auf Codeberg](https://codeberg.org/luro61/mediadb/issues).
+
+## Haftungshinweis
+MediaDB ist ein privates Hobbyprojekt und wird kostenlos unter der GNU GPL-3.0 bereitgestellt. Eine Gewährleistung wird nicht übernommen, soweit das gesetzlich zulässig ist. Die Nutzung erfolgt auf eigenes Risiko. Die Software ist nicht in allen Umgebungen getestet. Es besteht keine Verpflichtung zu Support, Fehlerbehebung oder Weiterentwicklung.
+
+*In English:* MediaDB is a private hobby project, provided free of charge under the GNU GPL-3.0. To the extent permitted by law, no warranty is given. Use at your own risk. The software has not been tested in every environment. There is no obligation to provide support.
 
 ## Lizenz
 GNU GPL v3 oder später, siehe [LICENSE](LICENSE).

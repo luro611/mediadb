@@ -158,7 +158,7 @@ Wichtig: Hinter einem Reverse Proxy sieht die App nur die Adresse des Proxys, ni
 
 - Cover und Daten stammen von Diensten mit eigenen Bedingungen (siehe `DATENQUELLEN_UND_RECHT.md`). Eine öffentlich erreichbare Seite mit fremden Covern ist etwas anderes als die private Nutzung.
 - Die App ist ein Hobbyprojekt ohne Sicherheitsprüfung.
-- Wer die App trotzdem öffentlich betreibt, tut das auf eigene Verantwortung. Die Lizenz schließt jede Gewährleistung und Haftung aus.
+- Wer die App trotzdem öffentlich betreibt, tut das auf eigene Verantwortung. Eine Gewährleistung wird nicht übernommen, soweit das gesetzlich zulässig ist (siehe Haftungshinweis im README).
 
 ## Docker-Image auf Codeberg veröffentlichen (für den Projektbetreuer)
 
