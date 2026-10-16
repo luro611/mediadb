@@ -297,7 +297,7 @@ def ol_search(title='', author='', q='', limit=20):
         params['author'] = author
     if q and not (title or author):
         params['q'] = q
-    lang = {'de': 'ger', 'en': 'eng', 'fr': 'fre', 'es': 'spa'}.get(T.language()[:2])
+    lang = {'de': 'ger', 'en': 'eng', 'fr': 'fre', 'es': 'spa', 'it': 'ita'}.get(T.language()[:2])
     d, err = _json('ol', f'{OL}/search.json', params)
     if err:
         return [], err

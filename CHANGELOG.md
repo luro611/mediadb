@@ -1,5 +1,11 @@
 # Änderungen
 
+## MediaDB 1.13.0 – Italienisch und Spracheinstellungen
+- **Italienisch:** Die ganze Oberfläche gibt es jetzt auch auf Italiano. Als Datensprache für Filme und Serien stehen Italienisch (Italien) und Italienisch (Schweiz) zur Auswahl.
+- **Sprache in den Einstellungen:** Unter „Sprache der Oberfläche“ wählst du die Hauptsprache. Dort hakst du auch die Sprachen an, die oben in der Leiste zum Umschalten erscheinen sollen. Das ist praktisch, wenn im Haushalt mehrere Sprachen gesprochen werden.
+- **Umschalter oben nur noch auf Wunsch:** Ohne Auswahl (oder mit nur einer Sprache) ist die Leiste oben aufgeräumt und zeigt keine DE/EN/FR/ES-Knöpfe mehr.
+- **Handy:** In der Serienliste ist das Auswahlfeld für Streamingdienste nicht mehr breiter als der Bildschirm.
+
 ## MediaDB 1.12.0 – Aufgeräumte Startseite und Text-Ansicht
 - **Startseite aufgeräumt:** Statt acht Auswahllisten gibt es drei Reihen, in denen alle Bereiche gemischt sind: **„Als Nächstes“** (ist offen, in der Reihenfolge des Vormerkens), **„Gerade dabei“** (angefangene Serien und Bücher, die du gerade liest) und **„Zuletzt hinzugefügt“**. Ein kleines Schild zeigt, ob es eine CD, ein Film, eine Serie oder ein Buch ist.
 - „Top 10: Muss ich sehen“ und „Zuletzt gesehen“ findest du weiterhin als Reiter unter **Filme**.

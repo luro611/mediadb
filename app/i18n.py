@@ -5,7 +5,7 @@ import json, re
 from pathlib import Path
 from markupsafe import Markup, escape
 
-LANGS={'de':'Deutsch','en':'English','fr':'Français','es':'Español'}
+LANGS={'de':'Deutsch','en':'English','fr':'Français','es':'Español','it':'Italiano'}
 DEFAULT='de'
 _DIR=Path(__file__).parent/'locales'
 _TABLES={}; _PATTERNS={}

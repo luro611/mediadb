@@ -7,10 +7,12 @@ import json, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LANGS = ['en', 'fr', 'es']
+LANGS = ['en', 'fr', 'es', 'it']
 PAT = re.compile(r"""\b_t?\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')""")
 # Texte, die ohne _() im Quelltext stehen (Listen, Meldungen aus Python); bei neuen Meldungen hier ergänzen
 EXTRA = [
+    # Als Naechstes (1.11), Spracheinstellungen (1.13)
+    "Für „Als Nächstes“ vorgemerkt.", "Von „Als Nächstes“ genommen.", "Spracheinstellungen gespeichert.", "Buch",
     # Update-Knopf (1.9.4)
     "Neue Version § verfügbar.", "MediaDB § ist die neueste Version.", "Codeberg ist gerade nicht erreichbar. Bitte später noch einmal versuchen.",
     # NAS aus (1.9.3)

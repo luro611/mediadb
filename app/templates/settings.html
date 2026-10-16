@@ -7,7 +7,7 @@
 <form method="post" action="{{ base }}/settings/save" class="settings">
 <section class="card" id="sprache">
  <h2>{{ _("Sprache der Daten") }}</h2>
- <p class="help">{{ _("In dieser Sprache kommen Titel, Inhaltsangaben, Genres und Episodennamen von TMDB in die Datenbank. Das Land bestimmt Altersfreigabe, Kinostart und Streamingdienste. Die Sprache der Oberfläche stellst du oben rechts um; sie ist davon unabhängig.") }}</p>
+ <p class="help">{{ _("In dieser Sprache kommen Titel, Inhaltsangaben, Genres und Episodennamen von TMDB in die Datenbank. Das Land bestimmt Altersfreigabe, Kinostart und Streamingdienste. Die Sprache der Oberfläche stellst du weiter unten unter „Sprache der Oberfläche“ ein; sie ist davon unabhängig.") }}</p>
  <label for="dl">{{ _("Datensprache und Land") }}</label>
  <select name="TMDB_LANGUAGE" id="dl">{% for code, name in languages %}<option value="{{ code }}"{% if code==data_lang %} selected{% endif %}>{{ _(name) }}</option>{% endfor %}{% if data_lang not in languages|map('first')|list %}<option value="{{ data_lang }}" selected>{{ data_lang }}</option>{% endif %}</select>
  {% if lang != data_lang[:2] %}<p class="hint">{{ _("Die Oberfläche ist auf „§“ gestellt, die Daten kommen aber in „§“. Passt das so?", lang|upper, data_lang) }}</p>{% endif %}
@@ -110,10 +110,17 @@ S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var
  <form method="post" action="{{ base }}/settings/relang"><label class="checkbox"><input type="checkbox" name="titles" value="1" checked> {{ _("Auch die Titel ersetzen (eigene Änderungen an Titeln gehen dabei verloren)") }}</label><button{% if not tmdb_on %} disabled{% endif %}>{{ _("Jetzt neu laden") }}</button></form>
  {% endif %}
 </section>
-<section class="card">
+<section class="card" id="oberflaeche">
  <h3>{{ _("Sprache der Oberfläche") }}</h3>
- <p class="help">{{ _("Wird im Browser gespeichert und zusätzlich als Voreinstellung für neue Geräte.") }}</p>
- <p>{% for code,name in ui_langs.items() %}<a class="tab{% if code==lang %} active{% endif %}" href="{{ base }}/lang/{{ code }}?next={{ (base ~ '/settings')|urlencode }}">{{ name }}</a> {% endfor %}</p>
+ <form method="post" action="{{ base }}/lang-settings">
+  <label for="uilang">{{ _("Hauptsprache") }}</label>
+  <select name="lang" id="uilang">{% for code,name in ui_langs.items() %}<option value="{{ code }}"{% if code==lang %} selected{% endif %}>{{ name }}</option>{% endfor %}</select>
+  <p class="help">{{ _("Gilt für dieses Gerät und als Voreinstellung für alle anderen.") }}</p>
+  <fieldset class="langpick"><legend>{{ _("Oben in der Leiste zum Umschalten anbieten") }}</legend>
+  {% for code,name in ui_langs.items() %}<label class="checkbox"><input type="checkbox" name="nav" value="{{ code }}"{% if code in nav_langs %} checked{% endif %}> {{ name }}</label>{% endfor %}</fieldset>
+  <p class="help">{{ _("Nur nötig, wenn im Haushalt mehrere Sprachen gesprochen werden. Bei weniger als zwei Sprachen erscheint oben kein Umschalter.") }}</p>
+  <button>{{ _("Speichern") }}</button>
+ </form>
 </section>
 <section class="card">
  <h3>{{ _("Zugriff") }}</h3>

@@ -21,7 +21,7 @@ MediaDB ist eine **private Mediendatenbank für den eigenen Rechner** mit vier B
 - Sammelaktionen mit Fortschrittsanzeige: **Fehlende Cover laden**, **Fehlende Genres laden**, **Alle aus MusicBrainz aktualisieren** (füllt nur Leeres, überschreibt nichts).
 
 **Sprachen**
-- Die Oberfläche gibt es auf **Deutsch, Englisch, Französisch und Spanisch**. Die Umschalter (DE · EN · FR · ES) steht oben rechts neben „Theme“. Die Wahl wird im Browser (Cookie) und zusätzlich im Ordner `data/` (Datei `settings.json`) gespeichert und bleibt auch nach einem Neustart erhalten. Ohne Auswahl gilt Deutsch.
+- Die Oberfläche gibt es auf **Deutsch, Englisch, Französisch, Spanisch und Italienisch**. Die Hauptsprache stellst du unter **Einstellungen → Sprache der Oberfläche** ein. Wird im Haushalt mehr als eine Sprache gesprochen, hakst du dort die Sprachen an, die oben in der Leiste als Umschalter (z. B. DE · IT) erscheinen sollen. Die Wahl wird im Browser (Cookie) und zusätzlich im Ordner `data/` (Datei `settings.json`) gespeichert und bleibt auch nach einem Neustart erhalten. Ohne Auswahl gilt Deutsch.
 - Was nicht übersetzt wird: Namen von Künstlern, Alben und Labels, die Inhalte aus MusicBrainz/Discogs sowie technische Fehlermeldungen. Die Spaltenüberschriften der Exportdateien (xlsx, ods, csv) bleiben englische Feldnamen, damit Sicherungen in jeder Sprache wieder importierbar sind.
 
 **Sichern und mitnehmen**
@@ -51,7 +51,7 @@ Stoppen: `docker compose down`. Neu bauen nach einem Update: `docker compose up 
 
 **In der App (Zahnrad ⚙ oben):** TMDB-Schlüssel, Sprache der Daten (mit Land), E-Mail-Adresse für MusicBrainz, Discogs-Token und die Schalter für Barcode-Dienst, Cover von iTunes/Deezer und die tägliche Aktualisierung. Änderungen gelten sofort, gespeichert wird in `data/settings.json`. Diese Werte haben Vorrang vor der Datei `.env`.
 
-**Sprache der Oberfläche und Sprache der Daten** sind zwei verschiedene Dinge: Die Oberfläche (Menüs, Knöpfe) stellst du oben rechts um (DE · EN · FR · ES). In der **Datensprache** kommen Titel, Inhaltsangaben, Genres und Episodennamen von TMDB in die Datenbank; das Land dazu bestimmt Altersfreigabe, Kinostart und Streamingdienste. Wer bei der ersten Einrichtung die Oberfläche auf Englisch, Französisch oder Spanisch stellt, bekommt die passende Datensprache voreingestellt. Wird die Datensprache später geändert, lädt „Alles in der Datensprache neu laden“ die schon gespeicherten Filme und Serien im Hintergrund neu. Musik bleibt immer im Original (MusicBrainz übersetzt keine Titel).
+**Sprache der Oberfläche und Sprache der Daten** sind zwei verschiedene Dinge: Die Oberfläche (Menüs, Knöpfe) stellst du unter Einstellungen → „Sprache der Oberfläche“ um. In der **Datensprache** kommen Titel, Inhaltsangaben, Genres und Episodennamen von TMDB in die Datenbank; das Land dazu bestimmt Altersfreigabe, Kinostart und Streamingdienste. Wer bei der ersten Einrichtung die Oberfläche auf Englisch, Französisch, Spanisch oder Italienisch stellt, bekommt die passende Datensprache voreingestellt. Wird die Datensprache später geändert, lädt „Alles in der Datensprache neu laden“ die schon gespeicherten Filme und Serien im Hintergrund neu. Musik bleibt immer im Original (MusicBrainz übersetzt keine Titel).
 
 **In der Datei `.env`** stehen weiterhin die Zugriffseinstellungen und können dort auch alle anderen Werte stehen (z. B. bei einer automatischen Einrichtung):
 | Eintrag | Bedeutung |

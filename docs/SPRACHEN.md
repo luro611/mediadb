@@ -1,10 +1,10 @@
 # Sprachen und Übersetzungen
 
-MediaDB gibt es auf **Deutsch** (Quellsprache), **Englisch**, **Französisch** und **Spanisch**. Die Sprache wählst du oben rechts neben „Theme“.
+MediaDB gibt es auf **Deutsch** (Quellsprache), **Englisch**, **Französisch**, **Spanisch** und **Italienisch**. Die Hauptsprache wählst du unter Einstellungen → „Sprache der Oberfläche“. Dort kannst du auch Sprachen anhaken, die oben in der Leiste zum schnellen Umschalten erscheinen sollen (praktisch in mehrsprachigen Haushalten); bei weniger als zwei angehakten Sprachen gibt es oben keinen Umschalter.
 
 ## Wie es funktioniert
 - Jeder sichtbare Text steht in den Vorlagen als `{{ _("Deutscher Text") }}`.
-- Die Übersetzungen liegen in `app/locales/en.json`, `fr.json` und `es.json`. Der **Schlüssel** ist der deutsche Text, der **Wert** die Übersetzung.
+- Die Übersetzungen liegen in `app/locales/en.json`, `fr.json`, `es.json` und `it.json`. Der **Schlüssel** ist der deutsche Text, der **Wert** die Übersetzung.
 - `§` ist ein Platzhalter für Zahlen oder Namen, die das Programm einsetzt. Er muss in der Übersetzung genauso oft vorkommen wie im Schlüssel, in der gleichen Reihenfolge.
 - `*Wort*` in einer Überschrift wird hervorgehoben dargestellt (kursiv).
 - Fehlt eine Übersetzung, zeigt die App den deutschen Text.
@@ -14,11 +14,12 @@ MediaDB gibt es auf **Deutsch** (Quellsprache), **Englisch**, **Französisch** u
 2. Im Projektordner `python3 tools/check_translations.py` ausführen. Das Programm meldet fehlende Einträge und falsche Platzhalter.
 3. `docker compose up --build`, im Browser neu laden.
 
-## Eine neue Sprache ergänzen (z. B. Italienisch)
-1. `app/locales/en.json` nach `app/locales/it.json` kopieren und alle Werte übersetzen.
-2. In `app/i18n.py` bei `LANGS` die Zeile `'it': 'Italiano'` ergänzen.
-3. In `tools/check_translations.py` die Liste `LANGS` um `'it'` erweitern und das Skript ausführen.
-4. Die Datei `docs/SPRACHEN.md` und `README.md` anpassen.
+## Eine neue Sprache ergänzen (z. B. Niederländisch)
+1. `app/locales/en.json` nach `app/locales/nl.json` kopieren und alle Werte übersetzen.
+2. In `app/i18n.py` bei `LANGS` die Zeile `'nl': 'Nederlands'` ergänzen.
+3. In `app/config.py` bei `UI_FOR_DATA` und `DATA_LANGUAGES` die passende TMDB-Sprache ergänzen.
+4. In `tools/check_translations.py` die Liste `LANGS` um `'nl'` erweitern und das Skript ausführen.
+5. Die Datei `docs/SPRACHEN.md` und `README.md` anpassen.
 
 ## Neue Texte im Programm
 - In Vorlagen: `{{ _("Neuer Text") }}` schreiben und den Text in alle JSON-Dateien aufnehmen.

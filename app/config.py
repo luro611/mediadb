@@ -16,8 +16,9 @@ DATA_LANGUAGES = [
     ('en-US', 'Englisch (USA)'), ('en-GB', 'Englisch (Großbritannien)'), ('en-CA', 'Englisch (Kanada)'), ('en-AU', 'Englisch (Australien)'),
     ('fr-FR', 'Französisch (Frankreich)'), ('fr-BE', 'Französisch (Belgien)'), ('fr-CA', 'Französisch (Kanada)'), ('fr-CH', 'Französisch (Schweiz)'),
     ('es-ES', 'Spanisch (Spanien)'), ('es-MX', 'Spanisch (Mexiko)'), ('es-AR', 'Spanisch (Argentinien)'),
+    ('it-IT', 'Italienisch (Italien)'), ('it-CH', 'Italienisch (Schweiz)'),
 ]
-UI_FOR_DATA = {'de': 'de-DE', 'en': 'en-US', 'fr': 'fr-FR', 'es': 'es-ES'}
+UI_FOR_DATA = {'de': 'de-DE', 'en': 'en-US', 'fr': 'fr-FR', 'es': 'es-ES', 'it': 'it-IT'}
 KEYS = ['TMDB_API_KEY', 'TMDB_LANGUAGE', 'MB_CONTACT', 'DISCOGS_TOKEN', 'BARCODE_LOOKUP', 'COVER_WEB', 'AUTO_UPDATE', 'MEDIATHEK', 'UPDATE_CHECK']
 SECRET = {'TMDB_API_KEY', 'DISCOGS_TOKEN'}
 

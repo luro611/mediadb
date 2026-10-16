@@ -483,9 +483,13 @@ def get_layout(request,area):
 def layout_cls(request,area):
  """CSS-Klassen fuer ein Kachel-Raster (.posters): Liste = ' rows', Text = ' rows text'."""
  return {'list':' rows','text':' rows text'}.get(get_layout(request,area),'')
+def nav_langs():
+ """Sprachen fuer den Umschalter oben in der Leiste (Einstellungen). Weniger als zwei: kein Umschalter."""
+ v=load_settings().get('nav_langs') or []
+ return [c for c in i18n.LANGS if c in v]
 def ctx(request,**kw):
  lang=get_lang(request)
- return {'request':request,'lang':lang,'langs':i18n.LANGS,'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on,'layout':partial(get_layout,request),'layout_cls':partial(layout_cls,request),**kw}
+ return {'request':request,'lang':lang,'langs':i18n.LANGS,'nav_langs':nav_langs(),'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on,'layout':partial(get_layout,request),'layout_cls':partial(layout_cls,request),**kw}
 @app.get('/layout/{area}/{mode}')
 def set_layout(request:Request,area:str,mode:str,next:str='/'):
  next=sec.strip_base(next,sec.get_base(request))
@@ -493,6 +497,13 @@ def set_layout(request:Request,area:str,mode:str,next:str='/'):
  r=RedirectResponse(next,303)
  if area in LAYOUTS and mode in LAYOUT_MODES: r.set_cookie('mediadb_layout_'+area,mode,max_age=60*60*24*365*5,samesite='lax')
  return r
+@app.post('/lang-settings')
+def save_lang_settings(request:Request,lang:str=Form(i18n.DEFAULT),nav:list[str]=Form([])):
+ """Einstellungen: Hauptsprache (fuer alle Geraete ohne eigene Wahl) und die Sprachen fuer den Umschalter oben."""
+ lang=lang if lang in i18n.LANGS else i18n.DEFAULT
+ d=load_settings(); d['lang']=lang; d['nav_langs']=[c for c in i18n.LANGS if c in nav]; save_settings(d)
+ r=RedirectResponse('/settings?message='+quote('Spracheinstellungen gespeichert.')+'#oberflaeche',303)
+ r.set_cookie('mediadb_lang',lang,max_age=60*60*24*365*5,samesite='lax'); return r
 @app.get('/lang/{code}')
 def set_lang(request:Request,code:str,next:str='/'):
  if code not in i18n.LANGS: code=i18n.DEFAULT
