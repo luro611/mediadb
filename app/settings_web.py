@@ -85,7 +85,7 @@ async def update_check(request):
     """Knopf „Jetzt nach neuer Version suchen“."""
     await run_in_threadpool(updates.check)
     if updates.STATE['error']:
-        return go('/settings?part=update#update', 'Codeberg ist gerade nicht erreichbar. Bitte später noch einmal versuchen.')
+        return go('/settings?part=update#update', 'GitHub ist gerade nicht erreichbar. Bitte später noch einmal versuchen.')
     i = updates.info()
     return go('/settings?part=update#update', f'Neue Version {i["version"]} verfügbar.' if i else f'MediaDB {C.version()} ist die neueste Version.')
 

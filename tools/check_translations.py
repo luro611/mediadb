@@ -20,7 +20,7 @@ EXTRA = [
     # Als Naechstes (1.11), Spracheinstellungen (1.13)
     "Für „Als Nächstes“ vorgemerkt.", "Von „Als Nächstes“ genommen.", "Hauptsprache gespeichert.", "Umschalter gespeichert.", "Buch",
     # Update-Knopf (1.9.4)
-    "Neue Version § verfügbar.", "MediaDB § ist die neueste Version.", "Codeberg ist gerade nicht erreichbar. Bitte später noch einmal versuchen.",
+    "Neue Version § verfügbar.", "MediaDB § ist die neueste Version.", "GitHub ist gerade nicht erreichbar. Bitte später noch einmal versuchen.",
     # NAS aus (1.9.3)
     "Die NAS „§“ ist gerade nicht erreichbar. Ist sie eingeschaltet? Nach dem Einschalten dauert es oft ein bis zwei Minuten, bis sie bereit ist.", "Ordner nicht gefunden oder nicht freigegeben.",
     # NAS-Verbindung pruefen (1.9.2)

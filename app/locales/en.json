@@ -65,7 +65,7 @@
 "Alle anzeigen ›": "Show all ›",
 "Alle aus MusicBrainz aktualisieren": "Update all from MusicBrainz",
 "Alle ausgestrahlten Folgen vorhanden": "All aired episodes present",
-"Alle sechs Stunden bei Codeberg nachsehen, ob es eine neue Version von MediaDB gibt": "Check Codeberg every six hours for a new version of MediaDB",
+"Alle sechs Stunden bei GitHub nachsehen, ob es eine neue Version von MediaDB gibt": "Check GitHub every six hours for a new version of MediaDB",
 "Alle zuklappen": "Collapse all",
 "Alle § Bücher anzeigen ›": "Show all § books ›",
 "Alle § Filme anzeigen ›": "Show all § films ›",
@@ -235,7 +235,7 @@
 "CD + digital": "CD + digital",
 "CDs und Musikdateien": "CDs and music files",
 "CSV (.csv)": "CSV (.csv)",
-"Codeberg ist gerade nicht erreichbar. Bitte später noch einmal versuchen.": "Codeberg can’t be reached right now. Please try again later.",
+"GitHub ist gerade nicht erreichbar. Bitte später noch einmal versuchen.": "GitHub can’t be reached right now. Please try again later.",
 "Compilation": "Compilation",
 "Cover": "Cover",
 "Cover neu laden": "Reload cover",
@@ -742,7 +742,7 @@
 "Neuer Name": "New name",
 "Neues Exemplar zum vorhandenen Film hinzugefügt.": "New copy added to the existing film.",
 "Neues Passwort (leer lassen = unverändert)": "New password (leave empty = unchanged)",
-"Neueste auf Codeberg: §": "Latest on Codeberg: §",
+"Neueste auf GitHub: §": "Latest on GitHub: §",
 "Nicht bei MusicBrainz gefunden (§)": "Not found on MusicBrainz (§)",
 "Nicht gefunden": "Not found",
 "Nicht gefunden (§)": "Not found (§)",
@@ -1308,5 +1308,6 @@
 "← Zurück zum Film": "← Back to the film",
 "← Zurück zur Serie": "← Back to the show",
 "↑ nach oben": "↑ back to top",
-"⬆ eine Ebene hoch": "⬆ one level up"
+"⬆ eine Ebene hoch": "⬆ one level up",
+"MediaDB ist zu GitHub umgezogen – bitte einmal die Image-Adresse ändern": "MediaDB has moved to GitHub – please change the image address once"
 }

@@ -19,7 +19,7 @@ PAGES = {'': (ROOT / 'docs' / 'ANLEITUNG.md', 'Anleitung'), 'betrieb': (ROOT / '
 FILE_TO_PAGE = {p.name: k for k, (p, _) in PAGES.items()}
 MANUAL_EN = ROOT / 'docs' / 'MANUAL.md'  # englische Fassung der Anleitung
 FILE_TO_PAGE[MANUAL_EN.name] = ''
-REPO = 'https://codeberg.org/luro61/mediadb/src/branch/main/'
+REPO = 'https://github.com/luro611/mediadb/blob/main/'
 PICS = ROOT / 'docs' / 'bilder'  # Bildschirmfotos der Anleitung (tools/screenshots.py)
 
 templates = None
@@ -33,13 +33,13 @@ def setup(templates_, ctx_):
 
 
 def slug(text, sep='-'):
-    """Sprungmarken wie auf Codeberg: '3. Einstellungen' -> '3-einstellungen', '(ab 1.9)' -> 'ab-1-9'."""
+    """Sprungmarken wie auf GitHub: '3. Einstellungen' -> '3-einstellungen', '(ab 1.9)' -> 'ab-1-9'."""
     t = re.sub(r'[^\w\s-]', ' ', text.lower())
     return re.sub(r'[\s-]+', sep, t.strip()).strip(sep)
 
 
 def _link(m, base):
-    """Links zwischen den Dateien auf die Hilfeseiten umbiegen; andere Projektdateien zeigen auf Codeberg."""
+    """Links zwischen den Dateien auf die Hilfeseiten umbiegen; andere Projektdateien zeigen auf GitHub."""
     label, target = m.group(1), m.group(2)
     if re.match(r'^[a-z]+:|^#', target):
         return m.group(0)
@@ -59,7 +59,7 @@ _ITEM = re.compile(r'^(\s*)([-*+]|\d+\.)\s')
 
 
 def _commonmark_lists(text):
-    """Listen so schreiben, wie Python-Markdown sie braucht (Codeberg ist grosszuegiger): Leerzeile vor einer Liste,
+    """Listen so schreiben, wie Python-Markdown sie braucht (GitHub ist grosszuegiger): Leerzeile vor einer Liste,
     die direkt unter einem Absatz beginnt, und Unterpunkte mit 4 statt 2 Leerzeichen eingerueckt."""
     out, prev = [], ''
     for line in text.split('\n'):

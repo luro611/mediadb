@@ -65,7 +65,7 @@
 "Alle anzeigen ›": "Tout afficher ›",
 "Alle aus MusicBrainz aktualisieren": "Tout mettre à jour depuis MusicBrainz",
 "Alle ausgestrahlten Folgen vorhanden": "Tous les épisodes diffusés présents",
-"Alle sechs Stunden bei Codeberg nachsehen, ob es eine neue Version von MediaDB gibt": "Vérifier toutes les six heures sur Codeberg s’il existe une nouvelle version de MediaDB",
+"Alle sechs Stunden bei GitHub nachsehen, ob es eine neue Version von MediaDB gibt": "Vérifier toutes les six heures sur GitHub s’il existe une nouvelle version de MediaDB",
 "Alle zuklappen": "Tout replier",
 "Alle § Bücher anzeigen ›": "Afficher les § livres ›",
 "Alle § Filme anzeigen ›": "Afficher les § films ›",
@@ -235,7 +235,7 @@
 "CD + digital": "CD + numérique",
 "CDs und Musikdateien": "CD et fichiers musicaux",
 "CSV (.csv)": "CSV (.csv)",
-"Codeberg ist gerade nicht erreichbar. Bitte später noch einmal versuchen.": "Codeberg n’est pas joignable pour l’instant. Réessaie plus tard.",
+"GitHub ist gerade nicht erreichbar. Bitte später noch einmal versuchen.": "GitHub n’est pas joignable pour l’instant. Réessaie plus tard.",
 "Compilation": "Compilation",
 "Cover": "Pochette",
 "Cover neu laden": "Recharger la pochette",
@@ -742,7 +742,7 @@
 "Neuer Name": "Nouveau nom",
 "Neues Exemplar zum vorhandenen Film hinzugefügt.": "Nouvel exemplaire ajouté au film existant.",
 "Neues Passwort (leer lassen = unverändert)": "Nouveau mot de passe (laisser vide = inchangé)",
-"Neueste auf Codeberg: §": "Dernière sur Codeberg : §",
+"Neueste auf GitHub: §": "Dernière sur GitHub : §",
 "Nicht bei MusicBrainz gefunden (§)": "Introuvable sur MusicBrainz (§)",
 "Nicht gefunden": "Introuvable",
 "Nicht gefunden (§)": "Non trouvés (§)",
@@ -1308,5 +1308,6 @@
 "← Zurück zum Film": "← Retour au film",
 "← Zurück zur Serie": "← Retour à la série",
 "↑ nach oben": "↑ haut de page",
-"⬆ eine Ebene hoch": "⬆ remonter d'un niveau"
+"⬆ eine Ebene hoch": "⬆ remonter d'un niveau",
+"MediaDB ist zu GitHub umgezogen – bitte einmal die Image-Adresse ändern": "MediaDB a déménagé sur GitHub – merci de modifier une fois l’adresse de l’image"
 }

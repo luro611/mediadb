@@ -1,5 +1,10 @@
 # Änderungen
 
+## MediaDB 1.17.3 – Umzug zu GitHub (letzte Version auf Codeberg)
+- **MediaDB ist zu GitHub umgezogen:** https://github.com/luro611/mediadb. Codeberg verbietet seit 2026 Projekte, die überwiegend mit KI geschrieben sind. Diese Version ist die letzte auf Codeberg.
+- **Bitte einmal umstellen:** In der Compose-Datei (in Dockhand: Stack „mediadb“ bearbeiten) `image: codeberg.org/luro61/mediadb:latest` ersetzen durch `image: ghcr.io/luro611/mediadb:latest`, speichern, dann Pull und Redeploy. Die Daten bleiben, wie sie sind.
+- Unten auf jeder Seite steht bis dahin ein Hinweis mit Link zur Anleitung. Der Hinweis auf neue Versionen fragt jetzt bei GitHub nach.
+
 ## MediaDB 1.17.2 – Anleitung auf Englisch
 - **Englische Anleitung:** Die komplette Anleitung gibt es jetzt auch auf Englisch (`docs/MANUAL.md`), mit eigenen Bildschirmfotos der englischen Oberfläche. In der App (das **?** oben) sehen alle, die nicht Deutsch eingestellt haben, die englische Fassung; Französisch, Spanisch und Italienisch bekommen einen kurzen Hinweis dazu in ihrer Sprache.
 - Der Link „Was die einzelnen Einstellungen bedeuten …“ springt in der englischen Fassung zum passenden Abschnitt.

@@ -1,3 +1,5 @@
+> **MediaDB ist umgezogen: https://github.com/luro611/mediadb** · Image: `ghcr.io/luro611/mediadb:latest`. Codeberg verbietet seit 2026 überwiegend KI-geschriebene Projekte. / *MediaDB has moved to GitHub.*
+
 # MediaDB
 
 **Projektseite / Website: [lurohome.de/mediadb](https://lurohome.de/mediadb/)** · Docker-Image: `codeberg.org/luro61/mediadb` (amd64, arm64) · Lizenz / License: GPL-3.0
