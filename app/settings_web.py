@@ -1,6 +1,7 @@
 """Seite Einstellungen (/settings): TMDB-Schluessel, Datensprache, MusicBrainz-Kontakt, Discogs, Schalter.
 Dazu der Hintergrundlauf "Alle Filme und Serien in der neuen Sprache laden" (RELANG)."""
-import logging, os, threading
+import logging, os, threading, time
+from urllib.parse import quote
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse
@@ -14,6 +15,7 @@ from . import watchlist as WL
 from . import films_web as FW
 from . import i18n
 from . import nas
+from . import updates
 
 templates = None
 ctx = None
@@ -43,12 +45,14 @@ def _view():
                 password_on=bool(os.getenv('APP_PASSWORD')), public=os.getenv('ALLOW_PUBLIC', '0') in ('1', 'true', 'yes', 'ja', 'on'),
                 ui_langs=i18n.LANGS,
                 nas_shares=[{k: v for k, v in x.items() if k != 'password'} | {'has_password': bool(x.get('password'))} for x in nas.shares()],
-                nas_logins=nas.logins())
+                nas_logins=nas.logins(), upd=updates.STATE, upd_info=updates.info(), app_ver=C.version(),
+                upd_checked=time.strftime('%d.%m.%Y %H:%M', time.localtime(updates.STATE['checked'])) if updates.STATE['checked'] else '')
 
 
 async def page(request):
     p = request.query_params
-    return render(request, 'settings.html', message=p.get('message', ''), err=p.get('err', ''), changed=p.get('changed', ''), part=p.get('part', ''), **_view())
+    return render(request, 'settings.html', message=p.get('message', ''), err=p.get('err', ''), changed=p.get('changed', ''), part=p.get('part', ''),
+                  nas_label=p.get('nas', '')[:40], **_view())
 
 
 async def save(request):
@@ -77,6 +81,15 @@ async def save(request):
     return go('/settings', 'Gespeichert.')
 
 
+async def update_check(request):
+    """Knopf „Jetzt nach neuer Version suchen“."""
+    await run_in_threadpool(updates.check)
+    if updates.STATE['error']:
+        return go('/settings?part=update#update', 'Codeberg ist gerade nicht erreichbar. Bitte später noch einmal versuchen.')
+    i = updates.info()
+    return go('/settings?part=update#update', f'Neue Version {i["version"]} verfügbar.' if i else f'MediaDB {C.version()} ist die neueste Version.')
+
+
 async def test_tmdb(request):
     def work():
         if not T.configured():
@@ -97,13 +110,19 @@ async def nas_save(request):
     if err:
         return go('/settings?part=nas#nas', err)
     ok, text, _ = await run_in_threadpool(nas.check, new_id)
-    return go('/settings?part=nas#nas', _filled(text))  # gespeichert ist schon; die Meldung sagt, ob die Verbindung klappt
+    return go(_nas_url(new_id), _filled(text))  # gespeichert ist schon; die Meldung sagt, ob die Verbindung klappt
 
 
 async def nas_check(request):
     f, _ = await _form(request)
     ok, text, _ = await run_in_threadpool(nas.check, f.get('id') or '')
-    return go('/settings?part=nas#nas', _filled(text))
+    return go(_nas_url(f.get('id') or ''), _filled(text))
+
+
+def _nas_url(sid):
+    """Zurueck zu den NAS-Freigaben; der Name steht dann vor der Meldung („NAS: Musik · Verbindung klappt …“)."""
+    s = nas.get_share(sid)
+    return '/settings?part=nas' + ('&nas=' + quote(s['label']) if s else '') + '#nas'
 
 
 async def nas_test(request):
@@ -199,7 +218,7 @@ def activity():
                 'total': RELANG['total'], 'current': RELANG['current'], 'url': '/settings#sprache'}
 
 
-routes = [Route('/', page), Route('/save', save, methods=['POST']), Route('/test-tmdb', test_tmdb, methods=['POST']),
+routes = [Route('/', page), Route('/save', save, methods=['POST']), Route('/test-tmdb', test_tmdb, methods=['POST']), Route('/update-check', update_check, methods=['POST']),
           Route('/relang', relang, methods=['POST']), Route('/relang/status', relang_status),
           Route('/nas/save', nas_save, methods=['POST']), Route('/nas/check', nas_check, methods=['POST']),
           Route('/nas/test', nas_test, methods=['POST']), Route('/nas/status', nas_status),

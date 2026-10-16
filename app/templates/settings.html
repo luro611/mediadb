@@ -2,7 +2,7 @@
 <p class="eyebrow">{{ _("MediaDB / Einstellungen") }}</p>
 <h1>{{ _("Ein*stellungen*") }}</h1>
 <p class="intro">{{ _("Hier stellst du ein, was bisher in der Datei .env stand. Änderungen gelten sofort, ein Neustart ist nicht nötig. Gespeichert wird in data/settings.json.") }}</p>
-{% if message and part != 'nas' %}<div class="ok">{{ _(message) }}</div>{% endif %}
+{% if message and part not in ('nas', 'update') %}<div class="ok">{{ _(message) }}</div>{% endif %}
 
 <form method="post" action="{{ base }}/settings/save" class="settings">
 <section class="card" id="sprache">
@@ -39,18 +39,18 @@
  <label class="checkbox"><input type="checkbox" name="COVER_WEB" value="1"{% if flags.COVER_WEB %} checked{% endif %}> {{ _("Fehlende CD-Cover bei iTunes und Deezer suchen") }}</label>
  <label class="checkbox"><input type="checkbox" name="AUTO_UPDATE" value="1"{% if flags.AUTO_UPDATE %} checked{% endif %}> {{ _("Serien und Merkliste einmal am Tag aktualisieren") }}</label>
  <label class="checkbox"><input type="checkbox" name="MEDIATHEK" value="1"{% if flags.MEDIATHEK %} checked{% endif %}> {{ _("In den Mediatheken von ARD, ZDF, Arte und Co. suchen (MediathekViewWeb, nur Links)") }}</label>
- <label class="checkbox"><input type="checkbox" name="UPDATE_CHECK" value="1"{% if flags.UPDATE_CHECK %} checked{% endif %}> {{ _("Einmal am Tag bei Codeberg nachsehen, ob es eine neue Version von MediaDB gibt") }}</label>
+ <label class="checkbox"><input type="checkbox" name="UPDATE_CHECK" value="1"{% if flags.UPDATE_CHECK %} checked{% endif %}> {{ _("Alle sechs Stunden bei Codeberg nachsehen, ob es eine neue Version von MediaDB gibt") }}</label>
 </section>
 <div class="actions"><button>{{ _("Speichern") }}</button></div>
 </form>
 
 <section class="card settings" id="nas">
  <h2>{{ _("NAS-Freigaben") }}</h2>
- {% if message and part == 'nas' %}<div class="{{ 'ok' if message.startswith('Verbindung klappt') or message.startswith('Freigabe entfernt') else 'warn' }}">{{ _(message) }}</div>{% endif %}
+ {% if message and part == 'nas' %}<div class="{{ 'ok' if message.startswith('Verbindung klappt') or message.startswith('Freigabe entfernt') else 'warn' }}">{% if nas_label %}<strong>{{ _("NAS: §", nas_label) }}</strong> · {% endif %}{{ _(message) }}</div>{% endif %}
  <p class="help">{{ _("MediaDB liest Musik, Filme, Serien und Bücher direkt von der NAS (SMB, wie im Finder oder Windows-Explorer). Einhängen ist nicht nötig, auch nicht im Proxmox-LXC. Es wird nur gelesen. Am besten auf der NAS einen eigenen Benutzer anlegen, der nur lesen darf.") }}</p>
  {% for x in nas_shares %}
  <div class="nasrow">
-  <p><strong>{{ _("NAS: §", x.label) }}</strong> <code>//{{ x.host }}/{{ x.share }}{% if x.folder %}/{{ x.folder }}{% endif %}</code>{% if x.user %} · {{ x.user }}{% endif %}</p>
+  <p><strong>{{ _("NAS: §", x.label) }}</strong> <span class="nasstate" data-nas="/nas/{{ x.id }}"></span> <code>//{{ x.host }}/{{ x.share }}{% if x.folder %}/{{ x.folder }}{% endif %}</code>{% if x.user %} · {{ x.user }}{% endif %}</p>
   <div class="actions">
    <form method="post" action="{{ base }}/settings/nas/check"><input type="hidden" name="id" value="{{ x.id }}"><button class="quiet">{{ _("Verbindung prüfen") }}</button></form>
    <form method="post" action="{{ base }}/settings/nas/delete" onsubmit="return confirm({{ _t('Freigabe „§“ entfernen? Schon eingelesene Einträge bleiben erhalten.', x.label)|tojson }})"><input type="hidden" name="id" value="{{ x.id }}"><button class="quiet">{{ _("Entfernen") }}</button></form>
@@ -83,13 +83,19 @@
   </form>
  </details>
  <p class="help">{{ _("Danach erscheint jede Freigabe beim Einlesen von Musik, Filmen, Serien und Büchern in der Ordnerauswahl als „NAS: Name“.") }}</p>
- <script>(function(){var S=document.getElementById('nas'),W={{ _t("Prüfe die Verbindung …")|tojson }},E={{ _t("Die Prüfung ist fehlgeschlagen. Bitte die Seite neu laden.")|tojson }},D={{ _t("Technische Angabe:")|tojson }};
+ <script>document.addEventListener('DOMContentLoaded',function(){if(window.nasDots)nasDots(document.getElementById('nas'))});(function(){var S=document.getElementById('nas'),W={{ _t("Prüfe die Verbindung …")|tojson }},E={{ _t("Die Prüfung ist fehlgeschlagen. Bitte die Seite neu laden.")|tojson }},D={{ _t("Technische Angabe:")|tojson }};
 S.querySelectorAll('.nastest').forEach(function(b){b.onclick=function(){var f=b.form,r=f.querySelector('.nasresult');r.hidden=false;r.className='nasresult';r.textContent=W;b.disabled=true;
 fetch({{ base|tojson }}+'/settings/nas/test',{method:'POST',body:new FormData(f)}).then(function(x){return x.json()}).then(function(d){r.className='nasresult '+(d.ok?'ok':'warn');r.textContent=d.message;if(d.detail){var s=document.createElement('small');s.textContent=D+' '+d.detail;r.appendChild(s)}}).catch(function(){r.className='nasresult warn';r.textContent=E}).finally(function(){b.disabled=false})}});
 S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var o=sel.selectedOptions[0],f=sel.form,pw=f.querySelector('[name=password]');if(o.value){f.querySelector('[name=host]').value=o.dataset.host;f.querySelector('[name=user]').value=o.dataset.user;pw.value='';pw.placeholder={{ _t("gespeichert – leer lassen")|tojson }}}else{pw.placeholder=''}}});})()</script>
 </section>
 
 <div class="grid settingsextra">
+<section class="card" id="update">
+ <h3>{{ _("Neue Version?") }}</h3>
+ {% if message and part == 'update' %}<div class="{{ 'warn' if message.startswith('Codeberg') else 'ok' }}">{{ _(message) }}{% if upd_info %} <a href="{{ upd_info.url }}" target="_blank" rel="noopener noreferrer">{{ _("Was ist neu?") }}</a>{% endif %}</div>{% endif %}
+ <p class="help">{{ _("Läuft: MediaDB §", app_ver) }}{% if upd.latest %} · {{ _("Neueste auf Codeberg: §", upd.latest) }}{% endif %}{% if upd_checked %} · {{ _("geprüft am §", upd_checked) }}{% endif %}</p>
+ <form method="post" action="{{ base }}/settings/update-check"><button class="quiet">{{ _("Jetzt nach neuer Version suchen") }}</button></form>
+</section>
 <section class="card">
  <h3>{{ _("TMDB-Schlüssel prüfen") }}</h3>
  <form method="post" action="{{ base }}/settings/test-tmdb"><button class="quiet">{{ _("Jetzt prüfen") }}</button></form>

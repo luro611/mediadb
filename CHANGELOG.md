@@ -1,5 +1,11 @@
 # Änderungen
 
+## MediaDB 1.9.4 – Update-Hinweis und NAS-Status in den Einstellungen
+- **Neue Version?** In den Einstellungen steht jetzt, welche Version läuft, welche die neueste auf Codeberg ist und wann zuletzt nachgesehen wurde, dazu der Knopf **„Jetzt nach neuer Version suchen“**.
+- MediaDB sieht **alle sechs Stunden** nach (bisher einmal am Tag). Der Hinweis „Neue Version … verfügbar“ unten auf der Seite kam deshalb bisher bis zu einen Tag zu spät.
+- **NAS-Freigaben in den Einstellungen:** Neben jeder NAS steht wie in der Ordnerauswahl, ob sie gerade erreichbar ist.
+- **Verbindung prüfen** nennt die NAS: „NAS: Musik · Verbindung klappt: …“.
+
 ## MediaDB 1.9.3 – NAS, die nicht immer an ist
 - **Punkt in der Ordnerauswahl:** Neben jeder „NAS: …“ steht, ob sie gerade erreichbar ist (grün) oder aus (orange). Die Liste erscheint sofort, die NAS werden danach im Hintergrund gefragt.
 - **Klare Meldung:** Wer eine ausgeschaltete NAS öffnet, liest jetzt „Die NAS … ist gerade nicht erreichbar. Ist sie eingeschaltet?“ statt „Ordner nicht gefunden oder nicht freigegeben“.

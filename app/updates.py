@@ -1,4 +1,4 @@
-"""Hinweis auf eine neue Version: einmal am Tag das neueste Release auf Codeberg abfragen.
+"""Hinweis auf eine neue Version: alle sechs Stunden das neueste Release auf Codeberg abfragen.
 
 Es wird nur die oeffentliche Release-Liste gelesen (keine Daten aus der Sammlung, keine Kennung), abschaltbar unter
 Einstellungen -> Dienste und Automatik (UPDATE_CHECK=0). Ein Release wird erst angelegt, wenn das Docker-Image fertig
@@ -10,7 +10,7 @@ from . import config as C
 REPO = 'luro61/mediadb'
 API = f'https://codeberg.org/api/v1/repos/{REPO}/releases/latest'
 RELEASES = f'https://codeberg.org/{REPO}/releases'
-EVERY = 24 * 3600
+EVERY = 6 * 3600
 STATE = {'latest': None, 'url': None, 'checked': 0.0, 'error': ''}
 
 
@@ -55,7 +55,7 @@ def info():
 
 
 def scheduler():
-    """Kurz nach dem Start und danach einmal am Tag pruefen."""
+    """Kurz nach dem Start und danach alle EVERY Sekunden pruefen."""
     def loop():
         time.sleep(30)
         while True:

@@ -11,6 +11,8 @@ LANGS = ['en', 'fr', 'es']
 PAT = re.compile(r"""\b_t?\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')""")
 # Texte, die ohne _() im Quelltext stehen (Listen, Meldungen aus Python); bei neuen Meldungen hier ergänzen
 EXTRA = [
+    # Update-Knopf (1.9.4)
+    "Neue Version § verfügbar.", "MediaDB § ist die neueste Version.", "Codeberg ist gerade nicht erreichbar. Bitte später noch einmal versuchen.",
     # NAS aus (1.9.3)
     "Die NAS „§“ ist gerade nicht erreichbar. Ist sie eingeschaltet? Nach dem Einschalten dauert es oft ein bis zwei Minuten, bis sie bereit ist.", "Ordner nicht gefunden oder nicht freigegeben.",
     # NAS-Verbindung pruefen (1.9.2)

@@ -21,7 +21,7 @@
 | Wikipedia | Einleitung des Artikels zum Buch | REST-Schnittstelle, mit Link und Lizenzhinweis | Ja (CC BY-SA 4.0) | Namensnennung und Lizenzhinweis nötig (steht dabei) |
 | MediathekViewWeb (optional) | Sendungen in den Mediatheken von ARD, ZDF, Arte & Co. | Öffentlicher Such-Feed, nur Anzeige und Link | Ja | Abschaltbar (`MEDIATHEK=0`); keine Downloads |
 | Eigene Filmdateien | Dateiname, Jellyfin-/Kodi-.nfo, Technikdaten per ffprobe | Lokal gelesen, nichts wird übertragen | Ja | – |
-| Codeberg (optional) | Nummer der neuesten MediaDB-Version | Einmal am Tag die öffentliche Release-Liste lesen | Ja | Abschaltbar (`UPDATE_CHECK=0`); es wird nichts über dich oder die Sammlung gesendet |
+| Codeberg (optional) | Nummer der neuesten MediaDB-Version | Alle sechs Stunden (und auf Knopfdruck) die öffentliche Release-Liste lesen | Ja | Abschaltbar (`UPDATE_CHECK=0`); es wird nichts über dich oder die Sammlung gesendet |
 
 ## Was die App nach außen sendet
 
