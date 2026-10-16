@@ -89,7 +89,12 @@ print(json.dumps({'tag_name': tag, 'name': m.group(1).strip(), 'body': m.group(2
 EOF
 )
 OUT=$(mktemp)
-code=$(curl -s -o "$OUT" -w '%{http_code}' -X POST -H "$AUTH" -H 'Content-Type: application/json' -d "$BODY" "$API/releases")
+for try in 1 2 3; do  # Codeberg antwortet manchmal kurz mit 5xx: dann nach einer Pause noch einmal
+  code=$(curl -s -o "$OUT" -w '%{http_code}' -X POST -H "$AUTH" -H 'Content-Type: application/json' -d "$BODY" "$API/releases")
+  case "$code" in 5*) [ "$try" -lt 3 ] && { echo "Codeberg antwortet mit $code, neuer Versuch in 10 Sekunden …"; sleep 10; } ;; *) break ;; esac
+  # wurde das Release trotz Fehler angelegt, nicht doppelt anlegen
+  [ "$(curl -s -o /dev/null -w '%{http_code}' -H "$AUTH" "$API/releases/tags/$TAG")" = "200" ] && { echo "Das Release $TAG gibt es inzwischen. Bitte prüfen, ob docker-compose.homelab.yml angehängt ist: https://codeberg.org/$REPO/releases/tag/$TAG"; rm -f "$OUT"; exit 0; }
+done
 if [ "$code" != "201" ]; then
   echo "Das Release konnte nicht angelegt werden (Antwort $code):"; cat "$OUT"; echo
   case "$code" in

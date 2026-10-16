@@ -211,7 +211,7 @@ MediaDB liest Musik, Filme, Serien und Bücher **direkt von der NAS** (SMB, wie 
 
 **Musik vom Mac:** Den Musikordner am Mac per Dateifreigabe (SMB) freigeben und in MediaDB wie eine NAS eintragen. Wichtig ist dabei der Haken bei **Windows-Dateifreigabe** für deinen Benutzer. Die Schritte stehen in [BETRIEB.md → Musik vom Mac](BETRIEB.md#musik-vom-mac-oder-einem-anderen-rechner-einlesen). Ein Windows-PC geht genauso.
 
-Mehr Hilfe bei Problemen: [BETRIEB.md → Musik und Filme von der NAS einlesen](BETRIEB.md#musik-und-filme-von-der-nas-einlesen-ab-19).
+Mehr Hilfe bei Problemen: [BETRIEB.md → Musik und Filme von der NAS einlesen](BETRIEB.md#musik-und-filme-von-der-nas-einlesen-ab-1-9).
 
 ## 13. Sichern und Updates
 
