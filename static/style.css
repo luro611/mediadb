@@ -284,3 +284,11 @@ input.mid{max-width:14em}
 .colorrow input[type=color]{width:44px;height:32px;padding:2px;margin:0;border:1px solid var(--line);border-radius:4px;background:var(--surface);cursor:pointer;flex:none}
 .colorrow .changed{font:600 10px GeistMono,monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-style:normal;margin-left:6px}
 #farben form+form{margin-top:8px}
+/* ---- Hilfe (/hilfe) ---- */
+.helptabs{margin-top:6px}
+.manual{max-width:820px;margin:10px 0 40px}.manual h1{margin:10px 0 18px}.manual h2{margin:42px 0 12px;padding-top:18px;border-top:1px solid var(--line);scroll-margin-top:20px}.manual h3{margin:28px 0 8px;font-size:24px;scroll-margin-top:20px}
+.manual p,.manual li{max-width:72ch}.manual ul,.manual ol{padding-left:22px}.manual li{margin:4px 0}
+.manual code{font:13px GeistMono,monospace;background:var(--soft);padding:1px 5px;border-radius:3px}.manual pre{background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto}.manual pre code{background:none;padding:0}
+.manual table{display:block;overflow-x:auto;margin:14px 0 20px;max-width:100%}.manual th,.manual td{vertical-align:top;font-size:14px}
+.manual blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid var(--accent);background:var(--surface)}
+nav a.navhelp:not(.brand){display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:2px solid currentColor;border-radius:50%;font:700 15px/1 Inter,sans-serif;letter-spacing:0;padding:0}

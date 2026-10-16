@@ -1,5 +1,11 @@
 # Änderungen
 
+## MediaDB 1.15.0 – Hilfe in der App
+- **Die Anleitung ist jetzt in MediaDB selbst:** über das neue **?** oben in der Leiste, den Link „Anleitung“ unten auf jeder Seite oder „Was die einzelnen Einstellungen bedeuten …“ in den Einstellungen. Sie passt immer zur installierten Version und funktioniert auch ohne Internet.
+- Neben der Anleitung gibt es **Betrieb im Homelab**, **Datenquellen und Rechtliches** und **Änderungen** (diese Liste) als eigene Reiter. Links zwischen den Texten bleiben in der App.
+- Das **Inhaltsverzeichnis** der Anleitung ist anklickbar.
+- Die Hilfe gibt es bisher nur auf Deutsch; in den anderen Sprachen steht ein Hinweis darüber.
+
 ## MediaDB 1.14.0 – Eigene Farben
 - **Neuer Bereich „Farben“ in den Einstellungen:** Hintergrund, Kästen und Eingabefelder, Schrift, Nebentext, Akzent (Überschriften, Knöpfe) und Links lassen sich frei wählen, getrennt für das helle und das dunkle Farbschema. Jede Änderung ist sofort als Vorschau zu sehen; gespeichert wird erst mit „Farben speichern“. Geänderte Farben sind markiert.
 - **„Auf Ursprung zurücksetzen“** stellt mit einem Klick alle ursprünglichen Farben wieder her. Die Vorgaben stehen fest im Programm (static/style.css) und werden nie überschrieben; gespeichert werden nur deine Abweichungen (data/settings.json).

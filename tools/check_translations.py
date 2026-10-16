@@ -11,6 +11,8 @@ LANGS = ['en', 'fr', 'es', 'it']
 PAT = re.compile(r"""\b_t?\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')""")
 # Texte, die ohne _() im Quelltext stehen (Listen, Meldungen aus Python); bei neuen Meldungen hier ergänzen
 EXTRA = [
+    # Hilfe in der App (1.15)
+    "Anleitung", "Betrieb im Homelab", "Datenquellen und Rechtliches", "Änderungen",
     # Eigene Farben (1.14)
     "Farben gespeichert.", "Farben auf die Vorgaben zurückgesetzt.", "Hell", "Dunkel", "Hintergrund", "Kästen und Eingabefelder", "Schrift", "Nebentext", "Akzent (Überschriften, Knöpfe)", "Links",
     # Als Naechstes (1.11), Spracheinstellungen (1.13)

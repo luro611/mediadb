@@ -10,7 +10,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY static ./static
-COPY VERSION LICENSE ./
+COPY VERSION LICENSE CHANGELOG.md ./
+# Hilfe in der App (/hilfe) zeigt diese Texte an
+COPY docs/ANLEITUNG.md docs/BETRIEB.md docs/DATENQUELLEN_UND_RECHT.md ./docs/
 RUN mkdir -p /app/data/covers
 EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=120s \

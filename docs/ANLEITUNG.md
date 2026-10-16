@@ -2,9 +2,9 @@
 
 MediaDB ist eine **private Mediendatenbank für das eigene Heimnetz** mit vier Bereichen: **Musik, Filme, Serien und Bücher**, dazu **Merkliste**, **Als Nächstes** und **Verliehen an …**. Du erfasst CDs, DVDs, Blu-rays, Bücher und deine Dateien (Musik, Filme, Serien, E-Books, Hörbücher), die App ergänzt Titellisten, Cover, Filmdaten, Episodenführer und Buchangaben aus freien Internetquellen. Bedient wird alles im Browser, am Rechner wie am Handy. Die Daten bleiben bei dir.
 
-Diese Anleitung beschreibt MediaDB ab Version 1.13. Welche Version läuft, steht unten auf jeder Seite.
+Diese Anleitung beschreibt MediaDB ab Version 1.15. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet.
 
-**Inhalt:** 1. Überblick · 2. Installation · 3. Einstellungen · 4. Bedienung allgemein · 5. Musik · 6. Filme · 7. Serien · 8. Merkliste · 9. Bücher · 10. Verliehen an … · 11. Mediatheken · 12. Dateien von NAS und Mac · 13. Sichern und Updates · 14. Woher kommen die Daten? · 15. Grenzen · 16. Fehlersuche
+**Inhalt:** [1. Überblick](#1-überblick) · [2. Installation](#2-installation) · [3. Einstellungen](#3-einstellungen) · [4. Bedienung allgemein](#4-bedienung-allgemein) · [5. Musik](#5-musik) · [6. Filme](#6-filme) · [7. Serien](#7-serien) · [8. Merkliste](#8-merkliste) · [9. Bücher](#9-bücher) · [10. Verliehen an …](#10-verliehen-an) · [11. Mediatheken](#11-mediatheken) · [12. Dateien von NAS und Mac](#12-dateien-von-nas-und-mac) · [13. Sichern und Updates](#13-sichern-und-updates) · [14. Woher kommen die Daten?](#14-woher-kommen-die-daten) · [15. Grenzen](#15-grenzen) · [16. Fehlersuche](#16-fehlersuche)
 
 ## 1. Überblick
 

@@ -1,7 +1,10 @@
 .git
 .env
 data
-docs
+docs/*
+!docs/ANLEITUNG.md
+!docs/BETRIEB.md
+!docs/DATENQUELLEN_UND_RECHT.md
 tools
 **/__pycache__
 *.pyc

@@ -582,6 +582,10 @@ app.mount('/lend',loans_web.app)
 from . import watchlist_web
 from . import activity
 activity.register_media()
+from . import help as helpdocs  # Hilfe in der App: Anleitung aus docs/ (/hilfe)
+helpdocs.setup(templates,ctx)
+app.add_route('/hilfe',helpdocs.page)
+app.add_route('/hilfe/{page}',helpdocs.page)
 from . import settings_web
 settings_web.setup(templates,ctx)
 app.add_route('/settings',settings_web.page)
