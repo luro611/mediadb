@@ -1,5 +1,11 @@
 # Änderungen
 
+## MediaDB 1.17.2 – Anleitung auf Englisch
+- **Englische Anleitung:** Die komplette Anleitung gibt es jetzt auch auf Englisch (`docs/MANUAL.md`), mit eigenen Bildschirmfotos der englischen Oberfläche. In der App (das **?** oben) sehen alle, die nicht Deutsch eingestellt haben, die englische Fassung; Französisch, Spanisch und Italienisch bekommen einen kurzen Hinweis dazu in ihrer Sprache.
+- Der Link „Was die einzelnen Einstellungen bedeuten …“ springt in der englischen Fassung zum passenden Abschnitt.
+- „Betrieb im Homelab“, „Datenquellen und Rechtliches“ und „Änderungen“ sind weiterhin deutsch und tragen in den anderen Sprachen einen Hinweis.
+- README, Projektanleitung, Roadmap, Sprachen und Betrieb auf den Stand 1.17.2 gebracht; die Projektseite nennt die englische Anleitung.
+
 ## MediaDB 1.17.1 – Willkommen in allen Sprachen
 - **Erster Start in zwei Schritten:** Zuerst begrüßt MediaDB in allen fünf Sprachen (die Sprache des Browsers steht vorne) und fragt nach der Sprache. Danach kommt die Auswahl der Bereiche, schon in der gewählten Sprache. Die Datensprache für Filme und Serien wird dabei passend voreingestellt.
 - Ist noch keine Sprache gewählt, richtet sich MediaDB nach der Sprache des Browsers statt immer Deutsch zu zeigen.

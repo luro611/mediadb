@@ -2,7 +2,7 @@
 <p class="eyebrow">{{ _("MediaDB / Einstellungen") }}</p>
 <h1>{{ _("Ein*stellungen*") }}</h1>
 <p class="intro">{{ _("Hier stellst du ein, was bisher in der Datei .env stand. Änderungen gelten sofort, ein Neustart ist nicht nötig. Gespeichert wird in data/settings.json.") }}</p>
-<p class="help"><a href="{{ base }}/hilfe#3-einstellungen" target="mediadb-hilfe">{{ _("Was die einzelnen Einstellungen bedeuten, steht in der Anleitung.") }}</a></p>
+<p class="help"><a href="{{ base }}/hilfe#{{ '3-einstellungen' if lang == 'de' else '3-settings' }}" target="mediadb-hilfe">{{ _("Was die einzelnen Einstellungen bedeuten, steht in der Anleitung.") }}</a></p>
 {% if message and part not in ('nas', 'update') %}<div class="ok">{{ _(message) }}</div>{% endif %}
 
 <section class="card" id="bereiche">

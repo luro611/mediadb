@@ -12,8 +12,9 @@ Musik und Fundament: CDs und Audiodateien, MusicBrainz, Cover, Genres, Import/Ex
 6. ✅ **Betrieb im Proxmox-LXC** (oberste Priorität für den Alltag, 1.8.1 vorbereitet: fertiges Image `codeberg.org/luro61/mediadb`, Stack für Dockhand, alles unter `/opt/mediadb`, Umzug vom Mac) und **Veröffentlichung auf Codeberg:** Quellcode und Docker-Image in der Codeberg-Registry; Update in Dockhand per Pull und Redeploy. Vor der Veröffentlichung noch: Codeberg-Links auf der Projektseite (TMDB-Logo erledigt in 1.8.2).
 7. ✅ **1.9 NAS-Freigaben direkt in MediaDB (fertig):** siehe unten.
 8. ✅ **1.10–1.17 Alltag und Bedienung (fertig):** Kacheln/Liste/Text, „Als Nächstes“, aufgeräumte Startseite, Italienisch und Spracheinstellungen, eigene Farben, Hilfe in der App mit Bildschirmfotos, Bereiche ein- und ausschalten, Willkommensseite beim ersten Start.
-9. **Offen:** Anleitung in die anderen Sprachen übersetzen; gemeinsame Konten für Familien.
-10. **Home-Assistant-Add-on:** eigenes kleines Repository, verweist auf das Docker-Image.
+9. ✅ **1.17.2 Englische Anleitung** (`docs/MANUAL.md`) für alle Oberflächensprachen außer Deutsch.
+10. **Offen:** Betrieb und Datenquellen auf Englisch, Anleitung in weiteren Sprachen; gemeinsame Konten für Familien.
+11. **Home-Assistant-Add-on:** eigenes kleines Repository, verweist auf das Docker-Image.
 
 ## NAS-Freigaben (1.9, fertig)
 Problem: In einem Proxmox-LXC (unprivilegiert, Standard) lassen sich Netzwerkfreigaben weder im LXC noch im Docker-Container einhängen. Der Umweg über den Proxmox-Host (fstab, `pct set … -mp0`) ist niemandem zu erklären.

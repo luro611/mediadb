@@ -13,7 +13,7 @@ MediaDB is a small self-hosted catalogue for your **CDs and music files, films, 
 - **Books:** ISBN scan, e-books and audiobooks from folders, data from the German National Library and Open Library.
 - **Lending:** keep track of what you lent to whom. **NAS:** reads SMB shares directly, no mounting needed (also in a Proxmox LXC).
 - **Everyday use:** “up next” list across all sections, tiles/list/text views, your own colours, and switch off sections you don’t need (nothing is deleted). On first start MediaDB greets you in all languages and asks what you want to manage.
-- The **user interface** is available in **English, German, French, Spanish and Italian** (main language in the settings, optional switcher in the top bar). The built-in help (with screenshots) and the documentation are in German so far; your browser's translate function works fine on these pages.
+- The **user interface** is available in **English, German, French, Spanish and Italian** (main language in the settings, optional switcher in the top bar). The **user manual** is available in English ([docs/MANUAL.md](docs/MANUAL.md)) and German ([docs/ANLEITUNG.md](docs/ANLEITUNG.md)), with screenshots; inside the app (the **?** at the top) it appears in English for every interface language except German. The other documents are in German so far; your browser's translate function works fine on these pages.
 
 **Quick start:** create `/opt/mediadb/data`, copy [`docker-compose.homelab.yml`](docker-compose.homelab.yml) to the server (or paste the compose file from the German quick start below as a new stack into Dockhand or Portainer and click *Deploy*), run `docker compose -f docker-compose.homelab.yml up -d` and open `http://<server>:8000`. Then add your e-mail address (for MusicBrainz) and a TMDB key under Settings. Details (in German): [docs/BETRIEB.md](docs/BETRIEB.md).
 
@@ -65,7 +65,7 @@ Dann `http://localhost:8000` öffnen. Daten liegen in `data/` (Datenbanken, Cove
 
 ## Dokumentation
 - [Projektseite](https://lurohome.de/mediadb/): Überblick, Deutsch und Englisch (weitere Projekte auf [lurohome.de](https://lurohome.de))
-- [Ausführliche Anleitung](docs/ANLEITUNG.md): Funktionen, Installation, Abläufe, Fehlersuche
+- [Ausführliche Anleitung](docs/ANLEITUNG.md): Funktionen, Installation, Abläufe, Fehlersuche (englisch: [User manual](docs/MANUAL.md))
 - [Betrieb im Homelab](docs/BETRIEB.md): Proxmox-LXC (auch mit Dockhand), NAS-Freigaben, Umzug vom Mac, Updates, Sicherung, Zugriffsschutz
 - [Datenquellen und Rechtliches](docs/DATENQUELLEN_UND_RECHT.md): welche Dienste genutzt werden, Bedingungen, was bei Weitergabe zu beachten ist
 - [Roadmap](docs/ROADMAP.md): nächste Versionen

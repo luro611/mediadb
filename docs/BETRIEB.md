@@ -224,7 +224,7 @@ Dann im Projektordner:
 ```
 python3 tools/screenshots.py
 ```
-Das Skript legt mit `tools/demo_data.py` eine frische Beispiel-Sammlung in einem Zwischenordner an, startet MediaDB damit, fotografiert die Seiten mit Chrome (unsichtbar) und räumt danach auf. Nur einzelne Bilder: `python3 tools/screenshots.py film serie`. Welche Seiten fotografiert werden, steht oben in `tools/screenshots.py`; eingebunden werden die Bilder in `docs/ANLEITUNG.md` mit `![Beschreibung](bilder/name.png)`.
+Das Skript legt mit `tools/demo_data.py` eine frische Beispiel-Sammlung in einem Zwischenordner an, startet MediaDB damit, fotografiert die Seiten mit Chrome (unsichtbar) und räumt danach auf. Jedes Bild entsteht zweimal: mit deutscher Oberfläche in `docs/bilder/` (für `ANLEITUNG.md`) und mit englischer in `docs/bilder/en/` (für `MANUAL.md`). Nur einzelne Bilder: `python3 tools/screenshots.py film serie`. Welche Seiten fotografiert werden, steht oben in `tools/screenshots.py`; eingebunden werden die Bilder in `docs/ANLEITUNG.md` mit `![Beschreibung](bilder/name.png)`.
 
 ## Home Assistant (geplant)
 

@@ -1,4 +1,5 @@
-"""Macht die Bildschirmfotos für die Anleitung neu (docs/bilder/*.png), immer mit der erfundenen Beispiel-Sammlung.
+"""Macht die Bildschirmfotos für die Anleitung neu (docs/bilder/*.png auf Deutsch, docs/bilder/en/*.png auf Englisch),
+immer mit der erfundenen Beispiel-Sammlung.
 
 Ablauf: legt mit tools/demo_data.py eine frische Beispiel-Sammlung in einem Zwischenordner an, startet MediaDB damit,
 fotografiert die Seiten mit Google Chrome (unsichtbar im Hintergrund) und beendet MediaDB wieder.
@@ -73,31 +74,33 @@ def main(only):
                 time.sleep(0.5)
         else:
             sys.exit('MediaDB ist nicht gestartet.')
-        OUT.mkdir(parents=True, exist_ok=True)
         with sync_playwright() as p:
             browser = p.chromium.launch(channel='chrome', headless=True)
-            for name, url, layouts, what in shots(data):
-                if only and not any(name.startswith(o) for o in only):
-                    continue
-                ctx = browser.new_context(viewport={'width': W, 'height': H}, locale='de-DE', color_scheme='light')
-                ctx.add_cookies([{'name': f'mediadb_layout_{k}', 'value': v, 'url': base} for k, v in layouts.items()] +
-                                [{'name': 'mediadb_lang', 'value': 'de', 'url': base}])
-                page = ctx.new_page()
-                page.goto(base + url, wait_until='networkidle')
-                # ohne Animationen; den Hinweis auf den fehlenden TMDB-Schlüssel ausblenden (die Beispiel-Sammlung braucht keinen)
-                page.add_style_tag(content='*{transition:none!important;animation:none!important}.warn:has(a[href$="#tmdb"]){display:none}')
-                target = OUT / f'{name}.png'
-                if what is None:
-                    page.screenshot(path=target)
-                elif what == 'page':
-                    page.screenshot(path=target, full_page=True)
-                elif isinstance(what, int):
-                    h = min(what, page.evaluate('document.documentElement.scrollHeight'))
-                    page.screenshot(path=target, full_page=True, clip={'x': 0, 'y': 0, 'width': W, 'height': h})
-                else:
-                    page.locator(what).screenshot(path=target)
-                print(f'{target.relative_to(ROOT)}  ({target.stat().st_size // 1024} KB)')
-                ctx.close()
+            # deutsche Bilder fuer ANLEITUNG.md, englische (docs/bilder/en) fuer MANUAL.md
+            for lang, out, locale in (('de', OUT, 'de-DE'), ('en', OUT / 'en', 'en-GB')):
+                out.mkdir(parents=True, exist_ok=True)
+                for name, url, layouts, what in shots(data):
+                    if only and not any(name.startswith(o) for o in only):
+                        continue
+                    ctx = browser.new_context(viewport={'width': W, 'height': H}, locale=locale, color_scheme='light')
+                    ctx.add_cookies([{'name': f'mediadb_layout_{k}', 'value': v, 'url': base} for k, v in layouts.items()] +
+                                    [{'name': 'mediadb_lang', 'value': lang, 'url': base}])
+                    page = ctx.new_page()
+                    page.goto(base + url, wait_until='networkidle')
+                    # ohne Animationen; den Hinweis auf den fehlenden TMDB-Schlüssel ausblenden (die Beispiel-Sammlung braucht keinen)
+                    page.add_style_tag(content='*{transition:none!important;animation:none!important}.warn:has(a[href$="#tmdb"]){display:none}')
+                    target = out / f'{name}.png'
+                    if what is None:
+                        page.screenshot(path=target)
+                    elif what == 'page':
+                        page.screenshot(path=target, full_page=True)
+                    elif isinstance(what, int):
+                        h = min(what, page.evaluate('document.documentElement.scrollHeight'))
+                        page.screenshot(path=target, full_page=True, clip={'x': 0, 'y': 0, 'width': W, 'height': h})
+                    else:
+                        page.locator(what).screenshot(path=target)
+                    print(f'{target.relative_to(ROOT)}  ({target.stat().st_size // 1024} KB)')
+                    ctx.close()
             browser.close()
         srv.terminate()
         srv.wait(10)

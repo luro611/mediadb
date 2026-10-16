@@ -1,7 +1,7 @@
 {% extends 'base.html' %}{% block content %}
 <p class="eyebrow">{{ _("MediaDB / Hilfe") }}</p>
 <nav class="tabs helptabs" aria-label="{{ _('Hilfe') }}">{% for k,(p,t) in pages.items() %}<a class="tab{% if k==page %} active{% endif %}" href="{{ base }}/hilfe{{ '/'~k if k }}"{% if k==page %} aria-current="page"{% endif %}>{{ _(t) }}</a>{% endfor %}</nav>
-{% if lang != 'de' %}<div class="warn">{{ _("Die Anleitung gibt es bisher nur auf Deutsch.") }}</div>{% endif %}
-<article class="manual" lang="de">{{ doc }}</article>
+{% if lang != 'de' %}{% if page == '' %}{% if lang != 'en' %}<div class="warn">{{ _("Die Anleitung gibt es auf Deutsch und Englisch; hier steht die englische Fassung.") }}</div>{% endif %}{% else %}<div class="warn">{{ _("Dieser Text ist bisher nur auf Deutsch.") }}</div>{% endif %}{% endif %}
+<article class="manual" lang="{{ 'en' if page == '' and lang != 'de' else 'de' }}">{{ doc }}</article>
 <p class="muted"><a href="#top" onclick="window.scrollTo(0,0);return false">{{ _("↑ nach oben") }}</a></p>
 {% endblock %}

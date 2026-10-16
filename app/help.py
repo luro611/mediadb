@@ -1,5 +1,8 @@
 """Hilfe in der App (/hilfe): zeigt die Anleitung und die anderen Texte aus docs/ als Seiten in MediaDB.
 
+Die Anleitung gibt es auf Deutsch (docs/ANLEITUNG.md) und Englisch (docs/MANUAL.md, Bilder in docs/bilder/en/);
+bei deutscher Oberflaeche erscheint die deutsche, bei allen anderen Sprachen die englische.
+
 Quelle bleibt die Markdown-Datei im Projekt (docs/ANLEITUNG.md usw.); sie wird mit jeder Version ins Docker-Image kopiert,
 deshalb passt die Hilfe immer zur laufenden Version und funktioniert auch ohne Internet. Bisher nur auf Deutsch."""
 import re
@@ -14,6 +17,8 @@ PAGES = {'': (ROOT / 'docs' / 'ANLEITUNG.md', 'Anleitung'), 'betrieb': (ROOT / '
          'datenquellen': (ROOT / 'docs' / 'DATENQUELLEN_UND_RECHT.md', 'Datenquellen und Rechtliches'),
          'aenderungen': (ROOT / 'CHANGELOG.md', 'Änderungen')}
 FILE_TO_PAGE = {p.name: k for k, (p, _) in PAGES.items()}
+MANUAL_EN = ROOT / 'docs' / 'MANUAL.md'  # englische Fassung der Anleitung
+FILE_TO_PAGE[MANUAL_EN.name] = ''
 REPO = 'https://codeberg.org/luro61/mediadb/src/branch/main/'
 PICS = ROOT / 'docs' / 'bilder'  # Bildschirmfotos der Anleitung (tools/screenshots.py)
 
@@ -41,7 +46,7 @@ def _link(m, base):
     path, _, frag = target.partition('#')
     name = Path(path).name
     if path.startswith('bilder/'):
-        return f'[{label}]({base}/hilfe/bilder/{name})'
+        return f'[{label}]({base}/hilfe/{path})'
     if name in FILE_TO_PAGE:
         page = FILE_TO_PAGE[name]
         url = f'{base}/hilfe' + (f'/{page}' if page else '')
@@ -70,10 +75,12 @@ def _commonmark_lists(text):
     return '\n'.join(out)
 
 
-def render(page, base):
+def render(page, base, lang='de'):
     path, title = PAGES[page]
+    if page == '' and lang != 'de' and MANUAL_EN.exists():
+        path = MANUAL_EN
     mtime = path.stat().st_mtime
-    key = (page, base)
+    key = (path.name, base)
     if key in _cache and _cache[key][0] == mtime:
         return _cache[key][1], title
     text = _commonmark_lists(path.read_text(encoding='utf-8'))
@@ -95,13 +102,13 @@ async def page(request):
     if name not in PAGES or not PAGES[name][0].exists():
         return RedirectResponse('/hilfe', 303)
     c = ctx(request, area='help')
-    html, title = render(name, c['base'])
+    html, title = render(name, c['base'], c['lang'])
     return templates.TemplateResponse(request, 'help.html', {**c, 'doc': html, 'title': title, 'page': name, 'pages': PAGES})
 
 
 async def picture(request):
     name = request.path_params['name']
     f = PICS / name
-    if not re.fullmatch(r'[a-z0-9-]+\.png', name) or not f.is_file():
+    if not re.fullmatch(r'(en/)?[a-z0-9-]+\.png', name) or not f.is_file():
         return Response(status_code=404)
     return FileResponse(f, media_type='image/png', headers={'Cache-Control': 'max-age=86400'})

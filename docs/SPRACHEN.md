@@ -9,6 +9,11 @@ MediaDB gibt es auf **Deutsch** (Quellsprache), **Englisch**, **Französisch**, 
 - `*Wort*` in einer Überschrift wird hervorgehoben dargestellt (kursiv).
 - Fehlt eine Übersetzung, zeigt die App den deutschen Text.
 
+## Die Anleitung
+- Die Anleitung gibt es auf **Deutsch** (`docs/ANLEITUNG.md`) und **Englisch** (`docs/MANUAL.md`). In der App (das **?** oben) erscheint bei deutscher Oberfläche die deutsche, bei allen anderen Sprachen die englische Fassung, mit einem kurzen Hinweis in der jeweiligen Sprache.
+- Beide Fassungen haben denselben Aufbau. Wer die deutsche Anleitung ändert, ändert die englische mit. Die Bildschirmfotos liegen in `docs/bilder/` (deutsch) und `docs/bilder/en/` (englisch) und entstehen mit `python3 tools/screenshots.py`.
+- „Betrieb im Homelab“, „Datenquellen und Rechtliches“ und „Änderungen“ gibt es bisher nur auf Deutsch.
+
 ## Eine Übersetzung verbessern
 1. Die passende Datei in `app/locales/` öffnen und den Wert ändern (Schlüssel nicht ändern).
 2. Im Projektordner `python3 tools/check_translations.py` ausführen. Das Programm meldet fehlende Einträge und falsche Platzhalter.

@@ -3,6 +3,7 @@
 data
 docs/*
 !docs/ANLEITUNG.md
+!docs/MANUAL.md
 !docs/BETRIEB.md
 !docs/DATENQUELLEN_UND_RECHT.md
 !docs/bilder
