@@ -42,7 +42,8 @@ def _view():
                 stored_lang=C.stored().get('TMDB_LANGUAGE'),
                 password_on=bool(os.getenv('APP_PASSWORD')), public=os.getenv('ALLOW_PUBLIC', '0') in ('1', 'true', 'yes', 'ja', 'on'),
                 ui_langs=i18n.LANGS,
-                nas_shares=[{k: v for k, v in x.items() if k != 'password'} | {'has_password': bool(x.get('password'))} for x in nas.shares()])
+                nas_shares=[{k: v for k, v in x.items() if k != 'password'} | {'has_password': bool(x.get('password'))} for x in nas.shares()],
+                nas_logins=nas.logins())
 
 
 async def page(request):
@@ -86,20 +87,32 @@ async def test_tmdb(request):
 
 
 # ---------------------------------------------------------------- NAS-Freigaben
+NAS_FIELDS = ('label', 'host', 'share', 'folder', 'user', 'password', 'from')
+
+
 async def nas_save(request):
     f, _ = await _form(request)
     sid = (f.get('id') or '').strip() or None
-    new_id, err = await run_in_threadpool(nas.save_share, {k: f.get(k) for k in ('label', 'host', 'share', 'folder', 'user', 'password')}, sid)
+    new_id, err = await run_in_threadpool(nas.save_share, {k: f.get(k) for k in NAS_FIELDS}, sid)
     if err:
         return go('/settings?part=nas#nas', err)
-    ok, text = await run_in_threadpool(nas.check, new_id)
+    ok, text, _ = await run_in_threadpool(nas.check, new_id)
     return go('/settings?part=nas#nas', _filled(text))  # gespeichert ist schon; die Meldung sagt, ob die Verbindung klappt
 
 
 async def nas_check(request):
     f, _ = await _form(request)
-    ok, text = await run_in_threadpool(nas.check, f.get('id') or '')
+    ok, text, _ = await run_in_threadpool(nas.check, f.get('id') or '')
     return go('/settings?part=nas#nas', _filled(text))
+
+
+async def nas_test(request):
+    """Knopf „Verbindung prüfen“ im Formular: prueft die eingetragenen Angaben, ohne zu speichern (Antwort als JSON)."""
+    f, _ = await _form(request)
+    ok, text, detail = await run_in_threadpool(nas.test, {k: f.get(k) for k in NAS_FIELDS}, (f.get('id') or '').strip() or None)
+    lang = ctx(request)['lang']
+    t = i18n.tr_text(lang, text[0], *text[1:]) if isinstance(text, tuple) else i18n.tr_text(lang, text)
+    return JSONResponse({'ok': ok, 'message': t, 'detail': detail})
 
 
 async def nas_delete(request):
@@ -184,5 +197,6 @@ def activity():
 routes = [Route('/', page), Route('/save', save, methods=['POST']), Route('/test-tmdb', test_tmdb, methods=['POST']),
           Route('/relang', relang, methods=['POST']), Route('/relang/status', relang_status),
           Route('/nas/save', nas_save, methods=['POST']), Route('/nas/check', nas_check, methods=['POST']),
+          Route('/nas/test', nas_test, methods=['POST']),
           Route('/nas/delete', nas_delete, methods=['POST'])]
 app = Starlette(routes=routes)

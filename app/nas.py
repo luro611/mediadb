@@ -8,10 +8,12 @@ Fuer ffprobe/ffmpeg gibt es einen kleinen HTTP-Vermittler nur auf 127.0.0.1: Er 
 weiter, so liest ffprobe nur die Teile, die es braucht (nicht den ganzen Film). Es wird nie etwas geschrieben.
 
 Gespeichert in data/settings.json unter "nas": [{id, label, host, share, folder, user, password}]."""
-import errno, logging, posixpath, re, secrets, threading, time
+import errno, logging, posixpath, re, secrets, socket, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import quote, unquote
 from . import config as C
+
+logging.getLogger('smbclient').setLevel(logging.ERROR)  # "Failed to close connection" samt Traceback ist nur Laerm
 
 PREFIX = '/nas'
 TIMEOUT = 10        # Sekunden fuer den Verbindungsaufbau
@@ -52,23 +54,58 @@ def clean_part(p):
     return '/'.join(parts)
 
 
-def save_share(data, sid=None):
-    """Freigabe anlegen (sid=None) oder aendern. Leeres Passwort beim Aendern = unveraendert. Gibt (id, fehler) zurueck."""
+def logins():
+    """Gespeicherte Zugaenge zum Uebernehmen in eine neue Freigabe: je NAS und Benutzer einmal (ohne Passwort)."""
+    seen, out = set(), []
+    for s in shares():
+        key = (s['host'].lower(), s.get('user') or '')
+        if key not in seen:
+            seen.add(key)
+            out.append({'id': s['id'], 'host': s['host'], 'user': s.get('user') or '', 'label': s['label']})
+    return out
+
+
+def _entry(data, sid=None):
+    """Formular -> Freigabe (ohne zu speichern). Gibt (eintrag, alter_eintrag, fehler) zurueck.
+    Passwort leer: beim Aendern das gespeicherte, sonst das der Freigabe aus data['from'] (gleiche NAS, gleicher Benutzer)."""
     label = (data.get('label') or '').strip()[:40]
-    host = clean_host(data.get('host'))
-    share = clean_part(data.get('share')).split('/')[0] if data.get('share') else ''
+    raw = (data.get('host') or '').strip()
+    host = clean_host(raw)
+    share, folder = clean_part(data.get('share')), clean_part(data.get('folder'))
+    if not share:  # ganze Adresse ins Feld NAS-Adresse kopiert: smb://nas/Musik/Alben oder \\nas\Musik\Alben
+        rest = re.sub(r'^(smb|cifs)://', '', raw.replace('\\', '/').strip('/'), flags=re.I).split('/')[1:]
+        share, folder = (rest[0], clean_part('/'.join(rest[1:])) or folder) if rest else ('', folder)
+    if '/' in share:  # "Musik/Alben" im Feld Freigabe: der Rest ist ein Unterordner
+        share, more = share.split('/', 1)
+        folder = clean_part(more + '/' + folder)
     if not label or not host or not share:
-        return None, 'Bitte Name, NAS-Adresse und Freigabe eintragen.'
+        return None, None, 'Bitte Name, NAS-Adresse und Freigabe eintragen.'
     if not re.fullmatch(r'[A-Za-z0-9.\-_]+(:\d{1,5})?|\[[0-9a-fA-F:]+\](:\d{1,5})?', host):
-        return None, 'Die NAS-Adresse ist nicht lesbar (z. B. 192.168.1.20 oder nas.local).'
+        return None, None, 'Die NAS-Adresse ist nicht lesbar (z. B. 192.168.1.20).'
     lst = shares()
     old = next((s for s in lst if s['id'] == sid), None) if sid else None
     if sid and not old:
-        return None, 'Freigabe nicht gefunden.'
+        return None, None, 'Freigabe nicht gefunden.'
+    user = (data.get('user') or '').strip()[:100]
+    password = data.get('password') or ''
+    if not password:
+        src = old or get_share(data.get('from') or '')
+        if src and src['host'].lower() == host.lower() and (src.get('user') or '') == user:
+            password = src.get('password', '')
+    if not user or not password:
+        return None, None, 'Bitte Benutzer und Passwort der NAS eintragen. Ein Zugang als Gast ohne Passwort ist nicht möglich.'
     entry = {'id': old['id'] if old else slug(label, {s['id'] for s in lst}), 'label': label, 'host': host, 'share': share,
-             'folder': clean_part(data.get('folder')), 'user': (data.get('user') or '').strip()[:100],
-             'password': data.get('password') or (old or {}).get('password', '')}
-    lst = [entry if s is old else s for s in lst] if old else lst + [entry]
+             'folder': folder, 'user': user, 'password': password}
+    return entry, old, ''
+
+
+def save_share(data, sid=None):
+    """Freigabe anlegen (sid=None) oder aendern. Leeres Passwort beim Aendern = unveraendert. Gibt (id, fehler) zurueck."""
+    entry, old, err = _entry(data, sid)
+    if err:
+        return None, err
+    lst = shares()
+    lst = [entry if s['id'] == old['id'] else s for s in lst] if old else lst + [entry]
     if not C.save_section('nas', lst):
         return None, 'Die Einstellungen konnten nicht gespeichert werden.'
     reset()
@@ -82,14 +119,25 @@ def delete_share(sid):
     return ok
 
 
+def reset_cache(s=None):
+    """Offene SMB-Verbindungen schliessen: alle oder nur die zur NAS der Freigabe s."""
+    try:
+        import smbclient
+        if s is None:
+            smbclient.reset_connection_cache(fail_on_error=False)
+            return
+        from smbclient import _pool
+        con = _pool._SMB_CONNECTIONS.pop(f'{_hostname(s).lower()}:{_port(s)}', None)
+        if con:
+            con.disconnect()
+    except Exception:
+        pass
+
+
 def reset():
     """Nach einer Aenderung der Zugangsdaten: offene Verbindungen schliessen, Sperren vergessen."""
     _down.clear()
-    try:
-        import smbclient
-        smbclient.reset_connection_cache()
-    except Exception:
-        pass
+    reset_cache()
 
 
 def roots():
@@ -119,19 +167,29 @@ def _split(path):
     s = get_share(sid)
     if not s:
         raise OSError(errno.ENOENT, 'NAS-Freigabe nicht (mehr) eingerichtet', str(path))
-    parts = [s['share']] + ([s['folder']] if s.get('folder') else []) + rest
-    host = s['host']
-    if ':' in host and not host.startswith('['):
-        host = host.split(':')[0]
-    return s, '\\\\' + host + '\\' + '\\'.join(x.replace('/', '\\') for x in parts)
+    return s, _unc(s, rest)
+
+
+def _hostname(s):
+    """NAS-Adresse ohne Port (IPv6 ohne Klammern)."""
+    h = s['host']
+    if h.startswith('['):
+        return h[1:h.index(']')]
+    return h.split(':')[0]
+
+
+def _unc(s, rest=()):
+    parts = [s['share']] + ([s['folder']] if s.get('folder') else []) + list(rest)
+    return '\\\\' + _hostname(s) + '\\' + '\\'.join(x.replace('/', '\\') for x in parts)
+
+
+def _port(s):
+    m = re.search(r':(\d{1,5})$', s['host'])
+    return int(m.group(1)) if m and not s['host'].endswith(']') else 445
 
 
 def _kw(s):
-    port = 445
-    m = re.search(r':(\d{1,5})$', s['host'])
-    if m and not s['host'].endswith(']'):
-        port = int(m.group(1))
-    return {'username': s.get('user') or None, 'password': s.get('password') or None, 'port': port,
+    return {'username': s.get('user') or None, 'password': s.get('password') or None, 'port': _port(s),
             'connection_timeout': TIMEOUT, 'auth_protocol': 'ntlm'}
 
 
@@ -152,6 +210,7 @@ def _call(path, fn):
         msg = describe(e)
         if _is_conn_error(e):
             _down[host] = (time.time(), msg)
+            reset_cache(s)  # z. B. NAS neu gestartet: beim naechsten Versuch neu verbinden statt die tote Verbindung zu nehmen
         raise OSError(errno.EIO, msg, str(path)) from e
 
 
@@ -173,6 +232,10 @@ def describe(e):
     if st == 0xC000006D:
         return 'Anmeldung abgelehnt. Bitte Benutzer und Passwort prüfen.'
     t = f'{type(e).__name__}: {e}'.lower()
+    if 'as a guest' in t:
+        return 'Die NAS kennt diesen Benutzer nicht und würde nur einen Gastzugang erlauben. Bitte den Benutzernamen prüfen (genau so, wie er auf der NAS angelegt ist).'
+    if 'negotiat' in t or 'dialect' in t:
+        return 'Die NAS spricht wohl nur das alte SMB1. Bitte in der NAS-Oberfläche SMB2 oder SMB3 einschalten.'
     if 'logon' in t or 'authentication' in t or 'access_denied' in t or 'password' in t or 'status_logon_failure' in t:
         return 'Anmeldung abgelehnt. Bitte Benutzer und Passwort prüfen.'
     if 'bad_network_name' in t or 'network name' in t:
@@ -240,23 +303,55 @@ def walk(top):
         yield from walk(top + '/' + d)
 
 
+def probe(s):
+    """Verbindung Schritt fuer Schritt pruefen: Name -> Netz -> SMB-Port -> Anmeldung -> Freigabe und Unterordner.
+    Gibt (ok, text, technische_angabe) zurueck; text ist ein String oder (Muster mit §, Werte ...)."""
+    host, port = _hostname(s), _port(s)
+    try:
+        addr = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)[0][4]
+    except (socket.gaierror, UnicodeError) as e:
+        if host.lower().endswith('.local'):
+            return False, ('Den Namen „§“ findet MediaDB nicht: Namen mit .local funktionieren im Docker-Container nicht. Bitte die IP-Adresse der NAS eintragen (z. B. 192.168.1.20).', host), str(e)
+        return False, ('Den Namen „§“ findet MediaDB im Netz nicht. Bitte die IP-Adresse der NAS eintragen (z. B. 192.168.1.20).', host), str(e)
+    try:
+        socket.create_connection(addr[:2], timeout=5).close()
+    except ConnectionRefusedError as e:
+        return False, ('Die NAS unter § antwortet, aber SMB ist dort nicht eingeschaltet (Port § ist zu). Bitte SMB in der NAS-Oberfläche einschalten.', host, port), str(e)
+    except OSError as e:
+        return False, ('Unter § antwortet nichts. Stimmt die Adresse, und ist die NAS eingeschaltet? Läuft MediaDB in einem LXC oder einer VM: Ist die NAS von dort aus erreichbar (Firewall, anderes Netz)?', host), f'{type(e).__name__}: {e}'
+    import smbclient
+    cache = {}  # eigene Verbindung, damit eine alte (z. B. mit anderem Passwort) nicht stoert
+    try:
+        with smbclient.scandir(_unc(s), **_kw(s), connection_cache=cache) as it:
+            entries = [(e.name, e.is_dir()) for e in it if e.name not in ('.', '..')]
+    except Exception as e:
+        msg = describe(e)
+        if type(e).__name__ == 'SMBConnectionClosed' and msg.startswith('Fehler beim'):  # Port offen, aber sofort aufgelegt
+            msg = 'Die NAS hat die Verbindung sofort beendet. Meist spricht sie nur das alte SMB1: Bitte in der NAS-Oberfläche SMB2 oder SMB3 einschalten.'
+        return False, msg, f'{type(e).__name__}: {e}'[:300]
+    finally:
+        try:
+            smbclient.reset_connection_cache(fail_on_error=False, connection_cache=cache)
+        except Exception:
+            pass
+    nd = sum(1 for _, d in entries if d)
+    return True, ('Verbindung klappt: § Ordner und § Dateien gefunden.', nd, len(entries) - nd), ''
+
+
 def check(sid):
-    """Verbindung pruefen. Gibt (ok, text) zurueck."""
+    """Gespeicherte Freigabe pruefen. Gibt (ok, text, technische_angabe) zurueck."""
     s = get_share(sid)
     if not s:
-        return False, 'Freigabe nicht gefunden.'
+        return False, 'Freigabe nicht gefunden.', ''
     _down.pop(s['host'], None)
-    try:
-        entries = scandir(f'{PREFIX}/{sid}')
-    except OSError as e:
-        if getattr(e, 'ntstatus', None) is None and e.errno in (errno.EIO, errno.EHOSTUNREACH, errno.ENOENT) and e.strerror:
-            return False, e.strerror  # schon von _call/_split beschrieben
-        return False, describe(e)
-    except Exception as e:
-        return False, describe(e)
-    nd = sum(1 for _, d, _ in entries if d)
-    nf = sum(1 for _, d, _ in entries if not d)
-    return True, ('Verbindung klappt: § Ordner und § Dateien gefunden.', nd, nf)
+    reset_cache(s)
+    return probe(s)
+
+
+def test(data, sid=None):
+    """Angaben aus dem Formular pruefen, ohne sie zu speichern (Knopf „Verbindung prüfen“)."""
+    entry, _, err = _entry(data, sid)
+    return (False, err, '') if err else probe(entry)
 
 
 # ---------------------------------------------------------------- HTTP-Vermittler fuer ffprobe/ffmpeg

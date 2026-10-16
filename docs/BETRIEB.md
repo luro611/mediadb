@@ -54,11 +54,17 @@ Nein. MediaDB spielt nichts ab; nach dem Import stehen Titel, Tags, Technikdaten
 Am einfachsten liest MediaDB die Dateien **direkt von der NAS**. In Proxmox muss dafür nichts eingerichtet werden.
 
 1. In MediaDB: **Einstellungen (Zahnrad) → NAS-Freigaben → Freigabe hinzufügen**.
-2. Eintragen: Name (z. B. „Musik“), NAS-Adresse (z. B. `192.168.1.20`), Freigabe (der Ordnername, den du auch im Finder unter `smb://192.168.1.20/…` siehst), optional ein Unterordner, Benutzer und Passwort der NAS.
-3. **Speichern und prüfen.** Die Meldung sagt, ob es klappt, und sonst, was nicht stimmt.
-4. Beim Einlesen (Audio-Import, Filme, Serien, Bücher) erscheint die Freigabe in der Ordnerauswahl als **„NAS: Musik“**.
+2. Eintragen: Name (z. B. „Musik“), NAS-Adresse (z. B. `192.168.1.20`), Freigabe (der Ordnername, den du auch im Finder unter `smb://192.168.1.20/…` siehst), optional ein Unterordner, Benutzer und Passwort der NAS. Die ganze Adresse `smb://192.168.1.20/Musik/Alben` ins Feld NAS-Adresse zu kopieren geht auch.
+3. **Verbindung prüfen** (prüft, ohne zu speichern) und dann **Speichern und prüfen.** Die Meldung sagt, ob es klappt, und sonst, woran es hängt: Name nicht gefunden, NAS antwortet nicht, SMB aus, Anmeldung, Freigabe oder Unterordner falsch.
+4. Für weitere Freigaben auf derselben NAS oben **„Zugang einer eingerichteten NAS übernehmen“** wählen: Adresse, Benutzer und Passwort sind dann schon eingetragen.
+5. Beim Einlesen (Audio-Import, Filme, Serien, Bücher) erscheint die Freigabe in der Ordnerauswahl als **„NAS: Musik“**.
 
-Die NAS muss **SMB** anbieten (bei Synology, QNAP, UGREEN, TrueNAS, Unraid, Fritzbox und Windows Standard). Es wird nur gelesen. Am besten legst du auf der NAS einen eigenen Benutzer an, der die Freigaben nur lesen darf.
+Die NAS muss **SMB2 oder SMB3** anbieten (bei Synology, QNAP, UGREEN, TrueNAS, Unraid, Fritzbox und Windows Standard). Es wird nur gelesen.
+
+**Wenn es nicht klappt:**
+- Die **IP-Adresse** der NAS eintragen, nicht ihren Namen. Namen wie `diskstation.local` findet der Docker-Container meist nicht.
+- Ein **Benutzer mit Passwort** ist nötig; ein Gastzugang ohne Passwort geht nicht.
+- Unter der Meldung steht eine **technische Angabe**. Die hilft bei der Fehlersuche. Am besten legst du auf der NAS einen eigenen Benutzer an, der die Freigaben nur lesen darf.
 
 **Ohne NAS:** Neue Ordner in `/opt/mediadb/medien/…` kopieren, einlesen und danach wieder löschen.
 

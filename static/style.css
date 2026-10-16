@@ -211,7 +211,7 @@ nav .actitem .sub{font-size:13px}
 .hint{margin:12px 0 0;padding:10px 12px;border-left:3px solid var(--accent);background:var(--soft);font-size:14px}
 .settingsextra{margin-top:28px}.settingsextra .card{margin:0}.settingsextra h3{font-size:24px}
 .settingsextra .tab{display:inline-block;margin:0 4px 6px 0}
-#nas{margin:16px 0 0}#nas .nasrow{border-top:1px solid var(--line,#ddd);padding:10px 0}#nas .nasrow .actions{display:flex;gap:8px;flex-wrap:wrap}#nas .nasrow form{margin:0}#nas details{margin:8px 0}#nas summary{cursor:pointer;font-weight:600}
+#nas{margin:16px 0 0}#nas .nasrow{border-top:1px solid var(--line,#ddd);padding:10px 0}#nas .nasrow .actions{display:flex;gap:8px;flex-wrap:wrap}#nas .nasrow form{margin:0}#nas details{margin:8px 0}#nas summary{cursor:pointer;font-weight:600}#nas .nasresult{margin:8px 0 0}#nas .nasresult small{display:block;margin-top:4px;opacity:.75;overflow-wrap:anywhere}#nas select{max-width:100%}
 nav a.navgear:not(.brand){font:400 18px Inter,sans-serif;letter-spacing:0;line-height:1}
 .help{color:var(--muted);font-size:14px;line-height:1.5;margin:4px 0 14px;max-width:760px}
 /* Buecher */

@@ -1,5 +1,12 @@
 # Änderungen
 
+## MediaDB 1.9.2 – NAS-Verbindung prüfen
+- **„Verbindung prüfen“ direkt im Formular:** prüft die eingetragenen Angaben, ohne sie zu speichern. Die Prüfung geht Schritt für Schritt vor und sagt genau, woran es hängt: Name der NAS nicht gefunden (Namen mit `.local` funktionieren im Docker-Container nicht, dann die IP-Adresse eintragen), NAS antwortet nicht, SMB ausgeschaltet, nur das alte SMB1, Benutzer unbekannt, Passwort falsch, Freigabe oder Unterordner falsch. Darunter steht eine technische Angabe für die Fehlersuche.
+- **Zugang übernehmen:** Bei einer weiteren Freigabe lässt sich eine schon eingerichtete NAS auswählen; Adresse, Benutzer und Passwort werden übernommen.
+- Die ganze Adresse (`smb://192.168.1.20/Musik/Alben` oder `\\192.168.1.20\Musik\Alben`) darf ins Feld NAS-Adresse; „Musik/Alben“ im Feld Freigabe wird in Freigabe und Unterordner aufgeteilt (bisher ging der Unterordner verloren).
+- Benutzer und Passwort sind jetzt Pflicht: Ein Gastzugang ohne Passwort scheiterte bisher immer mit der irreführenden Meldung „Anmeldung abgelehnt“.
+- Nach einem Neustart der NAS wird die alte Verbindung verworfen und neu verbunden.
+
 ## MediaDB 1.9.1 – Hinweis auf neue Versionen
 - **Neue Version verfügbar:** MediaDB schaut einmal am Tag bei Codeberg nach dem neuesten Release. Gibt es ein neueres, steht unten auf jeder Seite neben der Versionsnummer „Neue Version … verfügbar“, mit Link zu den Neuerungen. Aktualisieren wie gewohnt in Dockhand mit *Pull* und *Redeploy*.
 - Abgefragt wird nur die öffentliche Release-Liste, ohne Angaben zu dir oder deiner Sammlung. Abschaltbar unter Einstellungen → „Dienste und Automatik“ (`UPDATE_CHECK=0`).

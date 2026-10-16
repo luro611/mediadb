@@ -60,7 +60,8 @@
     <input type="hidden" name="id" value="{{ x.id }}">
     {% set pre = 'n' ~ loop.index %}
     {% include '_nas_fields.html' %}
-    <div class="actions"><button>{{ _("Speichern und prüfen") }}</button></div>
+    <div class="actions"><button>{{ _("Speichern und prüfen") }}</button><button type="button" class="quiet nastest">{{ _("Verbindung prüfen") }}</button></div>
+    <div class="nasresult" hidden></div>
    </form>
   </details>
  </div>
@@ -68,11 +69,24 @@
  <details{% if not nas_shares %} open{% endif %}><summary>{{ _("Freigabe hinzufügen") }}</summary>
   <form method="post" action="{{ base }}/settings/nas/save">
    {% set x = {} %}{% set pre = 'n0' %}
+   {% if nas_logins %}
+   <label for="n0from">{{ _("Zugang einer eingerichteten NAS übernehmen") }}</label>
+   <select name="from" id="n0from" class="nasfrom">
+    <option value="">{{ _("– neu eintragen –") }}</option>
+    {% for g in nas_logins %}<option value="{{ g.id }}" data-host="{{ g.host }}" data-user="{{ g.user }}">{{ g.host }}{% if g.user %} · {{ g.user }}{% endif %} ({{ g.label }})</option>{% endfor %}
+   </select>
+   <p class="help">{{ _("Übernimmt NAS-Adresse, Benutzer und Passwort. Dann nur noch Name und Freigabe eintragen.") }}</p>
+   {% endif %}
    {% include '_nas_fields.html' %}
-   <div class="actions"><button>{{ _("Speichern und prüfen") }}</button></div>
+   <div class="actions"><button>{{ _("Speichern und prüfen") }}</button><button type="button" class="quiet nastest">{{ _("Verbindung prüfen") }}</button></div>
+   <div class="nasresult" hidden></div>
   </form>
  </details>
  <p class="help">{{ _("Danach erscheint jede Freigabe beim Einlesen von Musik, Filmen, Serien und Büchern in der Ordnerauswahl als „NAS: Name“.") }}</p>
+ <script>(function(){var S=document.getElementById('nas'),W={{ _t("Prüfe die Verbindung …")|tojson }},E={{ _t("Die Prüfung ist fehlgeschlagen. Bitte die Seite neu laden.")|tojson }},D={{ _t("Technische Angabe:")|tojson }};
+S.querySelectorAll('.nastest').forEach(function(b){b.onclick=function(){var f=b.form,r=f.querySelector('.nasresult');r.hidden=false;r.className='nasresult';r.textContent=W;b.disabled=true;
+fetch({{ base|tojson }}+'/settings/nas/test',{method:'POST',body:new FormData(f)}).then(function(x){return x.json()}).then(function(d){r.className='nasresult '+(d.ok?'ok':'warn');r.textContent=d.message;if(d.detail){var s=document.createElement('small');s.textContent=D+' '+d.detail;r.appendChild(s)}}).catch(function(){r.className='nasresult warn';r.textContent=E}).finally(function(){b.disabled=false})}});
+S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var o=sel.selectedOptions[0],f=sel.form,pw=f.querySelector('[name=password]');if(o.value){f.querySelector('[name=host]').value=o.dataset.host;f.querySelector('[name=user]').value=o.dataset.user;pw.value='';pw.placeholder={{ _t("gespeichert – leer lassen")|tojson }}}else{pw.placeholder=''}}});})()</script>
 </section>
 
 <div class="grid settingsextra">

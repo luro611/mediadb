@@ -10,4 +10,4 @@
 <input name="user" id="{{ pre }}u" value="{{ x.user or '' }}" autocomplete="off" spellcheck="false" autocapitalize="off">
 <label for="{{ pre }}p">{{ x.has_password and _("Neues Passwort (leer lassen = unverändert)") or _("Passwort") }}</label>
 <input type="password" name="password" id="{{ pre }}p" autocomplete="new-password">
-<p class="help">{{ _("Die Adresse steht in der NAS-Oberfläche oder im Router. Die Freigabe ist der Ordnername, den du auch im Finder unter smb://adresse/freigabe oder im Windows-Explorer unter Netzwerk siehst.") }}</p>
+<p class="help">{{ _("Am besten die IP-Adresse der NAS eintragen; sie steht in der NAS-Oberfläche oder im Router. Namen wie nas.local funktionieren im Docker-Container meist nicht. Die Freigabe ist der Ordnername, den du auch im Finder unter smb://adresse/freigabe oder im Windows-Explorer unter Netzwerk siehst.") }}</p>
