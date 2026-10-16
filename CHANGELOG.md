@@ -1,5 +1,10 @@
 # Änderungen
 
+## MediaDB 1.13.1 – Sprache gut sichtbar in den Einstellungen
+- **Eigener Bereich „Sprache der Oberfläche“** ganz oben in den Einstellungen. Bisher steckte er klein in einer schmalen Kachel weit unten, und die Häkchen waren kaum zu sehen.
+- **Zwei getrennte Teile:** links die **Hauptsprache** mit eigenem Speichern-Knopf, rechts der **Umschalter oben in der Leiste** mit großen Knöpfen zum Anhaken und eigenem Speichern-Knopf.
+- **Website:** fünf Sprachen, dazu neue Abschnitte zu „Als Nächstes“, den Ansichten Kacheln/Liste/Text und der neuen Startseite.
+
 ## MediaDB 1.13.0 – Italienisch und Spracheinstellungen
 - **Italienisch:** Die ganze Oberfläche gibt es jetzt auch auf Italiano. Als Datensprache für Filme und Serien stehen Italienisch (Italien) und Italienisch (Schweiz) zur Auswahl.
 - **Sprache in den Einstellungen:** Unter „Sprache der Oberfläche“ wählst du die Hauptsprache. Dort hakst du auch die Sprachen an, die oben in der Leiste zum Umschalten erscheinen sollen. Das ist praktisch, wenn im Haushalt mehrere Sprachen gesprochen werden.

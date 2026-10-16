@@ -497,13 +497,18 @@ def set_layout(request:Request,area:str,mode:str,next:str='/'):
  r=RedirectResponse(next,303)
  if area in LAYOUTS and mode in LAYOUT_MODES: r.set_cookie('mediadb_layout_'+area,mode,max_age=60*60*24*365*5,samesite='lax')
  return r
-@app.post('/lang-settings')
-def save_lang_settings(request:Request,lang:str=Form(i18n.DEFAULT),nav:list[str]=Form([])):
- """Einstellungen: Hauptsprache (fuer alle Geraete ohne eigene Wahl) und die Sprachen fuer den Umschalter oben."""
+@app.post('/lang-settings/main')
+def save_main_lang(lang:str=Form(i18n.DEFAULT)):
+ """Einstellungen: Hauptsprache (dieses Geraet und Voreinstellung fuer alle Geraete ohne eigene Wahl)."""
  lang=lang if lang in i18n.LANGS else i18n.DEFAULT
- d=load_settings(); d['lang']=lang; d['nav_langs']=[c for c in i18n.LANGS if c in nav]; save_settings(d)
- r=RedirectResponse('/settings?message='+quote('Spracheinstellungen gespeichert.')+'#oberflaeche',303)
+ d=load_settings(); d['lang']=lang; save_settings(d)
+ r=RedirectResponse('/settings?message='+quote('Hauptsprache gespeichert.')+'#oberflaeche',303)
  r.set_cookie('mediadb_lang',lang,max_age=60*60*24*365*5,samesite='lax'); return r
+@app.post('/lang-settings/nav')
+def save_nav_langs(nav:list[str]=Form([])):
+ """Einstellungen: Sprachen fuer den Umschalter oben in der Leiste (weniger als zwei = kein Umschalter)."""
+ d=load_settings(); d['nav_langs']=[c for c in i18n.LANGS if c in nav]; save_settings(d)
+ return RedirectResponse('/settings?message='+quote('Umschalter gespeichert.')+'#oberflaeche',303)
 @app.get('/lang/{code}')
 def set_lang(request:Request,code:str,next:str='/'):
  if code not in i18n.LANGS: code=i18n.DEFAULT
