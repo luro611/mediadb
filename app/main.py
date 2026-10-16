@@ -473,7 +473,11 @@ def get_lang(request):
  c=(request.cookies.get('mediadb_lang') or request.cookies.get('musikdb_lang')) if request else None  # musikdb_lang: bis MusikDB 1.2
  if c in i18n.LANGS: return c
  l=load_settings().get('lang')
- return l if l in i18n.LANGS else i18n.DEFAULT
+ if l in i18n.LANGS: return l
+ for part in (request.headers.get('accept-language','') if request else '').split(','):  # noch nichts gewaehlt: Sprache des Browsers
+  c=part.split(';')[0].strip()[:2].lower()
+  if c in i18n.LANGS: return c
+ return i18n.DEFAULT
 LAYOUTS={'music':'list','films':'tiles','series':'tiles','books':'tiles'}  # Voreinstellung je Bereich: Kacheln, Liste oder Text
 LAYOUT_MODES=('tiles','list','text')  # text: Liste ohne Bilder (seit 1.12)
 def get_layout(request,area):
@@ -568,11 +572,12 @@ def save_areas(area:list[str]=Form([])):
  if not _save_areas(area): return RedirectResponse('/settings?err='+quote('Mindestens ein Bereich muss eingeschaltet bleiben.')+'#bereiche',303)
  return RedirectResponse('/settings?message='+quote('Bereiche gespeichert.')+'#bereiche',303)
 @app.get('/willkommen',response_class=HTMLResponse)
-def welcome(request:Request,err:str=''):
- return templates.TemplateResponse(request,'welcome.html',ctx(request,area='welcome',err=err))
+def welcome(request:Request,err:str='',schritt:str=''):
+ """Erster Start: Schritt 1 die Sprache (Begruessung in allen Sprachen), Schritt 2 die Bereiche in der gewaehlten Sprache."""
+ return templates.TemplateResponse(request,'welcome.html',ctx(request,area='welcome',err=err,step=2 if schritt=='2' or err else 1))
 @app.post('/willkommen')
 def welcome_save(lang:str=Form(i18n.DEFAULT),area:list[str]=Form([])):
- if not _save_areas(area): return RedirectResponse('/willkommen?err='+quote('Bitte mindestens einen Bereich ankreuzen.'),303)
+ if not _save_areas(area): return RedirectResponse('/willkommen?schritt=2&err='+quote('Bitte mindestens einen Bereich ankreuzen.'),303)
  lang=lang if lang in i18n.LANGS else i18n.DEFAULT
  d=load_settings(); d['lang']=lang; save_settings(d)
  r=RedirectResponse('/',303); r.set_cookie('mediadb_lang',lang,max_age=60*60*24*365*5,samesite='lax'); return r

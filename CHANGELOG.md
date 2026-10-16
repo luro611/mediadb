@@ -1,5 +1,11 @@
 # Änderungen
 
+## MediaDB 1.17.1 – Willkommen in allen Sprachen
+- **Erster Start in zwei Schritten:** Zuerst begrüßt MediaDB in allen fünf Sprachen (die Sprache des Browsers steht vorne) und fragt nach der Sprache. Danach kommt die Auswahl der Bereiche, schon in der gewählten Sprache. Die Datensprache für Filme und Serien wird dabei passend voreingestellt.
+- Ist noch keine Sprache gewählt, richtet sich MediaDB nach der Sprache des Browsers statt immer Deutsch zu zeigen.
+- Während der Begrüßung ist die Leiste oben aufgeräumt.
+- **Dokumentation auf dem neuesten Stand:** Anleitung (mit neuen Bildschirmfotos der Willkommensseite), README, Projektanleitung, Roadmap, Sprachen und Datenquellen (inkl. der neuen Bibliotheken). Die Projektseite lurohome.de/mediadb hat neue Abschnitte zu Bereichen, Hilfe und Farben.
+
 ## MediaDB 1.17.0 – Bereiche ein- und ausschalten
 - **Neuer Abschnitt „Bereiche“ in den Einstellungen:** Musik, Filme, Serien und Bücher lassen sich einzeln ausschalten, z. B. für alle, die nur Bücher oder nur Filme und Serien verwalten.
 - **Ausgeschaltet heißt ausgeblendet:** Der Bereich verschwindet aus der Leiste, der Startseite, der Suche und aus „Hinzufügen“. Seine Hintergrundarbeiten ruhen, etwa die tägliche Serien-Aktualisierung. Einstellungen, die nur diesen Bereich betreffen (z. B. der TMDB-Schlüssel), treten zurück. Alte Lesezeichen zeigen einen freundlichen Hinweis.

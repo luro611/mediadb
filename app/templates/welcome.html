@@ -1,13 +1,20 @@
 {% extends 'base.html' %}{% block content %}
+{% if step == 1 %}
+{# Schritt 1: Begruessung in allen Sprachen; die Sprache des Browsers steht vorne #}
+{% set HELLO = {'de':('Willkommen','Bitte wähle deine Sprache.'),'en':('Welcome','Please choose your language.'),'fr':('Bienvenue','Choisis ta langue.'),'es':('Bienvenido','Elige tu idioma.'),'it':('Benvenuto','Scegli la tua lingua.')} %}
+<p class="eyebrow">MediaDB</p>
+<h1 class="hellos">{% for code in [lang] + (langs.keys()|reject('equalto', lang)|list) %}<span lang="{{ code }}"{% if loop.first %} class="first"{% endif %}>{{ HELLO[code][0] }}</span>{% endfor %}</h1>
+<div class="langpickbig" role="list">
+ {% for code in [lang] + (langs.keys()|reject('equalto', lang)|list) %}<a role="listitem" href="{{ base }}/lang/{{ code }}?next={{ (base ~ '/willkommen?schritt=2')|urlencode }}" lang="{{ code }}"{% if loop.first %} class="first"{% endif %}><strong>{{ langs[code] }}</strong><span>{{ HELLO[code][1] }}</span><b aria-hidden="true">→</b></a>{% endfor %}
+</div>
+{% else %}
+{# Schritt 2: was verwaltet werden soll, schon in der gewaehlten Sprache #}
 <p class="eyebrow">{{ _("MediaDB / Willkommen") }}</p>
 <h1>{{ _("Will*kommen*") }}</h1>
-<p class="intro">{{ _("Schön, dass du MediaDB ausprobierst. Zwei kurze Fragen, dann geht es los. Beides kannst du später jederzeit in den Einstellungen ändern.") }}</p>
+<p class="intro">{{ _("Was möchtest du verwalten?") }} {{ _("Kreuze an, was du sammelst. Was du nicht brauchst, bleibt ausgeblendet und lässt sich später in den Einstellungen dazuschalten.") }}</p>
 {% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
 <form method="post" action="{{ base }}/willkommen" class="card welcome">
- <h2>{{ _("Welche Sprache?") }}</h2>
- <select name="lang" id="wlang" aria-label="{{ _('Sprache') }}" onchange="location.href='{{ base }}/lang/'+this.value+'?next={{ (base ~ '/willkommen')|urlencode }}'">{% for code,name in langs.items() %}<option value="{{ code }}"{% if code==lang %} selected{% endif %}>{{ name }}</option>{% endfor %}</select>
- <h2>{{ _("Was möchtest du verwalten?") }}</h2>
- <p class="help">{{ _("Kreuze an, was du sammelst. Was du nicht brauchst, bleibt ausgeblendet und lässt sich später in den Einstellungen dazuschalten.") }}</p>
+ <input type="hidden" name="lang" value="{{ lang }}">
  <div class="areapick">
   {% for a,icon,desc in [('music','♪','CDs und Musikdateien'),('films','▶','DVDs, Blu-rays und Filmdateien'),('series','▦','Serienboxen und Folgen, mit Episodenführer'),('books','❦','Bücher, E-Books und Hörbücher')] %}
   <label><input type="checkbox" name="area" value="{{ a }}" checked><span class="ai" aria-hidden="true">{{ icon }}</span><span><strong>{{ _(AREA_NAMES[a]) }}</strong><br><span class="muted">{{ _(desc) }}</span></span></label>
@@ -15,4 +22,6 @@
  </div>
  <button>{{ _("Los geht's") }}</button>
 </form>
+<p class="muted"><a href="{{ base }}/willkommen">{{ _("← Andere Sprache wählen") }}</a></p>
+{% endif %}
 {% endblock %}

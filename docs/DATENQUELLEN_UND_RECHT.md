@@ -118,7 +118,7 @@ Die **Software** (dein Quellcode) darfst du unter einer freien Lizenz weitergebe
 4. **Namen und Logos:** Die App nennt die Quellen und behauptet keine Verbindung zu ihnen (siehe Texte in der App). Keine Logos der Dienste verwenden.
 5. **Lizenz der App:** Im Projekt liegt die GPL-3.0 als Vorschlag. Grund: Die Bibliothek `mutagen` steht unter GPL-2.0-oder-später; wer sie zusammen mit eigenem Code ausliefert (zum Beispiel in einem Docker-Image), sollte den eigenen Code ebenfalls unter einer kompatiblen GPL-Lizenz veröffentlichen. Du kannst eine andere Lizenz wählen, solltest dann aber `mutagen` ersetzen oder prüfen lassen.
 6. **Schriftarten** in `static/fonts/` (Inter, Archivo, Geist Mono, Instrument Serif): nach meinem Kenntnisstand unter der SIL Open Font License 1.1. Vor der Veröffentlichung bitte die jeweiligen Lizenztexte beilegen oder die Schriften durch Systemschriften ersetzen.
-7. Im Repository sollten **keine echten Daten aus deiner Sammlung** (Beispiel-Excel, Screenshots mit Covern) liegen.
+7. Im Repository sollten **keine echten Daten aus deiner Sammlung** (Beispiel-Excel, Screenshots mit Covern) liegen. Die Bildschirmfotos der Anleitung (`docs/bilder/`) zeigen deshalb eine erfundene Beispiel-Sammlung mit selbst erzeugten, schlichten Platzhaltern statt Covern und Postern (`tools/demo_data.py`, `tools/screenshots.py`).
 
 ## Verwendete Programmbibliotheken
 Alle werden beim Bau des Docker-Images per `pip` installiert und nicht mitgeliefert (Lizenzangaben nach meinem Kenntnisstand, bitte vor Veröffentlichung gegenprüfen):
@@ -133,9 +133,11 @@ Alle werden beim Bau des Docker-Images per `pip` installiert und nicht mitgelief
 | openpyxl | Excel lesen/schreiben | MIT |
 | requests | Web-Abfragen | Apache-2.0 |
 | mutagen | Audio-Tags | GPL-2.0-oder-später |
+| smbprotocol | NAS-Freigaben (SMB) direkt lesen | MIT |
+| Markdown (Python-Markdown) | Anleitung als Hilfe in der App anzeigen | BSD-3-Clause |
 | ffmpeg / ffprobe | Technikdaten von Filmdateien lesen (nur im Docker-Image, als eigenes Programm aufgerufen) | LGPL-2.1 / GPL-2.0 (je nach Bau, Debian-Paket) |
 
-Dazu kommen Python selbst (PSF-Lizenz), Docker und SQLite (gemeinfrei).
+Dazu kommen Python selbst (PSF-Lizenz), Docker und SQLite (gemeinfrei). Nur für Betreuer und nicht im Image: Playwright (Apache-2.0) für die Bildschirmfotos der Anleitung.
 
 ## Datenschutz (DSGVO)
 Die Sammlung ist eine private Liste. Die App überträgt keine persönlichen Daten außer Suchbegriffen und der IP-Adresse an die genannten Dienste. Erfasst du Daten Dritter (z. B. Leihgeber), gilt die übliche Zurückhaltung. Wer die App anderen anbietet, sollte in seiner README darauf hinweisen, dass die Dienste vom eigenen Rechner aus angesprochen werden.

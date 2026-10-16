@@ -1,6 +1,6 @@
 # Sprachen und Übersetzungen
 
-MediaDB gibt es auf **Deutsch** (Quellsprache), **Englisch**, **Französisch**, **Spanisch** und **Italienisch**. Die Hauptsprache wählst du unter Einstellungen → „Sprache der Oberfläche“. Dort kannst du auch Sprachen anhaken, die oben in der Leiste zum schnellen Umschalten erscheinen sollen (praktisch in mehrsprachigen Haushalten); bei weniger als zwei angehakten Sprachen gibt es oben keinen Umschalter.
+MediaDB gibt es auf **Deutsch** (Quellsprache), **Englisch**, **Französisch**, **Spanisch** und **Italienisch**. Die Hauptsprache wählst du unter Einstellungen → „Sprache der Oberfläche“. Dort kannst du auch Sprachen anhaken, die oben in der Leiste zum schnellen Umschalten erscheinen sollen (praktisch in mehrsprachigen Haushalten); bei weniger als zwei angehakten Sprachen gibt es oben keinen Umschalter. Ist noch nichts gewählt, nimmt MediaDB die Sprache des Browsers; bei einer neuen Installation fragt die Willkommensseite zuerst nach der Sprache (Begrüßung in allen Sprachen).
 
 ## Wie es funktioniert
 - Jeder sichtbare Text steht in den Vorlagen als `{{ _("Deutscher Text") }}`.

@@ -2,7 +2,7 @@
 
 MediaDB ist eine **private Mediendatenbank für das eigene Heimnetz** mit vier Bereichen: **Musik, Filme, Serien und Bücher**, dazu **Merkliste**, **Als Nächstes** und **Verliehen an …**. Du erfasst CDs, DVDs, Blu-rays, Bücher und deine Dateien (Musik, Filme, Serien, E-Books, Hörbücher), die App ergänzt Titellisten, Cover, Filmdaten, Episodenführer und Buchangaben aus freien Internetquellen. Bedient wird alles im Browser, am Rechner wie am Handy. Die Daten bleiben bei dir.
 
-Diese Anleitung beschreibt MediaDB ab Version 1.17. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet.
+Diese Anleitung beschreibt MediaDB 1.17.1. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet.
 
 **Inhalt:** [1. Überblick](#1-überblick) · [2. Installation](#2-installation) · [3. Einstellungen](#3-einstellungen) · [4. Bedienung allgemein](#4-bedienung-allgemein) · [5. Musik](#5-musik) · [6. Filme](#6-filme) · [7. Serien](#7-serien) · [8. Merkliste](#8-merkliste) · [9. Bücher](#9-bücher) · [10. Verliehen an …](#10-verliehen-an) · [11. Mediatheken](#11-mediatheken) · [12. Dateien von NAS und Mac](#12-dateien-von-nas-und-mac) · [13. Sichern und Updates](#13-sichern-und-updates) · [14. Woher kommen die Daten?](#14-woher-kommen-die-daten) · [15. Grenzen](#15-grenzen) · [16. Fehlersuche](#16-fehlersuche)
 
@@ -32,9 +32,11 @@ Dazu für alle Bereiche: gemeinsame **Suche**, **Als Nächstes**, Ansichten **Ka
 
 Stoppen: `docker compose down`. Fehler ansehen: `docker compose logs --tail 60`. Auf dem Mac sind externe Laufwerke (`/Volumes`) und der Benutzerordner nur lesend eingebunden. Beim ersten Zugriff muss macOS ggf. erlauben: *Systemeinstellungen → Datenschutz & Sicherheit → Dateien und Ordner* bzw. *Vollständiger Festplattenzugriff* für OrbStack.
 
-**Beim allerersten Start** fragt MediaDB nach der Sprache und danach, was du verwalten möchtest (Musik, Filme, Serien, Bücher). Beides lässt sich später in den Einstellungen ändern.
+**Beim allerersten Start** begrüßt dich MediaDB in allen fünf Sprachen; die Sprache deines Browsers steht vorne. Ein Klick auf deine Sprache, und alles Weitere erscheint darin. Im zweiten Schritt kreuzt du an, was du verwalten möchtest (Musik, Filme, Serien, Bücher). Beides lässt sich später in den Einstellungen ändern. Wer schon Daten hat (z. B. nach einem Update), sieht diese Seite nicht.
 
-![Die Willkommensseite beim ersten Start](bilder/willkommen.png)
+![Erster Schritt: Willkommen in allen Sprachen, Sprache wählen](bilder/willkommen.png)
+
+![Zweiter Schritt: was du verwalten möchtest, schon in der gewählten Sprache](bilder/willkommen-bereiche.png)
 
 **Erste Schritte nach der Installation:** Zahnrad ⚙ oben öffnen und eintragen: deine **E-Mail-Adresse für MusicBrainz** (Pflicht für Musik), einen kostenlosen **TMDB-Schlüssel** (für Filme und Serien) und, falls vorhanden, deine **NAS-Freigaben**.
 
