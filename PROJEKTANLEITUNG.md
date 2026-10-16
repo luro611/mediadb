@@ -29,7 +29,7 @@ Python, FastAPI, Jinja2-Vorlagen, SQLAlchemy, SQLite, openpyxl (Excel), requests
 - `data/musik.db` – die Datenbank (bis MusikDB 1.1 `musikdb.db`, wird automatisch umbenannt, Kopie in `data/backup/`), `data/covers/` – die Cover-Bilder (**das sind deine Daten**); `data/secret.key` – Schlüssel für die Anmeldung
 - `app/films_*.py`, `app/templates/films_*.html` – Bereich Filme (siehe unten)
 - `app/storage.py` – Datenbankdateien (musik/filme/serien) und Umbenennung; `app/search.py` – Volltextsuche; `app/security.py` – Unterpfad, Heimnetz-Sperre, Anmeldung
-- `docker-compose.homelab.yml`, `docs/BETRIEB.md` – Betrieb unter Proxmox/Linux (auch als Dockhand-Stack), Codeberg-Image, Umzug vom Mac, Zugriffsschutz; `tools/publish.sh` – Image bauen und zu Codeberg hochladen
+- `docker-compose.homelab.yml`, `docs/BETRIEB.md` – Betrieb unter Proxmox/Linux (auch als Dockhand-Stack), Codeberg-Image, Umzug vom Mac, Zugriffsschutz; `tools/publish.sh` – Image bauen und zu Codeberg hochladen, Tag und Release anlegen
 - `Dockerfile`, `docker-compose.yml`, `requirements.txt`, `.env` (aus `.env.example` kopiert; dort die eigene E-Mail bei `MB_USER_AGENT` eintragen)
 
 ## Starten, stoppen, neu bauen
@@ -155,7 +155,7 @@ Den ganzen Ordner `data` regelmäßig kopieren (Datenbank + Cover). Vor größer
 - Eigener Betrieb: Proxmox-LXC mit Docker, verwaltet mit **Dockhand** (Agent Hawser im LXC). Stack „mediadb“ = Inhalt von `docker-compose.homelab.yml`, Image `codeberg.org/luro61/mediadb:latest` (Codeberg-Benutzer `luro61`).
 - Alles unter `/opt/mediadb` im LXC: `data` (Daten) und `medien/musik|filme|serien|buecher` (nur lesend, in der App `/music`, `/movies`, `/series`, `/books`; `audio.ROOTS`). Container läuft als root; Medien liegen vorerst im LXC selbst, **keine NAS-Freigaben** (bewusst, wegen Ärger mit Linux-Rechten). Mediendateien braucht es nur zum Einlesen.
 - LXC-Größe: 2 Kerne, 1024 MB RAM (+512 MB Swap), 16 GB Speicher (Ordner `data` beim Umzug ca. 2,2 GB).
-- Neue Version: `VERSION` hochzählen, auf dem Mac `sh tools/publish.sh` (buildx, amd64 + arm64, Tags `<Version>` und `latest`), dann in Dockhand Pull und Redeploy.
+- Neue Version: `VERSION` hochzählen, CHANGELOG-Abschnitt schreiben, committen und pushen, dann auf dem Mac `sh tools/publish.sh` (buildx, amd64 + arm64, Tags `<Version>` und `latest`, Git-Tag `v<Version>`, Codeberg-Release mit Text aus dem CHANGELOG; Token in `~/.config/mediadb/codeberg-token`), dann in Dockhand Pull und Redeploy.
 
 ## Hintergrundaufgaben (seit 1.4.2)
 - `app/activity.py`: Jeder Bereich meldet eine Funktion an (`register`), die den Stand seiner Aufgabe liefert (Text, `net`/`files`, Fortschritt, Link). `/activity?lang=..` gibt alle laufenden als JSON; `base.html` fragt alle 8 s (bei laufender Aufgabe alle 3 s) ab und zeigt die Anzeige in der Navigation. Musik meldet sich in `main.py` an (REFRESH, JOB, IMP), Filme/Serien/Merkliste in `activity.register_media()`. Neue Hintergrundaufgaben dort anmelden.

@@ -165,12 +165,22 @@ Codeberg hat eine eigene Registry für Docker-Images. Das Image wird für normal
 Einmalig:
 1. Auf codeberg.org anmelden → *Einstellungen → Anwendungen → Zugangstoken erstellen*. Name z. B. „docker“, Berechtigung **package: Lesen und Schreiben**. Den Token sofort kopieren (er wird nur einmal angezeigt).
 2. Mac-Terminal: `docker login codeberg.org` → Benutzername `luro61`, als Passwort den Token einfügen.
+3. Für die Releases nimmt `publish.sh` denselben Token aus dem Schlüsselbund (von `docker login`). Er braucht dafür zusätzlich **repository: Lesen und Schreiben**. Hat er das nicht, einen zweiten Token mit dieser Berechtigung anlegen, kopieren und im Mac-Terminal speichern (liest ihn aus der Zwischenablage, er erscheint nirgends auf dem Bildschirm):
+   ```
+   mkdir -p ~/.config/mediadb && pbpaste > ~/.config/mediadb/codeberg-token && chmod 600 ~/.config/mediadb/codeberg-token
+   ```
+4. Im Projekt auf Codeberg die Releases einschalten: *mediadb → Einstellungen → Einheiten* (bei älteren Codeberg-Versionen: *Einstellungen → Repository*), Haken bei **Releases**, speichern.
 
-Jede neue Version (Mac-Terminal, im Projektordner):
+Jede neue Version: `VERSION` hochzählen, in `CHANGELOG.md` einen Abschnitt `## MediaDB <Version> – …` schreiben, committen und pushen. Dann im Mac-Terminal, im Projektordner:
 ```
 sh tools/publish.sh
 ```
-Das Skript liest die Version aus der Datei `VERSION`, baut beide Plattformen und lädt `codeberg.org/luro61/mediadb:<Version>` und `:latest` hoch. Danach in Dockhand beim Stack „mediadb“ *Pull* und *Redeploy*.
+Das Skript
+- baut beide Plattformen und lädt `codeberg.org/luro61/mediadb:<Version>` und `:latest` hoch,
+- legt den Tag `v<Version>` an und pusht ihn,
+- legt das Release auf Codeberg an: Titel und Text aus `CHANGELOG.md`, `docker-compose.homelab.yml` als Anhang.
+
+Es bricht vorher ab, wenn noch etwas nicht committet oder nicht gepusht ist. Nur Tag und Release nachholen (Image ist schon oben): `sh tools/publish.sh release`. Danach in Dockhand beim Stack „mediadb“ *Pull* und *Redeploy*. Das Release ist dafür nicht nötig; es sorgt für den Hinweis „Neue Version … verfügbar“ in der App und für die Download-Links.
 
 Das Image erscheint im Codeberg-Profil unter *Pakete*. Ist das Profil öffentlich, kann jeder das Image laden; das ist für die Veröffentlichung so gewollt.
 
