@@ -1,5 +1,9 @@
 # Änderungen
 
+## MediaDB 1.14.0 – Eigene Farben
+- **Neuer Bereich „Farben“ in den Einstellungen:** Hintergrund, Kästen und Eingabefelder, Schrift, Nebentext, Akzent (Überschriften, Knöpfe) und Links lassen sich frei wählen, getrennt für das helle und das dunkle Farbschema. Jede Änderung ist sofort als Vorschau zu sehen; gespeichert wird erst mit „Farben speichern“. Geänderte Farben sind markiert.
+- **„Auf Ursprung zurücksetzen“** stellt mit einem Klick alle ursprünglichen Farben wieder her. Die Vorgaben stehen fest im Programm (static/style.css) und werden nie überschrieben; gespeichert werden nur deine Abweichungen (data/settings.json).
+
 ## MediaDB 1.13.2 – Anleitung auf dem neuesten Stand
 - **Anleitung überarbeitet** (`docs/ANLEITUNG.md`): mit allen Funktionen bis 1.13, also Startseite, Als Nächstes, Ansichten Kacheln/Liste/Text, Statusanzeige, Merkliste, NAS-Freigaben, Musik vom Mac, Sichern und Updates mit Dockhand. Veraltetes korrigiert: Installation im Homelab, Einstellungen in der App statt in `.env`, Fehlersuche.
 - **Link „Anleitung“** unten auf jeder Seite neben der Versionsnummer und in den Einstellungen. Er öffnet die Anleitung auf Codeberg.

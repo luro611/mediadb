@@ -483,13 +483,45 @@ def get_layout(request,area):
 def layout_cls(request,area):
  """CSS-Klassen fuer ein Kachel-Raster (.posters): Liste = ' rows', Text = ' rows text'."""
  return {'list':' rows','text':' rows text'}.get(get_layout(request,area),'')
+# ---------------- Eigene Farben (Einstellungen → Farben) ----------------
+# Die Vorgaben stehen fest in static/style.css und werden nie veraendert; gespeichert werden nur Abweichungen (settings.json 'colors').
+COLOR_KEYS=['bg','surface','ink','muted','accent','accent-strong']
+def _css_defaults():
+ css=(BASE/'static'/'style.css').read_text(encoding='utf-8'); out={}
+ for theme,sel in (('light',':root{'),('dark',':root[data-theme=dark]{')):
+  block=css[css.index(sel)+len(sel):]; block=block[:block.index('}')]
+  out[theme]={k:v for k,v in re.findall(r'--([\w-]+):(#[0-9a-fA-F]{6})',block) if k in COLOR_KEYS}
+ return out
+COLOR_DEFAULTS=_css_defaults()
+def custom_colors():
+ """Gespeicherte Abweichungen von den Vorgaben, nur gueltige Werte (#rrggbb)."""
+ c=load_settings().get('colors') or {}
+ return {t:{k:v for k,v in (c.get(t) or {}).items() if k in COLOR_KEYS and re.fullmatch(r'#[0-9a-fA-F]{6}',v or '') and v.lower()!=COLOR_DEFAULTS[t].get(k,'').lower()} for t in ('light','dark')}
+def custom_css():
+ c=custom_colors(); parts=[]
+ for t,sel in (('light',':root'),('dark',':root[data-theme=dark]')):
+  if c[t]: parts.append(sel+'{'+';'.join(f'--{k}:{v}' for k,v in c[t].items())+'}')
+ return ''.join(parts)
+@app.post('/colors/save')
+async def save_colors(request:Request):
+ f=await request.form(); d=load_settings(); col={}
+ for t in ('light','dark'):
+  col[t]={k:f.get(f'{t}_{k}','').strip() for k in COLOR_KEYS if re.fullmatch(r'#[0-9a-fA-F]{6}',f.get(f'{t}_{k}','').strip())}
+ d['colors']=col; save_settings(d)
+ return RedirectResponse('/settings?message='+quote('Farben gespeichert.')+'#farben',303)
+@app.post('/colors/reset')
+def reset_colors():
+ """Zuruecksetzen: eigene Farben loeschen, es gelten wieder die festen Vorgaben aus style.css."""
+ d=load_settings(); d.pop('colors',None); save_settings(d)
+ return RedirectResponse('/settings?message='+quote('Farben auf die Vorgaben zurückgesetzt.')+'#farben',303)
+templates.env.globals.update(COLOR_KEYS=COLOR_KEYS,COLOR_DEFAULTS=COLOR_DEFAULTS,custom_colors=custom_colors)
 def nav_langs():
  """Sprachen fuer den Umschalter oben in der Leiste (Einstellungen). Weniger als zwei: kein Umschalter."""
  v=load_settings().get('nav_langs') or []
  return [c for c in i18n.LANGS if c in v]
 def ctx(request,**kw):
  lang=get_lang(request)
- return {'request':request,'lang':lang,'langs':i18n.LANGS,'nav_langs':nav_langs(),'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on,'layout':partial(get_layout,request),'layout_cls':partial(layout_cls,request),**kw}
+ return {'request':request,'lang':lang,'langs':i18n.LANGS,'nav_langs':nav_langs(),'custom_css':custom_css(),'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on,'layout':partial(get_layout,request),'layout_cls':partial(layout_cls,request),**kw}
 @app.get('/layout/{area}/{mode}')
 def set_layout(request:Request,area:str,mode:str,next:str='/'):
  next=sec.strip_base(next,sec.get_base(request))

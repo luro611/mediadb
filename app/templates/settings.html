@@ -24,6 +24,22 @@
  </div>
 </section>
 
+<section class="card" id="farben">
+ <h2>{{ _("Farben") }}</h2>
+ <p class="help">{{ _("Passe Hintergrund, Schrift und Akzentfarben an, getrennt für das helle und das dunkle Farbschema. Änderungen siehst du sofort als Vorschau; gespeichert wird erst mit dem Knopf. Die ursprünglichen Farben bleiben fest hinterlegt und lassen sich jederzeit wiederherstellen.") }}</p>
+ {% set CC = custom_colors() %}{% set LABELS = {'bg':'Hintergrund','surface':'Kästen und Eingabefelder','ink':'Schrift','muted':'Nebentext','accent':'Akzent (Überschriften, Knöpfe)','accent-strong':'Links'} %}
+ <form method="post" action="{{ base }}/colors/save" id="colorform">
+  <div class="colorgrid">
+   {% for t,tname in [('light','Hell'),('dark','Dunkel')] %}<fieldset data-theme-part="{{ t }}"><legend>{{ _(tname) }}</legend>
+    {% for k in COLOR_KEYS %}{% set dv = COLOR_DEFAULTS[t][k] %}{% set v = CC[t].get(k, dv) %}<label class="colorrow"><input type="color" name="{{ t }}_{{ k }}" value="{{ v }}" data-var="{{ k }}" data-default="{{ dv }}"><span>{{ _(LABELS[k]) }}{% if v|lower != dv|lower %} <em class="changed">{{ _("geändert") }}</em>{% endif %}</span></label>{% endfor %}
+   </fieldset>{% endfor %}
+  </div>
+  <div class="actions"><button>{{ _("Farben speichern") }}</button></div>
+ </form>
+ <form method="post" action="{{ base }}/colors/reset" onsubmit="return confirm({{ _('Alle Farben auf die ursprünglichen Vorgaben zurücksetzen?')|tojson|forceescape }})"><button class="quiet"{% if not (CC.light or CC.dark) %} disabled{% endif %}>{{ _("Auf Ursprung zurücksetzen") }}</button></form>
+ <script>(function(){var f=document.getElementById('colorform'),R=document.documentElement;f.addEventListener('input',function(e){var i=e.target;if(!i.dataset.var)return;var part=i.closest('fieldset').dataset.themePart,cur=R.dataset.theme==='dark'?'dark':'light';if(part===cur)R.style.setProperty('--'+i.dataset.var,i.value)})})()</script>
+</section>
+
 <form method="post" action="{{ base }}/settings/save" class="settings">
 <section class="card" id="sprache">
  <h2>{{ _("Sprache der Daten") }}</h2>

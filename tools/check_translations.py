@@ -11,6 +11,8 @@ LANGS = ['en', 'fr', 'es', 'it']
 PAT = re.compile(r"""\b_t?\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')""")
 # Texte, die ohne _() im Quelltext stehen (Listen, Meldungen aus Python); bei neuen Meldungen hier ergänzen
 EXTRA = [
+    # Eigene Farben (1.14)
+    "Farben gespeichert.", "Farben auf die Vorgaben zurückgesetzt.", "Hell", "Dunkel", "Hintergrund", "Kästen und Eingabefelder", "Schrift", "Nebentext", "Akzent (Überschriften, Knöpfe)", "Links",
     # Als Naechstes (1.11), Spracheinstellungen (1.13)
     "Für „Als Nächstes“ vorgemerkt.", "Von „Als Nächstes“ genommen.", "Hauptsprache gespeichert.", "Umschalter gespeichert.", "Buch",
     # Update-Knopf (1.9.4)

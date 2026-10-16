@@ -278,3 +278,9 @@ input.mid{max-width:14em}
 .langgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px 36px}.langgrid form{margin:0;display:flex;flex-direction:column;align-items:flex-start;gap:8px}.langgrid h3{margin:0;font-size:22px}.langgrid .help{margin:0}.langgrid select{width:100%;max-width:320px}.langgrid button{margin-top:6px}
 .langpick{display:flex;flex-wrap:wrap;gap:8px}.langpick label{display:inline-flex;align-items:center;gap:8px;margin:0;padding:8px 14px;border:1px solid var(--line);border-radius:99px;cursor:pointer;font:500 14px Inter,sans-serif;text-transform:none;letter-spacing:0;color:var(--ink)}
 .langpick input{width:18px;height:18px;margin:0;accent-color:var(--accent)}.langpick label:has(input:checked){border-color:var(--accent);background:var(--soft)}
+/* ---- Einstellungen: eigene Farben ---- */
+.colorgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 36px;margin:10px 0 6px}.colorgrid fieldset{border:0;padding:0;margin:0}.colorgrid legend{font:400 22px Instrument,serif;margin-bottom:8px;padding:0}
+.colorrow{display:flex;align-items:center;gap:12px;margin:0 0 8px;font:500 14px Inter,sans-serif;text-transform:none;letter-spacing:0;color:var(--ink)}
+.colorrow input[type=color]{width:44px;height:32px;padding:2px;margin:0;border:1px solid var(--line);border-radius:4px;background:var(--surface);cursor:pointer;flex:none}
+.colorrow .changed{font:600 10px GeistMono,monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-style:normal;margin-left:6px}
+#farben form+form{margin-top:8px}
