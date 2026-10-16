@@ -1,4 +1,4 @@
-"""Hinweis auf eine neue Version: alle sechs Stunden das neueste Release auf Codeberg abfragen.
+"""Hinweis auf eine neue Version: alle sechs Stunden das neueste Release auf GitHub abfragen.
 
 Es wird nur die oeffentliche Release-Liste gelesen (keine Daten aus der Sammlung, keine Kennung), abschaltbar unter
 Einstellungen -> Dienste und Automatik (UPDATE_CHECK=0). Ein Release wird erst angelegt, wenn das Docker-Image fertig
@@ -7,9 +7,9 @@ import logging, re, threading, time
 import requests
 from . import config as C
 
-REPO = 'luro61/mediadb'
-API = f'https://codeberg.org/api/v1/repos/{REPO}/releases/latest'
-RELEASES = f'https://codeberg.org/{REPO}/releases'
+REPO = 'luro611/mediadb'
+API = f'https://api.github.com/repos/{REPO}/releases/latest'
+RELEASES = f'https://github.com/{REPO}/releases'
 EVERY = 6 * 3600
 STATE = {'latest': None, 'url': None, 'checked': 0.0, 'error': ''}
 
@@ -27,8 +27,8 @@ def enabled():
 def check():
     """Neuestes Release holen. Gibt (version, url) zurueck oder (None, None)."""
     try:
-        r = requests.get(API, timeout=10, headers={'User-Agent': f'MediaDB/{C.version()} (+https://codeberg.org/{REPO})',
-                                                   'Accept': 'application/json'})
+        r = requests.get(API, timeout=10, headers={'User-Agent': f'MediaDB/{C.version()} (+https://github.com/{REPO})',
+                                                   'Accept': 'application/vnd.github+json'})
         if r.status_code == 404:  # noch kein Release
             STATE.update(latest=None, url=None, checked=time.time(), error='')
             return None, None

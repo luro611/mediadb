@@ -1,5 +1,12 @@
 # Änderungen
 
+## MediaDB 1.18.0 – Umzug zu GitHub
+- **Neues Zuhause:** Quellcode, Docker-Image und Releases liegen jetzt auf GitHub: https://github.com/luro611/mediadb. Grund: Codeberg verbietet seit 2026 in seinen Nutzungsbedingungen Projekte, die überwiegend mit KI geschrieben sind, und MediaDB ist mit Claude Code entstanden.
+- **Neues Image:** `ghcr.io/luro611/mediadb:latest` statt `codeberg.org/luro61/mediadb:latest`. **Wer MediaDB schon nutzt, ändert einmalig die Zeile `image:` in der Compose-Datei** (in Dockhand: Stack bearbeiten), dann Pull und Redeploy. Die Daten bleiben, wie sie sind. Anleitung: BETRIEB.md, Abschnitt „Neue Version einspielen“.
+- Der Hinweis auf neue Versionen fragt jetzt bei GitHub nach („Neueste auf GitHub“), Links in der Hilfe zeigen auf GitHub.
+- `tools/publish.sh` lädt Image und Release zu GitHub hoch (Anmeldung über das GitHub-Programm `gh`).
+- Anleitung, Betrieb, Datenquellen, README und Projektanleitung auf GitHub umgestellt; die Projektseite lurohome.de/mediadb ebenso.
+
 ## MediaDB 1.17.2 – Anleitung auf Englisch
 - **Englische Anleitung:** Die komplette Anleitung gibt es jetzt auch auf Englisch (`docs/MANUAL.md`), mit eigenen Bildschirmfotos der englischen Oberfläche. In der App (das **?** oben) sehen alle, die nicht Deutsch eingestellt haben, die englische Fassung; Französisch, Spanisch und Italienisch bekommen einen kurzen Hinweis dazu in ihrer Sprache.
 - Der Link „Was die einzelnen Einstellungen bedeuten …“ springt in der englischen Fassung zum passenden Abschnitt.

@@ -2,7 +2,7 @@
 
 MediaDB is a **private media database for your home network** with four sections: **music, films, TV shows and books**, plus a **watchlist**, **up next** and **lent to …**. You record CDs, DVDs, Blu-rays, books and your files (music, films, episodes, e-books, audiobooks); the app fills in track lists, covers, film data, episode guides and book details from free online sources. Everything runs in the browser, on a computer as well as on a phone. Your data stays with you.
 
-This manual describes MediaDB 1.17.2. The running version is shown at the bottom of every page. You can also open this manual in MediaDB itself: via the **?** in the top bar or the **“Manual”** link at the bottom of every page, matching the installed version and without internet. (This is the English translation of the German manual `ANLEITUNG.md`. The pages “Running in a homelab”, “Data sources and legal” and “Changes” are only available in German so far; your browser’s translate function works well on them.)
+This manual describes MediaDB 1.18.0. The running version is shown at the bottom of every page. You can also open this manual in MediaDB itself: via the **?** in the top bar or the **“Manual”** link at the bottom of every page, matching the installed version and without internet. (This is the English translation of the German manual `ANLEITUNG.md`. The pages “Running in a homelab”, “Data sources and legal” and “Changes” are only available in German so far; your browser’s translate function works well on them.)
 
 **Contents:** [1. Overview](#1-overview) · [2. Installation](#2-installation) · [3. Settings](#3-settings) · [4. General use](#4-general-use) · [5. Music](#5-music) · [6. Films](#6-films) · [7. TV shows](#7-tv-shows) · [8. Watchlist](#8-watchlist) · [9. Books](#9-books) · [10. Lent to …](#10-lent-to) · [11. Media libraries](#11-media-libraries) · [12. Files from a NAS or Mac](#12-files-from-a-nas-or-mac) · [13. Backups and updates](#13-backups-and-updates) · [14. Where does the data come from?](#14-where-does-the-data-come-from) · [15. Limitations](#15-limitations) · [16. Troubleshooting](#16-troubleshooting)
 
@@ -21,10 +21,10 @@ For all sections: a shared **search**, **up next**, the views **tiles / list / t
 
 ## 2. Installation
 
-**Recommended: in your homelab** (Proxmox LXC, Linux server, NAS with Docker). MediaDB then runs around the clock and everyone in the household can reach it in the browser. There is a ready-made Docker image on Codeberg; the file `docker-compose.homelab.yml` can be pasted unchanged as a stack into **Dockhand** or Portainer. The step-by-step guide is in **[BETRIEB.md](BETRIEB.md)** (German: size of the LXC, setup, moving from a Mac, updates, backups, access protection).
+**Recommended: in your homelab** (Proxmox LXC, Linux server, NAS with Docker). MediaDB then runs around the clock and everyone in the household can reach it in the browser. There is a ready-made Docker image on GitHub; the file `docker-compose.homelab.yml` can be pasted unchanged as a stack into **Dockhand** or Portainer. The step-by-step guide is in **[BETRIEB.md](BETRIEB.md)** (German: size of the LXC, setup, moving from a Mac, updates, backups, access protection).
 
 **On a Mac (or another computer with Docker)**, e.g. to try it out. You need **Docker**, on a Mac e.g. **OrbStack** or Docker Desktop.
-1. Download the project from Codeberg and unpack it.
+1. Download the project from [GitHub](https://github.com/luro611/mediadb) (*Code → Download ZIP*) and unpack it.
 2. Open a terminal in the project folder.
 3. `cp .env.example .env` (the file must exist; you don’t have to fill it in, you set everything important later in the app).
 4. `docker compose up --build -d`
@@ -50,7 +50,7 @@ The **gear ⚙** at the top opens the settings. Changes apply immediately, no re
 - **Data language:** titles, plot summaries, genres and episode names come from TMDB into the database in this language. The country determines age ratings, cinema releases and streaming services. It is independent of the interface language. If you change it later, **“Reload everything in the data language”** reloads your films and TV shows in the background. Music always stays in the original.
 - **TMDB (films and shows):** the key from themoviedb.org (create an account → Settings → API → request a key, purpose personal). Test it with **“Check TMDB key”**. Without a key, films and TV shows can only be added by hand.
 - **Music:** e-mail address for MusicBrainz (only sent to MusicBrainz and the Cover Art Archive) and optionally a **Discogs token** (discogs.com → Settings → Developers), which enables the Discogs search.
-- **Services and automation** (all can be switched off): look up DVD and Blu-ray barcodes at UPCitemdb · look for missing CD covers on iTunes and Deezer · update shows and watchlist once a day · search the media libraries · check Codeberg for a new version every six hours.
+- **Services and automation** (all can be switched off): look up DVD and Blu-ray barcodes at UPCitemdb · look for missing CD covers on iTunes and Deezer · update shows and watchlist once a day · search the media libraries · check GitHub for a new version every six hours.
 - **NAS shares:** see section 12.
 - **New version?** shows which version is running, which is the latest and when it was last checked; **“Check for a new version now”** checks immediately.
 - **Access:** password and access from the internet are shown here for information only. For security reasons they can only be changed in the compose file (in a homelab: the stack in Dockhand) or in `.env`, followed by a restart. See [BETRIEB.md → Zugriffsschutz](BETRIEB.md#zugriffsschutz) (German).
@@ -263,11 +263,11 @@ More help with problems: [BETRIEB.md → Musik und Filme von der NAS einlesen](B
 - **Homelab with Dockhand:** stack “mediadb” → **Pull** → **Redeploy**. Your data is kept.
 - **Mac with the project folder:** copy the new files over the project (don’t touch `data/` and `.env`), then `docker compose up --build -d` and Cmd+Shift+R in the browser.
 
-Afterwards the new version number is shown at the bottom. What has changed is listed in [CHANGELOG.md](../CHANGELOG.md) (German) and in the [releases on Codeberg](https://codeberg.org/luro61/mediadb/releases).
+Afterwards the new version number is shown at the bottom. What has changed is listed in [CHANGELOG.md](../CHANGELOG.md) (German) and in the [releases on GitHub](https://github.com/luro611/mediadb/releases).
 
 ## 14. Where does the data come from?
 
-Music: **MusicBrainz** with the **Cover Art Archive**, optionally **Discogs**, **iTunes** and **Deezer** as fallback sources for covers, plus the tags in your music files. Films and TV shows: **TMDB** (data, episode guides, pictures; streaming services from JustWatch via TMDB), DVD/Blu-ray barcodes: **UPCitemdb**. Books: **German National Library**, **Open Library** and **Wikipedia**. Media libraries: **MediathekViewWeb**. New versions: the public release list on **Codeberg**. Only search terms are sent; your collection stays with you. More details, including “Am I allowed to do this?”, are in [DATENQUELLEN_UND_RECHT.md](DATENQUELLEN_UND_RECHT.md) (German).
+Music: **MusicBrainz** with the **Cover Art Archive**, optionally **Discogs**, **iTunes** and **Deezer** as fallback sources for covers, plus the tags in your music files. Films and TV shows: **TMDB** (data, episode guides, pictures; streaming services from JustWatch via TMDB), DVD/Blu-ray barcodes: **UPCitemdb**. Books: **German National Library**, **Open Library** and **Wikipedia**. Media libraries: **MediathekViewWeb**. New versions: the public release list on **GitHub**. Only search terms are sent; your collection stays with you. More details, including “Am I allowed to do this?”, are in [DATENQUELLEN_UND_RECHT.md](DATENQUELLEN_UND_RECHT.md) (German).
 
 ## 15. Limitations
 

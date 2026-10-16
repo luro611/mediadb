@@ -21,7 +21,7 @@
 | Wikipedia | Einleitung des Artikels zum Buch | REST-Schnittstelle, mit Link und Lizenzhinweis | Ja (CC BY-SA 4.0) | Namensnennung und Lizenzhinweis nötig (steht dabei) |
 | MediathekViewWeb (optional) | Sendungen in den Mediatheken von ARD, ZDF, Arte & Co. | Öffentlicher Such-Feed, nur Anzeige und Link | Ja | Abschaltbar (`MEDIATHEK=0`); keine Downloads |
 | Eigene Filmdateien | Dateiname, Jellyfin-/Kodi-.nfo, Technikdaten per ffprobe | Lokal gelesen, nichts wird übertragen | Ja | – |
-| Codeberg (optional) | Nummer der neuesten MediaDB-Version | Alle sechs Stunden (und auf Knopfdruck) die öffentliche Release-Liste lesen | Ja | Abschaltbar (`UPDATE_CHECK=0`); es wird nichts über dich oder die Sammlung gesendet |
+| GitHub (optional) | Nummer der neuesten MediaDB-Version | Alle sechs Stunden (und auf Knopfdruck) die öffentliche Release-Liste lesen | Ja | Abschaltbar (`UPDATE_CHECK=0`); es wird nichts über dich oder die Sammlung gesendet |
 
 ## Was die App nach außen sendet
 
@@ -39,7 +39,7 @@ Nur **Suchbegriffe** (Interpret, Albumtitel, Filmtitel und Jahr, Buchtitel und A
 ### Cover Art Archive
 - Betrieben von MusicBrainz und dem Internet Archive. Die Bilder sind meist Fotos/Scans der Originalhüllen und bleiben **urheberrechtlich geschützt** (Rechte bei Künstlern bzw. Labels). Die Seite bittet: „Be respectful of the rights of the artists and labels.“
 - Die App lädt Cover nur für Einträge, die **du** angelegt hast, und speichert sie lokal in `data/covers/` zur Anzeige in deiner eigenen Sammlung. Das entspricht der üblichen privaten Nutzung (Vergleich: Cover im eigenen Musikprogramm).
-- **Cover nicht öffentlich ins Internet stellen und nicht im Repository (z. B. Codeberg) ablegen.** Der Ordner `data/` ist deshalb in `.gitignore`.
+- **Cover nicht öffentlich ins Internet stellen und nicht im Repository (z. B. GitHub) ablegen.** Der Ordner `data/` ist deshalb in `.gitignore`.
 - Quelle: [Cover Art Archive](https://musicbrainz.org/doc/Cover_Art_Archive)
 
 ### Discogs (optional)
@@ -109,7 +109,7 @@ Nur **Suchbegriffe** (Interpret, Albumtitel, Filmtitel und Jahr, Buchtitel und A
 ## Darf ich das alles privat nutzen?
 Für die **eigene, private Sammlung** (Katalog deiner CDs und Dateien, lokal auf deinem Rechner, nicht öffentlich im Netz): im Rahmen der Bedingungen ja. Abfragen einzelner Daten und ihre Speicherung in der eigenen Datenbank sind üblich, die Hauptquelle MusicBrainz ist weitgehend gemeinfrei. Ausnahmen sind Grauzonen bei iTunes/Deezer-Covern (siehe oben); wer sie meiden will, setzt `COVER_WEB=0`.
 
-## Darf ich die Software auf Codeberg anbieten?
+## Darf ich die Software auf GitHub anbieten?
 Die **Software** (dein Quellcode) darfst du unter einer freien Lizenz weitergeben. Dabei beachten:
 
 1. **Keine Daten mitliefern:** keine Datenbank, keine Cover, keine `.env`, keinen Token. (`.gitignore` ist vorbereitet; vor dem Hochladen mit `git status` prüfen.)
@@ -119,6 +119,7 @@ Die **Software** (dein Quellcode) darfst du unter einer freien Lizenz weitergebe
 5. **Lizenz der App:** Im Projekt liegt die GPL-3.0 als Vorschlag. Grund: Die Bibliothek `mutagen` steht unter GPL-2.0-oder-später; wer sie zusammen mit eigenem Code ausliefert (zum Beispiel in einem Docker-Image), sollte den eigenen Code ebenfalls unter einer kompatiblen GPL-Lizenz veröffentlichen. Du kannst eine andere Lizenz wählen, solltest dann aber `mutagen` ersetzen oder prüfen lassen.
 6. **Schriftarten** in `static/fonts/` (Inter, Archivo, Geist Mono, Instrument Serif): nach meinem Kenntnisstand unter der SIL Open Font License 1.1. Vor der Veröffentlichung bitte die jeweiligen Lizenztexte beilegen oder die Schriften durch Systemschriften ersetzen.
 7. Im Repository sollten **keine echten Daten aus deiner Sammlung** (Beispiel-Excel, Screenshots mit Covern) liegen. Die Bildschirmfotos der Anleitung (`docs/bilder/`) zeigen deshalb eine erfundene Beispiel-Sammlung mit selbst erzeugten, schlichten Platzhaltern statt Covern und Postern (`tools/demo_data.py`, `tools/screenshots.py`).
+8. **Mit KI geschrieben:** Der Code von MediaDB ist mit Claude Code (KI) entstanden. GitHub erlaubt solche Projekte. Codeberg verbietet seit 2026 in seinen Nutzungsbedingungen Projekte, die überwiegend aus KI-geschriebenem Code bestehen; deshalb ist MediaDB im Oktober 2026 von Codeberg zu GitHub umgezogen.
 
 ## Verwendete Programmbibliotheken
 Alle werden beim Bau des Docker-Images per `pip` installiert und nicht mitgeliefert (Lizenzangaben nach meinem Kenntnisstand, bitte vor Veröffentlichung gegenprüfen):

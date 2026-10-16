@@ -16,7 +16,7 @@
 #          (in Dockhand: Stack → Pull und Redeploy)
 services:
   mediadb:
-    image: codeberg.org/luro61/mediadb:latest
+    image: ghcr.io/luro611/mediadb:latest
     # Wer lieber aus dem Quellcode baut: die Zeile "image:" durch "build: ." ersetzen.
     container_name: mediadb
     ports:

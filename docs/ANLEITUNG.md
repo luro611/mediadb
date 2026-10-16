@@ -2,7 +2,7 @@
 
 MediaDB ist eine **private Mediendatenbank für das eigene Heimnetz** mit vier Bereichen: **Musik, Filme, Serien und Bücher**, dazu **Merkliste**, **Als Nächstes** und **Verliehen an …**. Du erfasst CDs, DVDs, Blu-rays, Bücher und deine Dateien (Musik, Filme, Serien, E-Books, Hörbücher), die App ergänzt Titellisten, Cover, Filmdaten, Episodenführer und Buchangaben aus freien Internetquellen. Bedient wird alles im Browser, am Rechner wie am Handy. Die Daten bleiben bei dir.
 
-Diese Anleitung beschreibt MediaDB 1.17.2. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet. Eine englische Fassung gibt es in [MANUAL.md](MANUAL.md); die App zeigt sie bei allen Oberflächensprachen außer Deutsch.
+Diese Anleitung beschreibt MediaDB 1.18.0. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet. Eine englische Fassung gibt es in [MANUAL.md](MANUAL.md); die App zeigt sie bei allen Oberflächensprachen außer Deutsch.
 
 **Inhalt:** [1. Überblick](#1-überblick) · [2. Installation](#2-installation) · [3. Einstellungen](#3-einstellungen) · [4. Bedienung allgemein](#4-bedienung-allgemein) · [5. Musik](#5-musik) · [6. Filme](#6-filme) · [7. Serien](#7-serien) · [8. Merkliste](#8-merkliste) · [9. Bücher](#9-bücher) · [10. Verliehen an …](#10-verliehen-an) · [11. Mediatheken](#11-mediatheken) · [12. Dateien von NAS und Mac](#12-dateien-von-nas-und-mac) · [13. Sichern und Updates](#13-sichern-und-updates) · [14. Woher kommen die Daten?](#14-woher-kommen-die-daten) · [15. Grenzen](#15-grenzen) · [16. Fehlersuche](#16-fehlersuche)
 
@@ -21,10 +21,10 @@ Dazu für alle Bereiche: gemeinsame **Suche**, **Als Nächstes**, Ansichten **Ka
 
 ## 2. Installation
 
-**Empfohlen: im Homelab** (Proxmox-LXC, Linux-Server, NAS mit Docker). MediaDB läuft dann rund um die Uhr, und alle im Haushalt erreichen es im Browser. Es gibt ein fertiges Docker-Image auf Codeberg; die Datei `docker-compose.homelab.yml` lässt sich unverändert als Stack in **Dockhand** oder Portainer einfügen. Die Schritt-für-Schritt-Anleitung steht in **[BETRIEB.md](BETRIEB.md)** (Größe des LXC, Einrichtung, Umzug vom Mac, Updates, Sicherung, Zugriffsschutz).
+**Empfohlen: im Homelab** (Proxmox-LXC, Linux-Server, NAS mit Docker). MediaDB läuft dann rund um die Uhr, und alle im Haushalt erreichen es im Browser. Es gibt ein fertiges Docker-Image auf GitHub; die Datei `docker-compose.homelab.yml` lässt sich unverändert als Stack in **Dockhand** oder Portainer einfügen. Die Schritt-für-Schritt-Anleitung steht in **[BETRIEB.md](BETRIEB.md)** (Größe des LXC, Einrichtung, Umzug vom Mac, Updates, Sicherung, Zugriffsschutz).
 
 **Auf dem Mac (oder einem anderen Rechner mit Docker)**, z. B. zum Ausprobieren. Voraussetzung: **Docker**, auf dem Mac z. B. **OrbStack** oder Docker Desktop.
-1. Projekt von Codeberg laden und entpacken.
+1. Projekt von [GitHub](https://github.com/luro611/mediadb) laden (*Code → Download ZIP*) und entpacken.
 2. Im Terminal in den Projektordner wechseln.
 3. `cp .env.example .env` (die Datei muss es geben; ausfüllen musst du sie nicht, alles Wichtige stellst du später in der App ein).
 4. `docker compose up --build -d`
@@ -50,7 +50,7 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
 - **Sprache der Daten:** In dieser Sprache kommen Titel, Inhaltsangaben, Genres und Episodennamen von TMDB in die Datenbank. Das Land bestimmt Altersfreigabe, Kinostart und Streamingdienste. Unabhängig von der Oberfläche. Wird sie später geändert, lädt **„Alles in der Datensprache neu laden“** die vorhandenen Filme und Serien im Hintergrund neu. Musik bleibt immer im Original.
 - **TMDB (Filme und Serien):** der Schlüssel von themoviedb.org (Konto anlegen → Einstellungen → API → Schlüssel beantragen, Zweck privat). Mit **„TMDB-Schlüssel prüfen“** testen. Ohne Schlüssel lassen sich Filme und Serien nur von Hand anlegen.
 - **Musik:** E-Mail-Adresse für MusicBrainz (wird nur an MusicBrainz und das Cover Art Archive geschickt) und optional ein **Discogs-Token** (discogs.com → Einstellungen → Entwickler), der die Discogs-Suche freischaltet.
-- **Dienste und Automatik** (alles abschaltbar): Barcodes von DVDs und Blu-rays bei UPCitemdb nachschlagen · fehlende CD-Cover bei iTunes und Deezer suchen · Serien und Merkliste einmal am Tag aktualisieren · in den Mediatheken suchen · alle sechs Stunden bei Codeberg nach einer neuen Version sehen.
+- **Dienste und Automatik** (alles abschaltbar): Barcodes von DVDs und Blu-rays bei UPCitemdb nachschlagen · fehlende CD-Cover bei iTunes und Deezer suchen · Serien und Merkliste einmal am Tag aktualisieren · in den Mediatheken suchen · alle sechs Stunden bei GitHub nach einer neuen Version sehen.
 - **NAS-Freigaben:** siehe Abschnitt 12.
 - **Neue Version?** zeigt, welche Version läuft, welche die neueste ist und wann zuletzt nachgesehen wurde; mit **„Jetzt nach neuer Version suchen“** sofort prüfen.
 - **Zugriff:** Passwort und Zugriff aus dem Internet stehen hier nur zur Ansicht. Ändern lassen sie sich aus Sicherheitsgründen nur in der Compose-Datei (im Homelab: Stack in Dockhand) bzw. in `.env`, danach neu starten. Siehe [BETRIEB.md → Zugriffsschutz](BETRIEB.md#zugriffsschutz).
@@ -263,11 +263,11 @@ Mehr Hilfe bei Problemen: [BETRIEB.md → Musik und Filme von der NAS einlesen](
 - **Homelab mit Dockhand:** Stack „mediadb“ → **Pull** → **Redeploy**. Die Daten bleiben erhalten.
 - **Mac mit dem Projektordner:** neue Dateien über das Projekt kopieren (`data/` und `.env` nicht anfassen), dann `docker compose up --build -d` und im Browser Cmd+Shift+R.
 
-Danach steht unten die neue Versionsnummer. Was sich geändert hat, steht in [CHANGELOG.md](../CHANGELOG.md) und bei den [Releases auf Codeberg](https://codeberg.org/luro61/mediadb/releases).
+Danach steht unten die neue Versionsnummer. Was sich geändert hat, steht in [CHANGELOG.md](../CHANGELOG.md) und bei den [Releases auf GitHub](https://github.com/luro611/mediadb/releases).
 
 ## 14. Woher kommen die Daten?
 
-Musik: **MusicBrainz** mit dem **Cover Art Archive**, optional **Discogs**, als Cover-Ausweichquelle **iTunes** und **Deezer**, dazu die Tags in deinen Musikdateien. Filme und Serien: **TMDB** (Daten, Episodenführer, Bilder; Streamingdienste von JustWatch über TMDB), DVD-/Blu-ray-Barcodes: **UPCitemdb**. Bücher: **Deutsche Nationalbibliothek**, **Open Library** und **Wikipedia**. Mediatheken: **MediathekViewWeb**. Neue Versionen: die öffentliche Release-Liste auf **Codeberg**. Es werden nur Suchbegriffe gesendet, deine Sammlung bleibt bei dir. Genaueres, auch zur Frage „Darf ich das?“, steht in [DATENQUELLEN_UND_RECHT.md](DATENQUELLEN_UND_RECHT.md).
+Musik: **MusicBrainz** mit dem **Cover Art Archive**, optional **Discogs**, als Cover-Ausweichquelle **iTunes** und **Deezer**, dazu die Tags in deinen Musikdateien. Filme und Serien: **TMDB** (Daten, Episodenführer, Bilder; Streamingdienste von JustWatch über TMDB), DVD-/Blu-ray-Barcodes: **UPCitemdb**. Bücher: **Deutsche Nationalbibliothek**, **Open Library** und **Wikipedia**. Mediatheken: **MediathekViewWeb**. Neue Versionen: die öffentliche Release-Liste auf **GitHub**. Es werden nur Suchbegriffe gesendet, deine Sammlung bleibt bei dir. Genaueres, auch zur Frage „Darf ich das?“, steht in [DATENQUELLEN_UND_RECHT.md](DATENQUELLEN_UND_RECHT.md).
 
 ## 15. Grenzen
 

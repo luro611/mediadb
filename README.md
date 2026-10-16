@@ -1,6 +1,6 @@
 # MediaDB
 
-**Projektseite / Website: [lurohome.de/mediadb](https://lurohome.de/mediadb/)** · Docker-Image: `codeberg.org/luro61/mediadb` (amd64, arm64) · Lizenz / License: GPL-3.0
+**Projektseite / Website: [lurohome.de/mediadb](https://lurohome.de/mediadb/)** · Docker-Image: `ghcr.io/luro611/mediadb` (amd64, arm64) · Lizenz / License: GPL-3.0
 
 Private Mediendatenbank für das eigene Heimnetz: CDs, Musikdateien, DVDs, Blu-rays, Filme, Serien und Bücher verwalten. Titellisten, Cover, Filmdaten, Episodenführer, Poster und Buchdaten kommen automatisch aus MusicBrainz, TMDB, der Deutschen Nationalbibliothek und Open Library. Läuft im Docker-Container (Proxmox-LXC, Linux-Server, NAS, Mac), Bedienung im Browser. Die Daten bleiben bei dir.
 
@@ -22,10 +22,10 @@ Oberfläche in Deutsch, Englisch, Französisch, Spanisch und Italienisch (Auswah
 
 ## Schnellstart
 
-**Homelab (Proxmox-LXC, Linux-Server, NAS)** mit dem fertigen Image von Codeberg:
+**Homelab (Proxmox-LXC, Linux-Server, NAS)** mit dem fertigen Image von GitHub:
 ```
 mkdir -p /opt/mediadb/data && cd /opt/mediadb
-curl -O https://codeberg.org/luro61/mediadb/raw/branch/main/docker-compose.homelab.yml
+curl -O https://raw.githubusercontent.com/luro611/mediadb/main/docker-compose.homelab.yml
 docker compose -f docker-compose.homelab.yml up -d
 ```
 **Mit Dockhand oder Portainer:**
@@ -34,7 +34,7 @@ docker compose -f docker-compose.homelab.yml up -d
    ```yaml
    services:
      mediadb:
-       image: codeberg.org/luro61/mediadb:latest
+       image: ghcr.io/luro611/mediadb:latest
        container_name: mediadb
        ports:
          - "8000:8000"          # links: Port im Browser, z. B. "80:8000" für http://<server>
@@ -76,7 +76,7 @@ Dann `http://localhost:8000` öffnen. Daten liegen in `data/` (Datenbanken, Cove
 ## Hinweise
 Für den privaten Betrieb im Heimnetz gedacht, nicht öffentlich ins Internet stellen. Keine Verbindung zu und keine Unterstützung durch MusicBrainz, Discogs, Apple, Deezer, TMDB, die Deutsche Nationalbibliothek oder Open Library. Cover bleiben Eigentum der Rechteinhaber und gehören nicht ins Repository.
 
-Fehler gefunden oder eine Idee? Gern als [Issue auf Codeberg](https://codeberg.org/luro61/mediadb/issues).
+Fehler gefunden oder eine Idee? Gern als [Issue auf GitHub](https://github.com/luro611/mediadb/issues).
 
 ## Haftungshinweis
 MediaDB ist ein privates Hobbyprojekt und wird kostenlos unter der GNU GPL-3.0 bereitgestellt. Eine Gewährleistung wird nicht übernommen, soweit das gesetzlich zulässig ist. Die Nutzung erfolgt auf eigenes Risiko. Die Software ist nicht in allen Umgebungen getestet. Es besteht keine Verpflichtung zu Support, Fehlerbehebung oder Weiterentwicklung.

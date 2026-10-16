@@ -49,7 +49,7 @@ SEC=sec.Settings(DATA)
 app=FastAPI(title='MediaDB'); app.add_middleware(sec.Gate,settings=SEC); (DATA/'film_images').mkdir(exist_ok=True); app.mount('/film-images',StaticFiles(directory=str(DATA/'film_images')),name='film_images'); app.mount('/static',StaticFiles(directory=str(BASE/'static')),name='static'); app.mount('/covers',StaticFiles(directory=str(DATA/'covers')),name='covers'); templates=Jinja2Templates(directory=str(BASE/'app/templates'))
 lock=threading.Lock(); last_mb=0.0
 templates.env.globals['asset_v']=int((BASE/'static'/'style.css').stat().st_mtime); templates.env.globals['app_version']=config.version()
-from . import updates; templates.env.globals['update_info']=updates.info; updates.scheduler()  # Hinweis auf neue Version (Codeberg-Release)
+from . import updates; templates.env.globals['update_info']=updates.info; updates.scheduler()  # Hinweis auf neue Version (GitHub-Release)
 
 def clean_barcode(x): return re.sub(r"^'+",'',str(x or '').strip())
 def duration(ms):

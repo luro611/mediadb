@@ -4,31 +4,31 @@
 #     sh tools/publish.sh release    nur Tag und Release (Image ist schon oben)
 #
 # 1. baut das Docker-Image für amd64 (PC, Server, Proxmox) und arm64 (Raspberry Pi, Mac)
-#    und lädt es in die Codeberg-Registry hoch (Tags <Version> und latest)
+#    und lädt es in die GitHub-Registry ghcr.io hoch (Tags <Version> und latest)
 # 2. legt den Git-Tag v<Version> an und pusht ihn
-# 3. legt auf Codeberg das Release an: Text aus CHANGELOG.md, docker-compose.homelab.yml als Anhang
+# 3. legt auf GitHub das Release an: Text aus CHANGELOG.md, docker-compose.homelab.yml als Anhang
 #
-# Einmalig vorher (siehe docs/BETRIEB.md):
-#   docker login codeberg.org                      (für das Image)
-#   für das Release: der Token von docker login (braucht dann auch "repository: Lesen und Schreiben")
-#   oder ein eigener Token in ~/.config/mediadb/codeberg-token
+# Einmalig vorher (siehe docs/BETRIEB.md): GitHub-Programm gh installieren und anmelden,
+#   gh auth login  und  gh auth refresh --scopes write:packages
+# Die Anmeldung bei ghcr.io für Docker erledigt das Skript selbst mit dem Schlüssel von gh.
 set -e
 cd "$(dirname "$0")/.."
-USER_NAME=${CODEBERG_USER:-luro61}
+USER_NAME=${GITHUB_USER:-luro611}
 REPO=$USER_NAME/mediadb
-IMAGE=codeberg.org/$REPO
-API=https://codeberg.org/api/v1/repos/$REPO
+IMAGE=ghcr.io/$REPO
 V=$(cat VERSION)
 TAG=v$V
-TOKEN_FILE=${CODEBERG_TOKEN_FILE:-$HOME/.config/mediadb/codeberg-token}
 
-# Nur veröffentlichen, was auch auf Codeberg liegt: keine offenen Änderungen, alles gepusht
+command -v gh >/dev/null || { echo "Abbruch: Das GitHub-Programm gh fehlt (brew install gh, dann gh auth login)."; exit 1; }
+gh auth status >/dev/null 2>&1 || { echo "Abbruch: gh ist nicht bei GitHub angemeldet (gh auth login)."; exit 1; }
+
+# Nur veröffentlichen, was auch auf GitHub liegt: keine offenen Änderungen, alles gepusht
 if [ -n "$(git status --porcelain)" ]; then
   echo "Abbruch: Es gibt noch nicht committete Änderungen (git status)."; exit 1
 fi
 git fetch -q origin
 if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
-  echo "Abbruch: Der aktuelle Stand ist noch nicht zu Codeberg gepusht (git push)."; exit 1
+  echo "Abbruch: Der aktuelle Stand ist noch nicht zu GitHub gepusht (git push)."; exit 1
 fi
 if ! grep -q "^## MediaDB $V " CHANGELOG.md; then
   echo "Abbruch: In CHANGELOG.md fehlt der Abschnitt „## MediaDB $V – …“."; exit 1
@@ -41,14 +41,18 @@ if [ "$1" != "release" ] && git rev-parse -q --verify "refs/tags/$TAG" >/dev/nul
 fi
 
 if [ "$1" != "release" ]; then
+  gh auth token | docker login ghcr.io -u "$USER_NAME" --password-stdin >/dev/null \
+    || { echo "Abbruch: Anmeldung bei ghcr.io fehlgeschlagen. Fehlt die Berechtigung? gh auth refresh --scopes write:packages"; exit 1; }
   echo "Baue $IMAGE:$V (amd64 + arm64). Das dauert beim ersten Mal 5–15 Minuten …"
   # Eigener Builder, der mehrere Plattformen kann (wird nur beim ersten Mal angelegt)
   docker buildx inspect mediadb-builder >/dev/null 2>&1 || docker buildx create --name mediadb-builder --driver docker-container >/dev/null
   docker buildx build --builder mediadb-builder \
     --platform linux/amd64,linux/arm64 \
+    --label "org.opencontainers.image.source=https://github.com/$REPO" \
+    --label "org.opencontainers.image.version=$V" \
     -t "$IMAGE:$V" -t "$IMAGE:latest" \
     --push .
-  echo "Image fertig: $IMAGE:$V und $IMAGE:latest sind auf Codeberg."
+  echo "Image fertig: $IMAGE:$V und $IMAGE:latest sind auf GitHub."
 fi
 
 # Tag
@@ -56,58 +60,26 @@ if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
   git tag -a "$TAG" -m "$(grep -m1 "^## MediaDB $V " CHANGELOG.md | sed 's/^## //')"
 fi
 git push -q origin "refs/tags/$TAG"
-echo "Tag $TAG ist auf Codeberg."
+echo "Tag $TAG ist auf GitHub."
 
 # Release
-if [ -n "$CODEBERG_TOKEN" ]; then
-  TOKEN=$CODEBERG_TOKEN
-elif [ -r "$TOKEN_FILE" ]; then
-  TOKEN=$(tr -d ' \r\n' < "$TOKEN_FILE")
-elif command -v docker-credential-osxkeychain >/dev/null && \
-     TOKEN=$(echo "https://codeberg.org" | docker-credential-osxkeychain get 2>/dev/null \
-       | python3 -c 'import json,sys; print(json.load(sys.stdin)["Secret"])' 2>/dev/null) && [ -n "$TOKEN" ]; then
-  : # derselbe Token wie bei "docker login codeberg.org" (Schlüsselbund); braucht auch "repository: Lesen und Schreiben"
-else
-  echo
-  echo "Kein Zugangsschlüssel gefunden – das Release bitte von Hand anlegen:"
-  echo "https://codeberg.org/$REPO/releases/new?tag=$TAG"
+if gh release view "$TAG" -R "$REPO" >/dev/null 2>&1; then
+  echo "Das Release $TAG gibt es schon: https://github.com/$REPO/releases/tag/$TAG"
   exit 0
 fi
-AUTH="Authorization: token $TOKEN"
-code=$(curl -s -o /dev/null -w '%{http_code}' -H "$AUTH" "$API/releases/tags/$TAG")
-if [ "$code" = "200" ]; then
-  echo "Das Release $TAG gibt es schon: https://codeberg.org/$REPO/releases/tag/$TAG"
-  exit 0
-fi
-# Titel und Text aus CHANGELOG.md (Abschnitt dieser Version) als JSON
-BODY=$(python3 - "$V" "$TAG" <<'EOF'
-import json, re, sys
-v, tag = sys.argv[1], sys.argv[2]
+# Titel und Text aus CHANGELOG.md (Abschnitt dieser Version)
+NOTES=$(mktemp)
+TITLE=$(python3 - "$V" "$NOTES" <<'EOF'
+import re, sys
+v, out = sys.argv[1], sys.argv[2]
 text = open('CHANGELOG.md', encoding='utf-8').read()
 m = re.search(r'^## (MediaDB ' + re.escape(v) + r' [^\n]*)\n(.*?)(?=^#{1,2} |^---|\Z)', text, re.M | re.S)
-print(json.dumps({'tag_name': tag, 'name': m.group(1).strip(), 'body': m.group(2).strip(), 'draft': False, 'prerelease': False}))
+open(out, 'w', encoding='utf-8').write(m.group(2).strip() + '\n')
+print(m.group(1).strip())
 EOF
 )
-OUT=$(mktemp)
-for try in 1 2 3; do  # Codeberg antwortet manchmal kurz mit 5xx: dann nach einer Pause noch einmal
-  code=$(curl -s -o "$OUT" -w '%{http_code}' -X POST -H "$AUTH" -H 'Content-Type: application/json' -d "$BODY" "$API/releases")
-  case "$code" in 5*) [ "$try" -lt 3 ] && { echo "Codeberg antwortet mit $code, neuer Versuch in 10 Sekunden …"; sleep 10; } ;; *) break ;; esac
-  # wurde das Release trotz Fehler angelegt, nicht doppelt anlegen
-  [ "$(curl -s -o /dev/null -w '%{http_code}' -H "$AUTH" "$API/releases/tags/$TAG")" = "200" ] && { echo "Das Release $TAG gibt es inzwischen. Bitte prüfen, ob docker-compose.homelab.yml angehängt ist: https://codeberg.org/$REPO/releases/tag/$TAG"; rm -f "$OUT"; exit 0; }
-done
-if [ "$code" != "201" ]; then
-  echo "Das Release konnte nicht angelegt werden (Antwort $code):"; cat "$OUT"; echo
-  case "$code" in
-    401|403) echo "Der Zugangsschlüssel stimmt nicht oder hat nicht die Berechtigung „repository: Lesen und Schreiben“." ;;
-    404) echo "Sind die Releases im Projekt eingeschaltet? Codeberg → mediadb → Einstellungen → Releases." ;;
-  esac
-  rm -f "$OUT"; exit 1
-fi
-ID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$OUT")
-rm -f "$OUT"
-curl -s -o /dev/null -f -X POST -H "$AUTH" -F "attachment=@docker-compose.homelab.yml" \
-  "$API/releases/$ID/assets?name=docker-compose.homelab.yml" \
-  || echo "Hinweis: docker-compose.homelab.yml konnte nicht angehängt werden – bitte von Hand ergänzen."
-echo "Release angelegt: https://codeberg.org/$REPO/releases/tag/$TAG"
+gh release create "$TAG" -R "$REPO" --verify-tag --latest --title "$TITLE" --notes-file "$NOTES" docker-compose.homelab.yml
+rm -f "$NOTES"
+echo "Release angelegt: https://github.com/$REPO/releases/tag/$TAG"
 echo
 echo "Im LXC (Dockhand): Stack mediadb → Pull und Redeploy."

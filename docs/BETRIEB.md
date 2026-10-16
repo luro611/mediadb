@@ -7,7 +7,7 @@ MediaDB ist für das **eigene Heimnetz** gedacht: ein Haushalt, eine kleine Date
 | Wo | Datei | Bemerkung |
 |---|---|---|
 | Mac (OrbStack, Docker Desktop) | `docker-compose.yml` | liest Musik von `/Volumes` und aus dem Benutzerordner |
-| Proxmox-LXC, Linux-Server, NAS, Dockhand | `docker-compose.homelab.yml` | fertiges Image von Codeberg, alles unter `/opt/mediadb` |
+| Proxmox-LXC, Linux-Server, NAS, Dockhand | `docker-compose.homelab.yml` | fertiges Image von GitHub, alles unter `/opt/mediadb` |
 | Home Assistant | geplant | als Add-on, siehe Roadmap |
 
 ## Proxmox: LXC mit Docker
@@ -132,9 +132,19 @@ Die Datei `~/Desktop/mediadb-data.tar.gz` auf dem Mac ist zugleich eine Sicherun
 
 ## Neue Version einspielen
 
-Gibt es eine neue Version, steht unten auf jeder Seite „Neue Version … verfügbar“ (alle sechs Stunden bei Codeberg nachgesehen, abschaltbar unter Einstellungen). Der Link führt zu den Neuerungen. Sofort nachsehen: Einstellungen → „Neue Version?“ → „Jetzt nach neuer Version suchen“.
+Gibt es eine neue Version, steht unten auf jeder Seite „Neue Version … verfügbar“ (alle sechs Stunden bei GitHub nachgesehen, abschaltbar unter Einstellungen). Der Link führt zu den Neuerungen. Sofort nachsehen: Einstellungen → „Neue Version?“ → „Jetzt nach neuer Version suchen“.
 
-**Mit Dockhand:** Stack „mediadb“ → *Pull* (lädt das neue Image von Codeberg) → *Redeploy*. Welche Version läuft, steht unten auf jeder Seite (z. B. „MediaDB 1.13.1“). Steht dort nach dem Redeploy noch die alte Nummer, war das *Pull* nicht erfolgreich: noch einmal *Pull*, dann *Redeploy*.
+**Umzug von Codeberg zu GitHub (einmalig, wer MediaDB vor 1.18.0 eingerichtet hat):** Das Image liegt seit 1.18.0 auf GitHub. In der Compose-Datei (in Dockhand: Stack „mediadb“ → bearbeiten) die Zeile
+```
+    image: codeberg.org/luro61/mediadb:latest
+```
+ersetzen durch
+```
+    image: ghcr.io/luro611/mediadb:latest
+```
+und speichern, dann *Pull* und *Redeploy*. Die Daten unter `/opt/mediadb/data` bleiben, wie sie sind.
+
+**Mit Dockhand:** Stack „mediadb“ → *Pull* (lädt das neue Image von GitHub) → *Redeploy*. Welche Version läuft, steht unten auf jeder Seite (z. B. „MediaDB 1.13.1“). Steht dort nach dem Redeploy noch die alte Nummer, war das *Pull* nicht erfolgreich: noch einmal *Pull*, dann *Redeploy*.
 
 **Im Terminal des LXC:**
 ```
@@ -145,7 +155,7 @@ docker compose -f docker-compose.homelab.yml up -d
 
 **Aus dem Quellcode** (wer selbst bauen will; in der Compose-Datei `build: .` statt `image:`):
 ```
-git clone https://codeberg.org/luro61/mediadb.git   # beim ersten Mal, danach: git pull
+git clone https://github.com/luro611/mediadb.git   # beim ersten Mal, danach: git pull
 docker compose -f docker-compose.homelab.yml up -d --build
 ```
 
@@ -186,31 +196,33 @@ Wichtig: Hinter einem Reverse Proxy sieht die App nur die Adresse des Proxys, ni
 - Die App ist ein Hobbyprojekt ohne Sicherheitsprüfung.
 - Wer die App trotzdem öffentlich betreibt, tut das auf eigene Verantwortung. Eine Gewährleistung wird nicht übernommen, soweit das gesetzlich zulässig ist (siehe Haftungshinweis im README).
 
-## Docker-Image auf Codeberg veröffentlichen (für den Projektbetreuer)
+## Docker-Image auf GitHub veröffentlichen (für den Projektbetreuer)
 
-Codeberg hat eine eigene Registry für Docker-Images. Das Image wird für normale PCs/Server (amd64) **und** für Raspberry Pi und ARM-Macs (arm64) gebaut.
+GitHub hat eine eigene Registry für Docker-Images (`ghcr.io`). Das Image wird für normale PCs/Server (amd64) **und** für Raspberry Pi und ARM-Macs (arm64) gebaut.
 
 Einmalig:
-1. Auf codeberg.org anmelden → *Einstellungen → Anwendungen → Zugangstoken erstellen*. Name z. B. „docker“, Berechtigung **package: Lesen und Schreiben**. Den Token sofort kopieren (er wird nur einmal angezeigt).
-2. Mac-Terminal: `docker login codeberg.org` → Benutzername `luro61`, als Passwort den Token einfügen.
-3. Für die Releases nimmt `publish.sh` denselben Token aus dem Schlüsselbund (von `docker login`). Er braucht dafür zusätzlich **repository: Lesen und Schreiben**. Hat er das nicht, einen zweiten Token mit dieser Berechtigung anlegen, kopieren und im Mac-Terminal speichern (liest ihn aus der Zwischenablage, er erscheint nirgends auf dem Bildschirm):
+1. Das GitHub-Programm installieren und anmelden (Mac-Terminal):
    ```
-   mkdir -p ~/.config/mediadb && pbpaste > ~/.config/mediadb/codeberg-token && chmod 600 ~/.config/mediadb/codeberg-token
+   brew install gh
+   gh auth login --hostname github.com --git-protocol https --web
+   gh auth refresh --hostname github.com --scopes write:packages
    ```
-4. Im Projekt auf Codeberg die Releases einschalten: *mediadb → Einstellungen → Einheiten* (bei älteren Codeberg-Versionen: *Einstellungen → Repository*), Haken bei **Releases**, speichern.
+   Jeweils den angezeigten Code im Browser eingeben und bestätigen.
+2. Nach dem **ersten** Hochladen das Image öffentlich machen: auf github.com → Profil → *Packages* → *mediadb* → *Package settings* → *Change visibility* → **Public**. Sonst können andere das Image nicht laden.
 
 Jede neue Version: `VERSION` hochzählen, in `CHANGELOG.md` einen Abschnitt `## MediaDB <Version> – …` schreiben, committen und pushen. Dann im Mac-Terminal, im Projektordner:
 ```
 sh tools/publish.sh
 ```
 Das Skript
-- baut beide Plattformen und lädt `codeberg.org/luro61/mediadb:<Version>` und `:latest` hoch,
+- meldet Docker mit dem Schlüssel von `gh` bei `ghcr.io` an,
+- baut beide Plattformen und lädt `ghcr.io/luro611/mediadb:<Version>` und `:latest` hoch,
 - legt den Tag `v<Version>` an und pusht ihn,
-- legt das Release auf Codeberg an: Titel und Text aus `CHANGELOG.md`, `docker-compose.homelab.yml` als Anhang.
+- legt das Release auf GitHub an: Titel und Text aus `CHANGELOG.md`, `docker-compose.homelab.yml` als Anhang.
 
 Es bricht vorher ab, wenn noch etwas nicht committet oder nicht gepusht ist. Nur Tag und Release nachholen (Image ist schon oben): `sh tools/publish.sh release`. Danach in Dockhand beim Stack „mediadb“ *Pull* und *Redeploy*. Das Release ist dafür nicht nötig; es sorgt für den Hinweis „Neue Version … verfügbar“ in der App und für die Download-Links.
 
-Das Image erscheint im Codeberg-Profil unter *Pakete*. Ist das Profil öffentlich, kann jeder das Image laden; das ist für die Veröffentlichung so gewollt.
+Bis 1.17.x lagen Code und Image auf Codeberg (`codeberg.org/luro61/mediadb`). Codeberg verbietet seit 2026 überwiegend KI-geschriebene Projekte, deshalb der Umzug.
 
 ## Bildschirmfotos der Anleitung erneuern (für den Projektbetreuer)
 

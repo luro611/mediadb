@@ -9,10 +9,11 @@ Musik und Fundament: CDs und Audiodateien, MusicBrainz, Cover, Genres, Import/Ex
 3. ✅ **1.2 Startseite und Bedienung (fertig):** Startseite, gemeinsame Suche, Buchstabenauswahl.
 4. ✅ **1.3 Serien (fertig):** eigener Bereich mit eigener Datenbank (`serien.db`): Barcode von Boxen, Titelsuche, Ordner-Import, Episodenführer von TMDB, Vergleich „Was fehlt?“, Videoformat, gesehen pro Folge, Personen gemeinsam mit den Filmen.
 5. ✅ **1.4 Merkliste, 1.5 Einstellungen, 1.6 Bücher, 1.7 Verliehen, 1.8 Mediatheken (fertig).**
-6. ✅ **Betrieb im Proxmox-LXC** (oberste Priorität für den Alltag, 1.8.1 vorbereitet: fertiges Image `codeberg.org/luro61/mediadb`, Stack für Dockhand, alles unter `/opt/mediadb`, Umzug vom Mac) und **Veröffentlichung auf Codeberg:** Quellcode und Docker-Image in der Codeberg-Registry; Update in Dockhand per Pull und Redeploy. Vor der Veröffentlichung noch: Codeberg-Links auf der Projektseite (TMDB-Logo erledigt in 1.8.2).
+6. ✅ **Betrieb im Proxmox-LXC** (oberste Priorität für den Alltag, 1.8.1 vorbereitet: fertiges Image, bis 1.17.x auf Codeberg, seit 1.18.0 `ghcr.io/luro611/mediadb`, Stack für Dockhand, alles unter `/opt/mediadb`, Umzug vom Mac) und **Veröffentlichung auf Codeberg:** Quellcode und Docker-Image in der Codeberg-Registry; Update in Dockhand per Pull und Redeploy. Vor der Veröffentlichung noch: Codeberg-Links auf der Projektseite (TMDB-Logo erledigt in 1.8.2).
 7. ✅ **1.9 NAS-Freigaben direkt in MediaDB (fertig):** siehe unten.
 8. ✅ **1.10–1.17 Alltag und Bedienung (fertig):** Kacheln/Liste/Text, „Als Nächstes“, aufgeräumte Startseite, Italienisch und Spracheinstellungen, eigene Farben, Hilfe in der App mit Bildschirmfotos, Bereiche ein- und ausschalten, Willkommensseite beim ersten Start.
 9. ✅ **1.17.2 Englische Anleitung** (`docs/MANUAL.md`) für alle Oberflächensprachen außer Deutsch.
+   ✅ **1.18.0 Umzug zu GitHub** (Code, Image `ghcr.io`, Releases, Update-Hinweis), weil Codeberg seit 2026 überwiegend KI-geschriebene Projekte verbietet.
 10. **Offen:** Betrieb und Datenquellen auf Englisch, Anleitung in weiteren Sprachen; gemeinsame Konten für Familien.
 11. **Home-Assistant-Add-on:** eigenes kleines Repository, verweist auf das Docker-Image.
 
@@ -59,4 +60,4 @@ Später: Streamingdienst auch bei Filmen anzeigen; Benachrichtigung (z. B. Home 
 - Aufräumen gelöschter/verschobener Audiodateien.
 - Automatische Tests und eine kleine Demo-Datenbank ohne echte Cover.
 - Weitere Sprachen (siehe SPRACHEN.md) und Verbesserung der vorhandenen Übersetzungen durch Muttersprachler.
-- Codeberg: Repository mit README, Lizenz, Issues; Releases als Tags.
+- GitHub (bis 1.17.x Codeberg): Repository mit README, Lizenz, Issues; Releases als Tags.
