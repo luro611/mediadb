@@ -39,6 +39,7 @@ Stoppen: `docker compose down`. Fehler ansehen: `docker compose logs --tail 60`.
 Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, ein Neustart ist nicht nötig. Gespeichert wird in `data/settings.json`; diese Werte haben Vorrang vor der Datei `.env`.
 
 - **Sprache der Oberfläche:** links die **Hauptsprache** (Deutsch, Englisch, Französisch, Spanisch, Italienisch). Rechts hakst du an, welche Sprachen oben in der Leiste als **Umschalter** (z. B. DE · IT) erscheinen sollen, praktisch, wenn im Haushalt mehrere Sprachen gesprochen werden. Ohne Auswahl bleibt die Leiste aufgeräumt.
+- **Farben:** Hintergrund, Kästen und Eingabefelder, Schrift, Nebentext, Akzent und Links, getrennt für das helle und das dunkle Farbschema. Jede Änderung ist sofort als Vorschau zu sehen; gespeichert wird mit **„Farben speichern“**. **„Auf Ursprung zurücksetzen“** stellt die ursprünglichen Farben wieder her; sie selbst lassen sich nicht überschreiben.
 - **Sprache der Daten:** In dieser Sprache kommen Titel, Inhaltsangaben, Genres und Episodennamen von TMDB in die Datenbank. Das Land bestimmt Altersfreigabe, Kinostart und Streamingdienste. Unabhängig von der Oberfläche. Wird sie später geändert, lädt **„Alles in der Datensprache neu laden“** die vorhandenen Filme und Serien im Hintergrund neu. Musik bleibt immer im Original.
 - **TMDB (Filme und Serien):** der Schlüssel von themoviedb.org (Konto anlegen → Einstellungen → API → Schlüssel beantragen, Zweck privat). Mit **„TMDB-Schlüssel prüfen“** testen. Ohne Schlüssel lassen sich Filme und Serien nur von Hand anlegen.
 - **Musik:** E-Mail-Adresse für MusicBrainz (wird nur an MusicBrainz und das Cover Art Archive geschickt) und optional ein **Discogs-Token** (discogs.com → Einstellungen → Entwickler), der die Discogs-Suche freischaltet.
@@ -46,6 +47,10 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
 - **NAS-Freigaben:** siehe Abschnitt 12.
 - **Neue Version?** zeigt, welche Version läuft, welche die neueste ist und wann zuletzt nachgesehen wurde; mit **„Jetzt nach neuer Version suchen“** sofort prüfen.
 - **Zugriff:** Passwort und Zugriff aus dem Internet stehen hier nur zur Ansicht. Ändern lassen sie sich aus Sicherheitsgründen nur in der Compose-Datei (im Homelab: Stack in Dockhand) bzw. in `.env`, danach neu starten. Siehe [BETRIEB.md → Zugriffsschutz](BETRIEB.md#zugriffsschutz).
+
+![Sprache der Oberfläche: links die Hauptsprache, rechts der Umschalter](bilder/einstellungen-sprache.png)
+
+![Eigene Farben für Hell und Dunkel, mit „Auf Ursprung zurücksetzen“](bilder/einstellungen-farben.png)
 
 **Einträge in `.env` bzw. in der Compose-Datei** (nur nötig für den Zugriffsschutz oder eine automatische Einrichtung; alles andere geht in der App):
 
@@ -66,11 +71,15 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
 - **Gerade dabei:** angefangene Serien und Bücher, die du gerade liest.
 - **Zuletzt hinzugefügt.**
 
+![Die Startseite mit Suche, den vier Bereichen und der Reihe „Als Nächstes“](bilder/start.png)
+
 **Suche:** Das Suchfeld auf der Startseite findet Musik (auch Songtitel), Filme, Serien, Bücher, Personen und Autoren und auch Namen bei „Verliehen an“. Jeder Bereich hat zusätzlich eine eigene Suche mit Filtern.
 
 **Als Nächstes:** Auf jeder CD-, Film-, Serien- und Buchseite gibt es **„☆ Als Nächstes vormerken“** für das, was du als Nächstes hören, sehen oder lesen möchtest; ein zweiter Klick nimmt es wieder herunter. Jeder Bereich hat dafür einen eigenen Reiter „Als Nächstes“, und ein ★ markiert vorgemerkte Einträge in allen Listen. Die Liste räumt sich selbst auf: Ein Film verschwindet, sobald er als gesehen markiert ist, ein Buch, sobald es gelesen ist, eine Serie, sobald keine ausgestrahlte Folge mehr offen ist. CDs nimmst du selbst herunter.
 
 **Kacheln, Liste oder Text:** Oben rechts über jeder Liste wählst du die Ansicht: **Kacheln** (Cover-Raster), **Liste** (eine schmale Zeile pro Eintrag mit kleinem Bild, so passt viel mehr auf die Seite) oder **Text** (ganz ohne Bilder). Der Browser merkt sich die Wahl für jeden Bereich.
+
+![Der Umschalter oben rechts: hier Filme in der Ansicht „Liste“](bilder/filme-liste.png)
 
 **Hintergrundaufgaben:** Läuft etwas im Hintergrund (Import, Cover laden, Aktualisierung), steht oben in der Leiste „1 Aufgabe läuft“ mit einem Punkt. Ein Klick zeigt, was genau läuft, mit Fortschritt. **Orange** heißt: liest gerade deine Dateien, **grün**: lädt nur Daten aus dem Internet. Du kannst währenddessen weiterarbeiten.
 
@@ -90,7 +99,13 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
   - Sampler erkennt die App daran, dass die Titel von verschiedenen Interpreten sind.
 - **Von Hand:** alle Felder frei eintragbar, auch die Titelliste.
 
+![„Hinzufügen“ bei Musik: Barcode, Diskografie-Suche, Tabelle, Audio-Import oder von Hand](bilder/hinzufuegen.png)
+
 **Ansehen:** Unter **Musik** stehen die **Interpreten** mit A–Z-Leiste (ein Klick zeigt ihre CDs, bei nur einem Eintrag direkt diesen) und der Reiter **Alle CDs**. Je Eintrag: Cover, Titelliste mit Laufzeiten, Label, Katalognummer, Land, Jahr der CD **und** Erscheinungsdatum des Albums, Genre und Styles, **Besitz** (CD, nur digital, CD + digital) und Dateiformate. **Compilations** sind ein Eintrag („Various Artists“) und werden auch über die Interpreten der einzelnen Titel gefunden. Die Suche findet Künstler, Album, Genre, Label, Songtitel und Notizen; mehrere Wörter müssen alle passen.
+
+![Musik: die Interpretenliste mit A–Z-Leiste](bilder/musik-interpreten.png)
+
+![„Alle CDs“ als Kacheln](bilder/musik-kacheln.png)
 
 **Sammelaktionen** mit Fortschrittsanzeige: **Fehlende Cover laden**, **Fehlende Genres laden**, **Alle aus MusicBrainz aktualisieren** (füllt nur Leeres, überschreibt nichts).
 
@@ -110,7 +125,11 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
 
 **Gesehen und Bewertung:** „Heute gesehen“ oder ein Datum eintragen; es reicht auch das Jahr (z. B. 1999). Leer heißt „unbekannt“. „Heute nochmal gesehen“ zählt hoch. Die eigene Bewertung reicht von 1 (5× löschen) bis 10 (Unbedingt sehen); bei ungesehenen Filmen heißt sie, wie dringend du ihn sehen willst.
 
+![Filmseite mit „Als Nächstes“, gesehen und eigener Bewertung](bilder/film-detail.png)
+
 **Listen:** Alle · Als Nächstes · Noch nicht gesehen · Top 10: Muss ich sehen (die 10 ungesehenen mit der höchsten Bewertung) · Lieblingsfilme (gesehen, 9–10) · Zuletzt gesehen · Zuletzt hinzugefügt · Filmreihen (von TMDB) · Eigene Listen (anlegen unter „Eigene Listen“ oder auf der Filmseite). Die Suche findet Titel, Originaltitel, Regie, Darsteller, Stichworte und Barcodes; dazu Filter nach Genre, Jahrzehnt und Format und eine A–Z-Leiste („Der Pate“ steht unter P).
+
+![Filme als Kacheln; der Stern zeigt „Als Nächstes“, die Zahl die eigene Bewertung](bilder/filme-kacheln.png)
 
 **Poster:** In der Filmübersicht **„Fehlende Poster laden“**. Die App sucht zuerst Bilder neben der Filmdatei (`poster.jpg`, `folder.jpg`, `cover.jpg` …), dann in der Datei eingebettete Cover, dann alle Poster bei TMDB. Für einen einzelnen Film: auf der Filmseite **„Poster ändern“** (TMDB-Poster wählen oder eigenes Bild hochladen, etwa einen Scan der Hülle).
 
@@ -132,7 +151,11 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
 
 **Was fehlt?** Auf der Serienseite steht bei jeder Folge „vorhanden“ (mit Auflösung oder „Box“), „fehlt“ oder „kommt“. Die Seite **Was fehlt?** listet alle Serien mit Lücken, auch **als Text zum Kopieren**. Gezählt werden nur ausgestrahlte Folgen, Specials (Staffel 0) nicht.
 
+![„Was fehlt?“: alle Serien mit fehlenden ausgestrahlten Folgen](bilder/serien-was-fehlt.png)
+
 **Gesehen und Bewertung:** pro Folge ein Haken, „Ganze Staffel als gesehen“ oder oben bei **„Weiter mit:“** (der nächsten ungesehenen Folge) auf „Gesehen“. Die Bewertung 1–10 gilt wie bei den Filmen.
+
+![Serienseite: Fortschritt, „Weiter mit:“, Bewertung und die Staffeln mit vorhandenen und fehlenden Folgen](bilder/serie-detail.png)
 
 **Übersicht:** Alle · Als Nächstes · Unvollständig · Angefangen · Noch nicht angefangen · Ganz gesehen · Läuft noch · Zuletzt hinzugefügt · Was fehlt?, dazu ein Filter nach Streamingdienst. Die Suche findet Titel, Darsteller, Sender und Barcodes.
 
@@ -146,6 +169,8 @@ Menü **Merkliste**:
 - **Neu bei deinen Serien:** was demnächst startet (z. B. „Staffel 4 startet am 16.10.“ mit Dienst), was in den letzten 30 Tagen erschienen ist und welche Staffeln angekündigt sind.
 - **Vorgemerkt:** Filme und Serien suchen, **„Vormerken“**, eine Notiz dazuschreiben (etwa „Tipp von …“). Die App zeigt Kinostart, Digitalstart oder Staffelstart, den Streamingdienst und ob der Titel schon in der Sammlung ist. „In die Sammlung“ führt zum passenden Bereich, „erledigt“ nimmt den Eintrag herunter (wiederherstellbar unter „Erledigte Einträge“).
 - **Jetzt in der Mediathek:** vorgemerkte Titel, die gerade bei ARD, ZDF & Co. abrufbar sind.
+
+![Die Merkliste mit neuen Folgen und vorgemerkten Titeln](bilder/merkliste.png)
 
 **Aktualisierung:** Einmal am Tag frischt die App im Hintergrund auf: laufende Serien täglich, beendete alle 30 Tage, dazu die Merkliste. **„Jetzt aktualisieren“** startet es sofort.
 
@@ -168,7 +193,11 @@ Ein Schlüssel ist nicht nötig.
 
 **Übersicht:** sortierbar nach Autor (Nachname), Titel (ohne „Der/Die/Das“), Jahr, Bewertung und Hinzufügedatum, mit A–Z-Leiste und Filtern für Genre, Format und Sprache. Ansichten: Als Nächstes, Ungelesen, Lese ich gerade, Gelesen, Lieblinge, Zuletzt gelesen, Zuletzt hinzugefügt, E-Books, Hörbücher.
 
+![Bücher in der Ansicht „Text“, mit Reitern, Filtern und A–Z-Leiste](bilder/buecher-text.png)
+
 **Autoren und Reihen:** Autorennamen sind anklickbar. Unter **Buchreihen** stehen alle Reihen mit Bandnummern; fehlende Bände werden genannt.
+
+![Eine Buchreihe mit Hinweis auf den fehlenden Band 3](bilder/buchreihe.png)
 
 **Zusammenfassung und Bewertungen:** Unter „Inhalt“ der Verlagstext (über die Nationalbibliothek) oder die Beschreibung von Open Library, darunter die Einleitung des **Wikipedia**-Artikels, falls es einen gibt, und die **Bewertung bei Open Library**. „Rezensionen suchen“ öffnet eine Suche bei Perlentaucher, Goodreads oder im Web. Passt der Wikipedia-Artikel nicht, „Entfernen“ klicken.
 
@@ -189,6 +218,8 @@ Für alle Bereiche gemeinsam gibt es die Seite **Verliehen** (Menü), mit eigene
 **Zurückbekommen:** auf der Detailseite, in der Übersicht oder auf der Seite der Person; dort auch „Alles zurückbekommen“. Ein versehentlicher Eintrag lässt sich löschen.
 
 **Überblick:** alles nach Personen sortiert, mit Filter nach Bereich; überfällige Rückgaben sind rot. **„Als Text zum Kopieren“** liefert die Liste, etwa für eine Nachricht. Verliehene Einträge sind in allen Übersichten markiert.
+
+![Seite „Verliehen“: alles nach Personen, überfällige Rückgaben rot](bilder/verliehen.png)
 
 ## 11. Mediatheken
 

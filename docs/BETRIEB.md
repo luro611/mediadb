@@ -212,6 +212,20 @@ Es bricht vorher ab, wenn noch etwas nicht committet oder nicht gepusht ist. Nur
 
 Das Image erscheint im Codeberg-Profil unter *Pakete*. Ist das Profil öffentlich, kann jeder das Image laden; das ist für die Veröffentlichung so gewollt.
 
+## Bildschirmfotos der Anleitung erneuern (für den Projektbetreuer)
+
+Die Bilder in `docs/bilder/` zeigen eine **erfundene Beispiel-Sammlung** mit farbigen Platzhaltern statt echter Cover. So ist nichts Privates darauf und keine fremden Bilder. Nach Änderungen an der Oberfläche lassen sie sich mit einem Befehl neu machen.
+
+Einmalig (Google Chrome muss installiert sein):
+```
+python3 -m pip install -r requirements.txt playwright
+```
+Dann im Projektordner:
+```
+python3 tools/screenshots.py
+```
+Das Skript legt mit `tools/demo_data.py` eine frische Beispiel-Sammlung in einem Zwischenordner an, startet MediaDB damit, fotografiert die Seiten mit Chrome (unsichtbar) und räumt danach auf. Nur einzelne Bilder: `python3 tools/screenshots.py film serie`. Welche Seiten fotografiert werden, steht oben in `tools/screenshots.py`; eingebunden werden die Bilder in `docs/ANLEITUNG.md` mit `![Beschreibung](bilder/name.png)`.
+
 ## Home Assistant (geplant)
 
 Ein Add-on ist ein kleines eigenes Repository mit einer Beschreibungsdatei, die auf das Docker-Image verweist. Die App ist darauf vorbereitet:

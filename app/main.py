@@ -585,6 +585,7 @@ activity.register_media()
 from . import help as helpdocs  # Hilfe in der App: Anleitung aus docs/ (/hilfe)
 helpdocs.setup(templates,ctx)
 app.add_route('/hilfe',helpdocs.page)
+app.add_route('/hilfe/bilder/{name}',helpdocs.picture)
 app.add_route('/hilfe/{page}',helpdocs.page)
 from . import settings_web
 settings_web.setup(templates,ctx)

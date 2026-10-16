@@ -292,3 +292,4 @@ input.mid{max-width:14em}
 .manual table{display:block;overflow-x:auto;margin:14px 0 20px;max-width:100%}.manual th,.manual td{vertical-align:top;font-size:14px}
 .manual blockquote{margin:16px 0;padding:10px 16px;border-left:3px solid var(--accent);background:var(--surface)}
 nav a.navhelp:not(.brand){display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:2px solid currentColor;border-radius:50%;font:700 15px/1 Inter,sans-serif;letter-spacing:0;padding:0}
+.manual figure.shot{margin:16px 0 26px}.manual figure.shot a{display:block}.manual figure.shot img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:4px;box-shadow:var(--shadow)}.manual figure.shot a:hover img{border-color:var(--accent)}.manual figcaption{margin-top:8px;font-size:13px;color:var(--muted)}

@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 import markdown
 from markupsafe import Markup
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, FileResponse, Response
 
 ROOT = Path(__file__).resolve().parent.parent
 # Seite -> (Datei, Titel); die Schluessel sind die Adressen unter /hilfe
@@ -15,6 +15,7 @@ PAGES = {'': (ROOT / 'docs' / 'ANLEITUNG.md', 'Anleitung'), 'betrieb': (ROOT / '
          'aenderungen': (ROOT / 'CHANGELOG.md', 'Änderungen')}
 FILE_TO_PAGE = {p.name: k for k, (p, _) in PAGES.items()}
 REPO = 'https://codeberg.org/luro61/mediadb/src/branch/main/'
+PICS = ROOT / 'docs' / 'bilder'  # Bildschirmfotos der Anleitung (tools/screenshots.py)
 
 templates = None
 ctx = None
@@ -39,6 +40,8 @@ def _link(m, base):
         return m.group(0)
     path, _, frag = target.partition('#')
     name = Path(path).name
+    if path.startswith('bilder/'):
+        return f'[{label}]({base}/hilfe/bilder/{name})'
     if name in FILE_TO_PAGE:
         page = FILE_TO_PAGE[name]
         url = f'{base}/hilfe' + (f'/{page}' if page else '')
@@ -78,6 +81,9 @@ def render(page, base):
     md = markdown.Markdown(extensions=['tables', 'fenced_code', 'sane_lists', 'toc'],
                            extension_configs={'toc': {'slugify': slug, 'permalink': False}})
     html = md.convert(text)
+    # Bildschirmfotos: nachladen, wenn sie ins Bild kommen; ein Klick zeigt das Bild in voller Groesse
+    html = re.sub(r'<p><img alt="([^"]*)" src="([^"]+)" /></p>',
+                  r'<figure class="shot"><a href="\2" target="_blank"><img alt="\1" src="\2" loading="lazy"></a><figcaption>\1</figcaption></figure>', html)
     # externe Links in einem neuen Tab oeffnen
     html = re.sub(r'<a href="(https?://[^"]+)"', r'<a href="\1" target="_blank" rel="noopener noreferrer"', html)
     _cache[key] = (mtime, Markup(html))
@@ -91,3 +97,11 @@ async def page(request):
     c = ctx(request, area='help')
     html, title = render(name, c['base'])
     return templates.TemplateResponse(request, 'help.html', {**c, 'doc': html, 'title': title, 'page': name, 'pages': PAGES})
+
+
+async def picture(request):
+    name = request.path_params['name']
+    f = PICS / name
+    if not re.fullmatch(r'[a-z0-9-]+\.png', name) or not f.is_file():
+        return Response(status_code=404)
+    return FileResponse(f, media_type='image/png', headers={'Cache-Control': 'max-age=86400'})

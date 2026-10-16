@@ -5,6 +5,7 @@ docs/*
 !docs/ANLEITUNG.md
 !docs/BETRIEB.md
 !docs/DATENQUELLEN_UND_RECHT.md
+!docs/bilder
 tools
 **/__pycache__
 *.pyc

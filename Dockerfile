@@ -13,6 +13,7 @@ COPY static ./static
 COPY VERSION LICENSE CHANGELOG.md ./
 # Hilfe in der App (/hilfe) zeigt diese Texte an
 COPY docs/ANLEITUNG.md docs/BETRIEB.md docs/DATENQUELLEN_UND_RECHT.md ./docs/
+COPY docs/bilder ./docs/bilder
 RUN mkdir -p /app/data/covers
 EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=120s \

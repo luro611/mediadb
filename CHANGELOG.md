@@ -1,5 +1,12 @@
 # Änderungen
 
+## MediaDB 1.16.0 – Anleitung mit Bildschirmfotos
+- **15 Bildschirmfotos in der Anleitung:** Startseite, Musik, Filme, Serien, „Was fehlt?“, Bücher, Buchreihen, Merkliste, Verliehen, Hinzufügen und die Einstellungen für Sprache und Farben. Jedes Bild hat eine Unterschrift; ein Klick öffnet es in voller Größe.
+- Die Fotos zeigen eine **erfundene Beispiel-Sammlung** mit farbigen Platzhaltern statt echter Cover, also nichts Privates und keine fremden Bilder.
+- **Hilfe in eigenem Fenster:** Das ? oben, „Anleitung“ unten und der Link in den Einstellungen öffnen die Hilfe in einem eigenen Fenster. So kannst du MediaDB bedienen und gleichzeitig nachlesen. Ein weiterer Klick holt dasselbe Fenster wieder nach vorn.
+- Die Anleitung erklärt jetzt auch die **Farben** in den Einstellungen.
+- Für Betreuer: `tools/demo_data.py` legt die Beispiel-Sammlung an, `tools/screenshots.py` macht alle Fotos neu (siehe „Betrieb im Homelab“).
+
 ## MediaDB 1.15.0 – Hilfe in der App
 - **Die Anleitung ist jetzt in MediaDB selbst:** über das neue **?** oben in der Leiste, den Link „Anleitung“ unten auf jeder Seite oder „Was die einzelnen Einstellungen bedeuten …“ in den Einstellungen. Sie passt immer zur installierten Version und funktioniert auch ohne Internet.
 - Neben der Anleitung gibt es **Betrieb im Homelab**, **Datenquellen und Rechtliches** und **Änderungen** (diese Liste) als eigene Reiter. Links zwischen den Texten bleiben in der App.
