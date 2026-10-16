@@ -68,6 +68,32 @@ Die NAS muss **SMB2 oder SMB3** anbieten (bei Synology, QNAP, UGREEN, TrueNAS, U
 
 **NAS, die nicht immer an ist:** Kein Problem. Was eingelesen ist, steht in der Datenbank von MediaDB und bleibt, auch wenn die NAS aus ist. In der Ordnerauswahl zeigt ein Punkt neben „NAS: …“, ob sie gerade erreichbar ist. Vor dem Einlesen die NAS einschalten und warten, bis der Punkt grün ist. Geht sie während des Einlesens aus, nennt MediaDB danach die Ordner, die fehlen; einfach später noch einmal einlesen. Am besten legst du auf der NAS einen eigenen Benutzer an, der die Freigaben nur lesen darf.
 
+
+### Musik vom Mac (oder einem anderen Rechner) einlesen
+
+MediaDB läuft im LXC und kann nicht auf die Festplatte des Rechners zugreifen, auf dem der Browser läuft (das lässt kein Browser zu). Ein Mac lässt sich aber **wie eine NAS freigeben**; dann erscheint sein Musikordner beim Einlesen als „NAS: …“.
+
+**Am Mac den Ordner freigeben:**
+1. **Systemeinstellungen → Allgemein → Teilen**, **Dateifreigabe** einschalten und daneben auf **ⓘ** klicken.
+2. Unter **Geteilte Ordner** mit **+** den Musikordner hinzufügen (z. B. `Musik` im Benutzerordner).
+3. **Optionen …**: Haken bei **„Dateien und Ordner über SMB teilen“**. Darunter bei **Windows-Dateifreigabe** den Haken beim eigenen Benutzer setzen und das Mac-Passwort eingeben. **Wichtig:** Ohne diesen Haken lehnt der Mac die Anmeldung ab, auch mit richtigem Passwort.
+4. Oben im Fenster steht die Adresse, z. B. `smb://192.168.1.23`.
+
+**In MediaDB eintragen** (Einstellungen → NAS-Freigaben → Freigabe hinzufügen):
+- **Name:** z. B. `Mac Musik`
+- **NAS-Adresse:** die IP von oben, z. B. `192.168.1.23` (nicht den Namen wie `Mein-MacBook.local`, den findet der Container nicht)
+- **Freigabe:** der Ordnername, wie er unter „Geteilte Ordner“ steht, z. B. `Musik`
+- **Benutzer und Passwort:** der Kurzname des Mac-Benutzers (wie in `/Users/…`) und das Mac-Passwort
+
+Dann **Verbindung prüfen**. Beim Musik-Import erscheint der Mac als „NAS: Mac Musik“.
+
+**Gut zu wissen:**
+- **Ruhezustand:** Schläft der Mac, zeigt MediaDB „gerade aus“. Vor dem Einlesen den Mac wecken.
+- **Feste IP:** Im Router dem Mac immer dieselbe Adresse geben (Fritzbox: *Heimnetz → Netzwerk → Gerät bearbeiten → „Diesem Netzwerkgerät immer die gleiche IPv4-Adresse zuweisen“*), sonst stimmt die Adresse irgendwann nicht mehr.
+- **Apple-Musik-Mediathek:** Die Dateien liegen meist unter `Musik/Music/Media/Music`, bei älteren Macs unter `Musik/iTunes/iTunes Media/Music`. Im Import einfach dorthin durchklicken.
+- **Eigener Benutzer:** Wer sein Mac-Passwort nicht in MediaDB speichern möchte, legt unter *Systemeinstellungen → Benutzer & Gruppen* einen Benutzer „Nur Teilen“ an und gibt ihm beim geteilten Ordner nur Leserechte.
+- **Windows-PC:** geht genauso: Ordner im Explorer über *Eigenschaften → Freigabe* freigeben, dann IP, Ordnername, Windows-Benutzer und Passwort eintragen.
+
 **Ohne NAS:** Neue Ordner in `/opt/mediadb/medien/…` kopieren, einlesen und danach wieder löschen.
 
 Dateien vom Mac in den LXC kopieren (im Mac-Terminal; Ordnernamen anpassen):

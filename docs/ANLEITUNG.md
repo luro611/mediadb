@@ -9,7 +9,7 @@ MediaDB ist eine **private Mediendatenbank für den eigenen Rechner** mit vier B
 - **Diskografie-Suche ohne Scanner:** Interpret wählen, dann alle seine CDs als Liste (nach Albumtitel, mit A–Z-Leiste und Barcode), Ausgabe wählen, „Das ist meine CD“.
 - **Von Hand:** Alle Felder frei eintragbar.
 - **Tabelle importieren (Excel, ODS, CSV):** Interpret und Albumtitel genügen, den Rest holt die App von MusicBrainz. Mit Probelauf und Vorschau.
-- **Audio-Import:** Musikordner (z. B. auf einer externen Platte oder direkt von der NAS, siehe Einstellungen → NAS-Freigaben) einlesen. Abgleich mit vorhandenen CDs über die Titellisten, Cover und Genre werden ergänzt.
+- **Audio-Import:** Musikordner (z. B. auf einer externen Platte, direkt von der NAS oder vom Mac, siehe Einstellungen → NAS-Freigaben und [BETRIEB.md](BETRIEB.md#musik-vom-mac-oder-einem-anderen-rechner-einlesen)) einlesen. Abgleich mit vorhandenen CDs über die Titellisten, Cover und Genre werden ergänzt.
 - **Ähnliche Ausgabe suchen:** Wird bei MusicBrainz nichts Eindeutiges gefunden, zeigt die App ähnliche Ausgaben zur Auswahl. Zusätzlich kann ein **Discogs-Link** eingefügt werden (Vorschau, dann bestätigen).
 
 **Verwalten und ansehen**
