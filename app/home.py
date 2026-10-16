@@ -11,6 +11,7 @@ from . import films_db as F
 from . import series_db as S
 from . import books_db as BK
 from . import search as music_search
+from . import config as C
 
 templates = None
 ctx = None
@@ -115,8 +116,10 @@ def _mixed(parts, key, newest_first=False, limit=None):
 
 
 async def home(request):
-    music, films, series, books = (await run_in_threadpool(_music), await run_in_threadpool(_films), await run_in_threadpool(_series),
-                                   await run_in_threadpool(_books))
+    # ausgeschaltete Bereiche gar nicht erst lesen
+    on = C.area_on
+    music, films, series, books = (await run_in_threadpool(_music) if on('music') else None, await run_in_threadpool(_films) if on('films') else None,
+                                   await run_in_threadpool(_series) if on('series') else None, await run_in_threadpool(_books) if on('books') else None)
     parts = [('music', music), ('films', films), ('series', series), ('books', books)]
     rows = {'upnext': _mixed(parts, 'upnext'),
             'doing': _mixed([('series', series)], 'watching') + _mixed([('books', books)], 'reading'),
@@ -159,24 +162,30 @@ async def search(request):
     def work():
         if not q:
             return [], 0, [], 0, [], 0, [], 0, [], []
-        music, n_music = _music_hits(q)
-        with F.db() as c:
-            films, n_films = F.query(c, 'all', q=q, limit=12)
-            people = {x['id']: dict(x) for x in F.find_people(c, q, 12)} if len(q) >= 3 else {}
-        with S.db() as c:
-            series, n_series = S.query(c, 'all', q=q, limit=12)
-            for x in (S.find_people(c, q, 12) if len(q) >= 3 else []):  # Personen aus beiden Datenbanken zusammenfuehren
-                if x['id'] in people:
-                    people[x['id']]['n'] += x['n']
-                else:
-                    people[x['id']] = dict(x)
+        # nur eingeschaltete Bereiche durchsuchen
+        music, n_music = _music_hits(q) if C.area_on('music') else ([], 0)
+        films, n_films, series, n_series, people = [], 0, [], 0, {}
+        if C.area_on('films'):
+            with F.db() as c:
+                films, n_films = F.query(c, 'all', q=q, limit=12)
+                people = {x['id']: dict(x) for x in F.find_people(c, q, 12)} if len(q) >= 3 else {}
+        if C.area_on('series'):
+            with S.db() as c:
+                series, n_series = S.query(c, 'all', q=q, limit=12)
+                for x in (S.find_people(c, q, 12) if len(q) >= 3 else []):  # Personen aus beiden Datenbanken zusammenfuehren
+                    if x['id'] in people:
+                        people[x['id']]['n'] += x['n']
+                    else:
+                        people[x['id']] = dict(x)
         people = sorted(people.values(), key=lambda p: (-p['n'], p['name']))[:12]
-        try:
-            with BK.db() as c:
-                books, n_books = BK.query(c, 'all', q=q, sort='title', limit=12)
-                authors = [dict(x) for x in BK.find_authors(c, q, 12)] if len(q) >= 3 else []
-        except Exception:
-            books, n_books, authors = [], 0, []
+        books, n_books, authors = [], 0, []
+        if C.area_on('books'):
+            try:
+                with BK.db() as c:
+                    books, n_books = BK.query(c, 'all', q=q, sort='title', limit=12)
+                    authors = [dict(x) for x in BK.find_authors(c, q, 12)] if len(q) >= 3 else []
+            except Exception:
+                books, n_books, authors = [], 0, []
         return music, n_music, [dict(r) for r in films], n_films, series, n_series, [dict(r) for r in books], n_books, people, authors
     music, n_music, films, n_films, series, n_series, books, n_books, people, authors = await run_in_threadpool(work)
     return templates.TemplateResponse(request, 'search.html', ctx(request, area='home', q=q, music=music, n_music=n_music,

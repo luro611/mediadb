@@ -1,5 +1,13 @@
 # Änderungen
 
+## MediaDB 1.17.0 – Bereiche ein- und ausschalten
+- **Neuer Abschnitt „Bereiche“ in den Einstellungen:** Musik, Filme, Serien und Bücher lassen sich einzeln ausschalten, z. B. für alle, die nur Bücher oder nur Filme und Serien verwalten.
+- **Ausgeschaltet heißt ausgeblendet:** Der Bereich verschwindet aus der Leiste, der Startseite, der Suche und aus „Hinzufügen“. Seine Hintergrundarbeiten ruhen, etwa die tägliche Serien-Aktualisierung. Einstellungen, die nur diesen Bereich betreffen (z. B. der TMDB-Schlüssel), treten zurück. Alte Lesezeichen zeigen einen freundlichen Hinweis.
+- **Es geht nichts verloren:** Die Datenbank des Bereichs wird nicht angefasst. Nach dem Einschalten ist alles sofort wieder da, samt gesehen, Bewertungen und Listen. Mindestens ein Bereich bleibt an.
+- Die Merkliste erscheint, solange Filme oder Serien an sind; „Verliehen“ zeigt weiterhin alles, was verliehen ist.
+- **Willkommensseite:** Bei einer neuen, leeren Installation fragt MediaDB beim ersten Start nach der Sprache und danach, was verwaltet werden soll. Bestehende Installationen sehen diese Seite nicht; dort bleiben alle Bereiche an.
+- Anleitung und Bildschirmfotos ergänzt.
+
 ## MediaDB 1.16.0 – Anleitung mit Bildschirmfotos
 - **15 Bildschirmfotos in der Anleitung:** Startseite, Musik, Filme, Serien, „Was fehlt?“, Bücher, Buchreihen, Merkliste, Verliehen, Hinzufügen und die Einstellungen für Sprache und Farben. Jedes Bild hat eine Unterschrift; ein Klick öffnet es in voller Größe.
 - Die Fotos zeigen eine **erfundene Beispiel-Sammlung** mit farbigen Platzhaltern statt echter Cover, also nichts Privates und keine fremden Bilder.

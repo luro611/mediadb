@@ -2,7 +2,7 @@
 
 MediaDB ist eine **private Mediendatenbank für das eigene Heimnetz** mit vier Bereichen: **Musik, Filme, Serien und Bücher**, dazu **Merkliste**, **Als Nächstes** und **Verliehen an …**. Du erfasst CDs, DVDs, Blu-rays, Bücher und deine Dateien (Musik, Filme, Serien, E-Books, Hörbücher), die App ergänzt Titellisten, Cover, Filmdaten, Episodenführer und Buchangaben aus freien Internetquellen. Bedient wird alles im Browser, am Rechner wie am Handy. Die Daten bleiben bei dir.
 
-Diese Anleitung beschreibt MediaDB ab Version 1.15. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet.
+Diese Anleitung beschreibt MediaDB ab Version 1.17. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet.
 
 **Inhalt:** [1. Überblick](#1-überblick) · [2. Installation](#2-installation) · [3. Einstellungen](#3-einstellungen) · [4. Bedienung allgemein](#4-bedienung-allgemein) · [5. Musik](#5-musik) · [6. Filme](#6-filme) · [7. Serien](#7-serien) · [8. Merkliste](#8-merkliste) · [9. Bücher](#9-bücher) · [10. Verliehen an …](#10-verliehen-an) · [11. Mediatheken](#11-mediatheken) · [12. Dateien von NAS und Mac](#12-dateien-von-nas-und-mac) · [13. Sichern und Updates](#13-sichern-und-updates) · [14. Woher kommen die Daten?](#14-woher-kommen-die-daten) · [15. Grenzen](#15-grenzen) · [16. Fehlersuche](#16-fehlersuche)
 
@@ -32,6 +32,10 @@ Dazu für alle Bereiche: gemeinsame **Suche**, **Als Nächstes**, Ansichten **Ka
 
 Stoppen: `docker compose down`. Fehler ansehen: `docker compose logs --tail 60`. Auf dem Mac sind externe Laufwerke (`/Volumes`) und der Benutzerordner nur lesend eingebunden. Beim ersten Zugriff muss macOS ggf. erlauben: *Systemeinstellungen → Datenschutz & Sicherheit → Dateien und Ordner* bzw. *Vollständiger Festplattenzugriff* für OrbStack.
 
+**Beim allerersten Start** fragt MediaDB nach der Sprache und danach, was du verwalten möchtest (Musik, Filme, Serien, Bücher). Beides lässt sich später in den Einstellungen ändern.
+
+![Die Willkommensseite beim ersten Start](bilder/willkommen.png)
+
 **Erste Schritte nach der Installation:** Zahnrad ⚙ oben öffnen und eintragen: deine **E-Mail-Adresse für MusicBrainz** (Pflicht für Musik), einen kostenlosen **TMDB-Schlüssel** (für Filme und Serien) und, falls vorhanden, deine **NAS-Freigaben**.
 
 ## 3. Einstellungen
@@ -39,6 +43,7 @@ Stoppen: `docker compose down`. Fehler ansehen: `docker compose logs --tail 60`.
 Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, ein Neustart ist nicht nötig. Gespeichert wird in `data/settings.json`; diese Werte haben Vorrang vor der Datei `.env`.
 
 - **Sprache der Oberfläche:** links die **Hauptsprache** (Deutsch, Englisch, Französisch, Spanisch, Italienisch). Rechts hakst du an, welche Sprachen oben in der Leiste als **Umschalter** (z. B. DE · IT) erscheinen sollen, praktisch, wenn im Haushalt mehrere Sprachen gesprochen werden. Ohne Auswahl bleibt die Leiste aufgeräumt.
+- **Bereiche:** Musik, Filme, Serien und Bücher lassen sich einzeln aus- und wieder einschalten. Ausgeschaltete Bereiche verschwinden aus der Leiste, der Startseite und der Suche, ihre Hintergrundarbeiten (z. B. die tägliche Serien-Aktualisierung) ruhen. **Gelöscht wird nichts:** Die Datenbank des Bereichs bleibt unberührt, nach dem Einschalten ist alles sofort wieder da. Mindestens ein Bereich bleibt an. Die Merkliste gehört zu Filmen und Serien; „Verliehen“ zeigt weiterhin alles, was verliehen ist.
 - **Farben:** Hintergrund, Kästen und Eingabefelder, Schrift, Nebentext, Akzent und Links, getrennt für das helle und das dunkle Farbschema. Jede Änderung ist sofort als Vorschau zu sehen; gespeichert wird mit **„Farben speichern“**. **„Auf Ursprung zurücksetzen“** stellt die ursprünglichen Farben wieder her; sie selbst lassen sich nicht überschreiben.
 - **Sprache der Daten:** In dieser Sprache kommen Titel, Inhaltsangaben, Genres und Episodennamen von TMDB in die Datenbank. Das Land bestimmt Altersfreigabe, Kinostart und Streamingdienste. Unabhängig von der Oberfläche. Wird sie später geändert, lädt **„Alles in der Datensprache neu laden“** die vorhandenen Filme und Serien im Hintergrund neu. Musik bleibt immer im Original.
 - **TMDB (Filme und Serien):** der Schlüssel von themoviedb.org (Konto anlegen → Einstellungen → API → Schlüssel beantragen, Zweck privat). Mit **„TMDB-Schlüssel prüfen“** testen. Ohne Schlüssel lassen sich Filme und Serien nur von Hand anlegen.
@@ -47,6 +52,8 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
 - **NAS-Freigaben:** siehe Abschnitt 12.
 - **Neue Version?** zeigt, welche Version läuft, welche die neueste ist und wann zuletzt nachgesehen wurde; mit **„Jetzt nach neuer Version suchen“** sofort prüfen.
 - **Zugriff:** Passwort und Zugriff aus dem Internet stehen hier nur zur Ansicht. Ändern lassen sie sich aus Sicherheitsgründen nur in der Compose-Datei (im Homelab: Stack in Dockhand) bzw. in `.env`, danach neu starten. Siehe [BETRIEB.md → Zugriffsschutz](BETRIEB.md#zugriffsschutz).
+
+![Bereiche ein- und ausschalten](bilder/einstellungen-bereiche.png)
 
 ![Sprache der Oberfläche: links die Hauptsprache, rechts der Umschalter](bilder/einstellungen-sprache.png)
 

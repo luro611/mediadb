@@ -515,6 +515,67 @@ def reset_colors():
  d=load_settings(); d.pop('colors',None); save_settings(d)
  return RedirectResponse('/settings?message='+quote('Farben auf die Vorgaben zurückgesetzt.')+'#farben',303)
 templates.env.globals.update(COLOR_KEYS=COLOR_KEYS,COLOR_DEFAULTS=COLOR_DEFAULTS,custom_colors=custom_colors)
+# ---------------- Bereiche ein- und ausschalten (Einstellungen → Bereiche, Willkommensseite beim ersten Start) ----------------
+# Ausgeschaltet heisst nur ausgeblendet: Die Datenbank des Bereichs bleibt unberuehrt, beim Einschalten ist alles wieder da.
+ADD_URLS={'music':'/add','films':'/films/add','series':'/series/add','books':'/books/add'}
+def add_url(area=None):
+ """Ziel von „Hinzufügen“: der aktuelle Bereich, sonst der erste eingeschaltete."""
+ if area in ADD_URLS and config.area_on(area): return ADD_URLS[area]
+ return next((ADD_URLS[a] for a in config.AREAS if config.area_on(a)),'/add')
+templates.env.globals.update(add_url=add_url,area_on=config.area_on,areas_on=config.areas,AREA_NAMES={'music':'Musik','films':'Filme','series':'Serien','books':'Bücher'})
+AREA_PATHS=[('music',('/media','/add','/manual','/scan','/import','/audio','/discography','/export')),('films',('/films','/mediathek/film')),
+ ('series',('/series','/mediathek/series')),('books',('/books',)),('watch',('/watchlist','/mediathek/watchlist'))]
+WELCOME_FREE=('/willkommen','/static/','/healthz','/login','/logout','/lang','/hilfe','/activity','/covers/','/film-images/')
+def area_of(path):
+ for a,ps in AREA_PATHS:
+  for p in ps:
+   if path==p or path.startswith(p+'/') or path.startswith(p+'.'): return a
+ return None
+_FRESH=[None]
+def is_fresh():
+ """Neue Installation: noch keine Wahl der Bereiche und in keinem Bereich ein Eintrag. Einmal nein, immer nein."""
+ if _FRESH[0] is False or config.areas_chosen(): return False
+ try:
+  from . import films_db as _F, series_db as _S, books_db as _B
+  s=Session(); n=s.query(Medium).count(); s.close()
+  for m,t in ((_F,'films'),(_S,'series'),(_B,'books')):
+   with m.db() as c: n+=c.execute(f'SELECT count(*) FROM {t}').fetchone()[0]
+ except Exception: logging.exception('Pruefung auf neue Installation fehlgeschlagen'); n=1
+ if n: _FRESH[0]=False
+ return not n
+class AreaGuard:
+ """Ausgeschaltete Bereiche zeigen einen Hinweis statt ihrer Seiten; bei einer neuen Installation zuerst die Willkommensseite."""
+ def __init__(self,app): self.app=app
+ async def __call__(self,scope,receive,send):
+  if scope['type']!='http': return await self.app(scope,receive,send)
+  path=scope.get('path','/')
+  if scope.get('method') in ('GET','HEAD') and not path.startswith(WELCOME_FREE) and is_fresh():
+   return await RedirectResponse('/willkommen',303)(scope,receive,send)
+  a=area_of(path)
+  if a and not config.area_on(a):
+   req=Request(scope,receive)
+   resp=templates.TemplateResponse(req,'area_off.html',ctx(req,off_area=a),status_code=404)
+   return await resp(scope,receive,send)
+  return await self.app(scope,receive,send)
+from starlette.middleware import Middleware as _MW
+app.user_middleware.append(_MW(AreaGuard))  # innen: laeuft nach Heimnetz- und Anmeldepruefung (sec.Gate)
+def _save_areas(chosen):
+ on=[a for a in config.AREAS if a in chosen]
+ if not on: return False
+ d=load_settings(); d['areas']=on; save_settings(d); return True
+@app.post('/areas/save')
+def save_areas(area:list[str]=Form([])):
+ if not _save_areas(area): return RedirectResponse('/settings?err='+quote('Mindestens ein Bereich muss eingeschaltet bleiben.')+'#bereiche',303)
+ return RedirectResponse('/settings?message='+quote('Bereiche gespeichert.')+'#bereiche',303)
+@app.get('/willkommen',response_class=HTMLResponse)
+def welcome(request:Request,err:str=''):
+ return templates.TemplateResponse(request,'welcome.html',ctx(request,area='welcome',err=err))
+@app.post('/willkommen')
+def welcome_save(lang:str=Form(i18n.DEFAULT),area:list[str]=Form([])):
+ if not _save_areas(area): return RedirectResponse('/willkommen?err='+quote('Bitte mindestens einen Bereich ankreuzen.'),303)
+ lang=lang if lang in i18n.LANGS else i18n.DEFAULT
+ d=load_settings(); d['lang']=lang; save_settings(d)
+ r=RedirectResponse('/',303); r.set_cookie('mediadb_lang',lang,max_age=60*60*24*365*5,samesite='lax'); return r
 def nav_langs():
  """Sprachen fuer den Umschalter oben in der Leiste (Einstellungen). Weniger als zwei: kein Umschalter."""
  v=load_settings().get('nav_langs') or []

@@ -141,3 +141,26 @@ def version():
         return (Path(__file__).resolve().parent.parent / 'VERSION').read_text().strip()
     except Exception:
         return '1'
+
+
+# ---------------------------------------------------------------- Bereiche (seit 1.17)
+# Einzelne Bereiche lassen sich in den Einstellungen ausschalten. Das blendet sie nur aus; ihre Datenbank bleibt unberuehrt.
+AREAS = ('music', 'films', 'series', 'books')
+
+
+def areas():
+    """Eingeschaltete Bereiche; ohne gespeicherte Wahl sind alle an."""
+    v = _read().get('areas')
+    on = [a for a in AREAS if isinstance(v, list) and a in v]
+    return on or list(AREAS)
+
+
+def areas_chosen():
+    """Wurde die Wahl schon einmal getroffen (Willkommensseite oder Einstellungen)?"""
+    return isinstance(_read().get('areas'), list)
+
+
+def area_on(area):
+    if area == 'watch':  # Merkliste und Mediatheken gehoeren zu Filmen und Serien
+        return bool({'films', 'series'} & set(areas()))
+    return area in areas()

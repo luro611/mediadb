@@ -7,6 +7,7 @@ import logging, threading, time
 from . import books_api as A
 from . import books_db as B
 from . import films_tmdb as T
+from . import config as C
 
 JOB = {'state': 'idle', 'done': 0, 'total': 0, 'current': ''}
 _lock = threading.Lock()
@@ -108,6 +109,8 @@ def scheduler(delay=120):
     def loop():
         time.sleep(delay)
         try:
+            if not C.area_on('books'):  # Bücher ausgeschaltet: nichts nachladen
+                return
             with B.db() as c:
                 if B.missing_extras(c, 1):
                     start()

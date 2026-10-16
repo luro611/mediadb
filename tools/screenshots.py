@@ -47,6 +47,8 @@ def shots(data):
         ('merkliste', '/watchlist', {}, 'page'),
         ('verliehen', '/lend', {}, 'page'),
         ('hinzufuegen', '/add', {}, 'page'),
+        ('willkommen', '/willkommen', {}, 'page'),
+        ('einstellungen-bereiche', '/settings', {}, '#bereiche'),
         ('einstellungen-sprache', '/settings', {}, '#oberflaeche'),
         ('einstellungen-farben', '/settings', {}, '#farben'),
     ]

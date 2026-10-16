@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from . import films_db as F
 from . import series_db as S
 from . import films_tmdb as T
+from . import config as C
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS watch(
@@ -172,8 +173,9 @@ def run(force=False):
         if not T.configured():
             UPD['state'] = 'idle'
             return
-        todo = due_series(force)
-        w = [(k, r['id']) for k in DBS for r in _watch_ids(k)]
+        # nur eingeschaltete Bereiche: Serien-Updates bei Serien, Merkliste je nach Filme ('movie') und Serien ('tv')
+        todo = due_series(force) if C.area_on('series') else []
+        w = [(k, r['id']) for k in DBS if C.area_on({'movie': 'films', 'tv': 'series'}[k]) for r in _watch_ids(k)]
         UPD.update(state='running', done=0, total=len(todo) + len(w), error='', changes=[])
         for r in todo:
             UPD['current'] = r['title']
@@ -226,7 +228,7 @@ def scheduler():
         while True:
             try:
                 last = last_run()
-                if T.configured() and os.getenv('AUTO_UPDATE', '1').strip().lower() not in ('0', 'false', 'no', 'nein', 'off') and (not last or last < (datetime.now() - timedelta(hours=20)).isoformat(timespec='seconds')):
+                if C.area_on('watch') and T.configured() and os.getenv('AUTO_UPDATE', '1').strip().lower() not in ('0', 'false', 'no', 'nein', 'off') and (not last or last < (datetime.now() - timedelta(hours=20)).isoformat(timespec='seconds')):
                     run()
             except Exception:
                 logging.exception('Zeitplan der Aktualisierung')

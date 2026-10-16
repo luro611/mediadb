@@ -11,6 +11,8 @@ LANGS = ['en', 'fr', 'es', 'it']
 PAT = re.compile(r"""\b_t?\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')""")
 # Texte, die ohne _() im Quelltext stehen (Listen, Meldungen aus Python); bei neuen Meldungen hier ergänzen
 EXTRA = [
+    # Bereiche ein- und ausschalten (1.17)
+    "Bereiche gespeichert.", "Mindestens ein Bereich muss eingeschaltet bleiben.", "Bitte mindestens einen Bereich ankreuzen.", "CDs und Musikdateien", "DVDs, Blu-rays und Filmdateien", "Serienboxen und Folgen, mit Episodenführer", "Bücher, E-Books und Hörbücher",
     # Hilfe in der App (1.15)
     "Anleitung", "Betrieb im Homelab", "Datenquellen und Rechtliches", "Änderungen",
     # Eigene Farben (1.14)

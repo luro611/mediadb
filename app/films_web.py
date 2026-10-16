@@ -13,6 +13,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Route
 from . import films_db as F
+from . import config as C
 from . import series_db as S
 from . import films_files as X
 from . import films_tmdb as T
@@ -37,7 +38,7 @@ def setup(templates_, ctx_, data_dir):
     os.makedirs(IMAGES, exist_ok=True)
     F.init(os.path.join(str(data_dir), 'filme.db'))
     templates.env.globals.update(FILM_KINDS=F.KINDS, RATING_LABELS=F.RATING_LABELS, DEPARTMENTS={'Acting': 'Schauspiel', 'Directing': 'Regie', 'Writing': 'Drehbuch', 'Production': 'Produktion', 'Sound': 'Musik', 'Camera': 'Kamera', 'Editing': 'Schnitt', 'Art': 'Szenenbild', 'Costume & Make-Up': 'Kostüm und Maske', 'Visual Effects': 'Visuelle Effekte', 'Crew': 'Filmstab', 'Lighting': 'Licht'})
-    if T.configured():  # Personen fuer frueher erfasste Filme einmal im Hintergrund nachladen
+    if T.configured() and C.area_on('films'):  # Personen fuer frueher erfasste Filme einmal im Hintergrund nachladen
         threading.Thread(target=X.backfill_people, daemon=True).start()
     templates.env.filters['fdate'] = lambda v: (f'{v[8:10]}.{v[5:7]}.{v[:4]}' if len(v) >= 10 else f'{v[5:7]}.{v[:4]}' if len(v) == 7 else v) if v else ''
 

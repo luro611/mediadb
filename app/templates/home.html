@@ -8,27 +8,31 @@
  </form>
 </section>
 
-<div class="areas">
- <a class="area card" href="{{ base }}/media">
+<div class="areas a{{ areas_on()|length }}">
+ {% if area_on('music') %}<a class="area card" href="{{ base }}/media">
   <p class="kicker">{{ _("Musik") }}</p>
   <p class="big">{{ music.n|num if music else '–' }}</p>
   <p class="muted">{% if music %}{{ _("Alben, davon § CDs und § digital", music.cd|num, music.digital|num) }}<br>{{ _("insgesamt § Lieder von § Interpreten", music.songs|num, music.artists|num) }}{% else %}{{ _("CDs und Musikdateien") }}{% endif %}</p>
  </a>
- <a class="area card" href="{{ base }}/films">
+ {% endif %}
+ {% if area_on('films') %}<a class="area card" href="{{ base }}/films">
   <p class="kicker">{{ _("Filme") }}</p>
   <p class="big">{{ films.films|num if films else '–' }}</p>
   <p class="muted">{% if films %}{{ _("§ gesehen · § bewertet", films.watched, films.rated) }}{% else %}{{ _("DVD, Blu-ray, 4K und Dateien") }}{% endif %}</p>
  </a>
- <a class="area card" href="{{ base }}/series">
+ {% endif %}
+ {% if area_on('series') %}<a class="area card" href="{{ base }}/series">
   <p class="kicker">{{ _("Serien") }}</p>
   <p class="big">{{ series.series|num if series else '–' }}</p>
   <p class="muted">{% if series %}{{ _("§ Folgen als Datei · § fehlen", series.files, series.missing) }}{% else %}{{ _("Boxen und Folgen") }}{% endif %}</p>
  </a>
- <a class="area card" href="{{ base }}/books">
+ {% endif %}
+ {% if area_on('books') %}<a class="area card" href="{{ base }}/books">
   <p class="kicker">{{ _("Bücher") }}</p>
   <p class="big">{{ books.books|num if books else '–' }}</p>
   <p class="muted">{% if books and books.books %}{{ _("§ gelesen · § E-Books · § Hörbücher", books.read|num, books.ebooks|num, books.audiobooks|num) }}{% else %}{{ _("Gedruckt, E-Book und Hörbuch") }}{% endif %}</p>
  </a>
+ {% endif %}
 </div>
 {% set LS = lend_stats() if lend_stats is defined else none %}{% if LS and LS.n %}<p class="homelend"><a href="{{ base }}/lend">{{ _("Verliehen: § Sachen bei § Personen", LS.n|num, LS.people|num) }} ›</a>{% if LS.overdue %} · <span class="overdue">{{ _("§ überfällig", LS.overdue) }}</span>{% endif %}</p>{% endif %}
 
@@ -36,8 +40,8 @@
 {% macro mixedrow(items) %}<div class="posters small mixed">{% for x in items %}<a class="pcard" href="{{ base }}{{ x.url }}"><span class="pimg{% if x.area=='music' %} sq{% endif %}">{% if x.img %}<img src="{{ base }}{{ x.img }}" alt="" loading="lazy">{% else %}<span class="pph">{{ '♪' if x.area=='music' else x.title }}</span>{% endif %}<span class="ptype">{{ _(KIND[x.area]) }}</span>{% if x.rating %}<span class="prating">{{ x.rating }}</span>{% endif %}</span><span class="ptitle">{{ x.title }}</span><span class="pmeta">{{ x.sub }}</span></a>{% endfor %}</div>{% endmacro %}
 <div class="fold">
 <details id="fold-upnext" open><summary><span>{{ _("Als Nächstes") }}</span><span class="n">{{ rows.upnext|length }}</span></summary>{% if rows.upnext %}{{ mixedrow(rows.upnext) }}{% else %}<p class="muted">{{ _("Noch nichts vorgemerkt. Auf jeder CD-, Film-, Serien- und Buchseite gibt es dafür den Knopf „☆ Als Nächstes vormerken“.") }}</p>{% endif %}</details>
-{% if rows.doing %}<details id="fold-doing"><summary><span>{{ _("Gerade dabei") }}</span><span class="n">{{ rows.doing|length }}</span></summary>{{ mixedrow(rows.doing) }}<p><a href="{{ base }}/series?view=watching">{{ _("Angefangene Serien ›") }}</a> · <a href="{{ base }}/books?view=reading">{{ _("Bücher, die ich gerade lese ›") }}</a></p></details>{% endif %}
-{% if rows.latest %}<details id="fold-latest"><summary><span>{{ _("Zuletzt hinzugefügt") }}</span><span class="n">{{ rows.latest|length }}</span></summary>{{ mixedrow(rows.latest) }}<p><a href="{{ base }}/films?view=recent_added">{{ _("Filme ›") }}</a> · <a href="{{ base }}/series?view=recent_added">{{ _("Serien ›") }}</a> · <a href="{{ base }}/books?view=recent_added">{{ _("Bücher ›") }}</a></p></details>{% endif %}
+{% if rows.doing %}<details id="fold-doing"><summary><span>{{ _("Gerade dabei") }}</span><span class="n">{{ rows.doing|length }}</span></summary>{{ mixedrow(rows.doing) }}<p>{% if area_on('series') %}<a href="{{ base }}/series?view=watching">{{ _("Angefangene Serien ›") }}</a>{% endif %}{% if area_on('series') and area_on('books') %} · {% endif %}{% if area_on('books') %}<a href="{{ base }}/books?view=reading">{{ _("Bücher, die ich gerade lese ›") }}</a>{% endif %}</p></details>{% endif %}
+{% if rows.latest %}<details id="fold-latest"><summary><span>{{ _("Zuletzt hinzugefügt") }}</span><span class="n">{{ rows.latest|length }}</span></summary>{{ mixedrow(rows.latest) }}{% set LL = [] %}{% if area_on('films') %}{% set _x = LL.append(('/films?view=recent_added', 'Filme ›')) %}{% endif %}{% if area_on('series') %}{% set _x = LL.append(('/series?view=recent_added', 'Serien ›')) %}{% endif %}{% if area_on('books') %}{% set _x = LL.append(('/books?view=recent_added', 'Bücher ›')) %}{% endif %}{% if LL %}<p>{% for u,t in LL %}<a href="{{ base }}{{ u }}">{{ _(t) }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}</details>{% endif %}
 </div>
 <script>(function(){var K='mediadb-home-open',o={};try{o=JSON.parse(localStorage.getItem(K)||'{}')}catch(e){}
 document.querySelectorAll('.fold details').forEach(function(d){if(d.id in o)d.open=o[d.id];d.addEventListener('toggle',function(){o[d.id]=d.open;try{localStorage.setItem(K,JSON.stringify(o))}catch(e){}})})})()</script>

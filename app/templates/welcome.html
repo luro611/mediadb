@@ -1,0 +1,18 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">{{ _("MediaDB / Willkommen") }}</p>
+<h1>{{ _("Will*kommen*") }}</h1>
+<p class="intro">{{ _("Schön, dass du MediaDB ausprobierst. Zwei kurze Fragen, dann geht es los. Beides kannst du später jederzeit in den Einstellungen ändern.") }}</p>
+{% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
+<form method="post" action="{{ base }}/willkommen" class="card welcome">
+ <h2>{{ _("Welche Sprache?") }}</h2>
+ <select name="lang" id="wlang" aria-label="{{ _('Sprache') }}" onchange="location.href='{{ base }}/lang/'+this.value+'?next={{ (base ~ '/willkommen')|urlencode }}'">{% for code,name in langs.items() %}<option value="{{ code }}"{% if code==lang %} selected{% endif %}>{{ name }}</option>{% endfor %}</select>
+ <h2>{{ _("Was möchtest du verwalten?") }}</h2>
+ <p class="help">{{ _("Kreuze an, was du sammelst. Was du nicht brauchst, bleibt ausgeblendet und lässt sich später in den Einstellungen dazuschalten.") }}</p>
+ <div class="areapick">
+  {% for a,icon,desc in [('music','♪','CDs und Musikdateien'),('films','▶','DVDs, Blu-rays und Filmdateien'),('series','▦','Serienboxen und Folgen, mit Episodenführer'),('books','❦','Bücher, E-Books und Hörbücher')] %}
+  <label><input type="checkbox" name="area" value="{{ a }}" checked><span class="ai" aria-hidden="true">{{ icon }}</span><span><strong>{{ _(AREA_NAMES[a]) }}</strong><br><span class="muted">{{ _(desc) }}</span></span></label>
+  {% endfor %}
+ </div>
+ <button>{{ _("Los geht's") }}</button>
+</form>
+{% endblock %}

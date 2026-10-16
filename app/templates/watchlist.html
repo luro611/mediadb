@@ -59,7 +59,7 @@
 <p class="muted"><a href="{{ base }}/watchlist/done">{{ _("Erledigte Einträge ›") }}</a></p>
 
 {% set mt_src = '/mediathek/watchlist' %}{% include '_mediathek.html' %}
-<h2 id="neu" class="wsec">{{ _("Neu bei deinen Serien") }}</h2>
+{% if area_on('series') %}<h2 id="neu" class="wsec">{{ _("Neu bei deinen Serien") }}</h2>
 {% if not soon and not new and not announced %}<p class="muted">{{ _("Keine neuen oder angekündigten Folgen bei deinen Serien.") }}{% if not last %} {{ _("Nach der ersten Aktualisierung erscheinen hier Termine.") }}{% endif %}</p>{% endif %}
 {% if soon %}<h3>{{ _("Demnächst") }}</h3>
 <ul class="wlist">{% for x in soon %}<li><span class="wdate">{{ x.air_date|fdate }}</span>{{ thumb(x.poster, true, x.title) }}
@@ -74,7 +74,7 @@
 {% if announced %}<h3>{{ _("Angekündigt") }}</h3>
 <ul class="wlist">{% for x in announced %}<li><span class="wdate">{{ x.air_date|fdate if x.air_date else _('ohne Termin') }}</span>{{ thumb(x.poster, true, x.title) }}
  <span class="wmain"><a href="{{ base }}/series/{{ x.id }}"><strong>{{ x.title }}</strong></a><span class="sub">{{ x.season_name or _('Staffel §', x.season) }}</span></span>
- {{ prov(x) }}</li>{% endfor %}</ul>{% endif %}
+ {{ prov(x) }}</li>{% endfor %}</ul>{% endif %}{% endif %}
 
 <p class="tmdbnote muted">{{ _("Streaming-Angaben: JustWatch (über TMDB).") }}</p>
 {% include '_films_foot.html' %}

@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% block content %}
+<p class="eyebrow">MediaDB</p>
+<h1>{% if off_area=='watch' %}{{ _("Merkliste *ausgeschaltet*") }}{% else %}{{ _("§ *ausgeschaltet*", _(AREA_NAMES[off_area])) }}{% endif %}</h1>
+<div class="card">
+ <p>{% if off_area=='watch' %}{{ _("Die Merkliste gehört zu Filmen und Serien. Beide Bereiche sind gerade ausgeschaltet.") }}{% else %}{{ _("Dieser Bereich ist in den Einstellungen ausgeschaltet. Deine Einträge sind nicht verloren: Sobald du ihn wieder einschaltest, ist alles wieder da.") }}{% endif %}</p>
+ <p><a href="{{ base }}/settings#bereiche">{{ _("Bereiche in den Einstellungen ein- und ausschalten ›") }}</a></p>
+</div>
+{% endblock %}

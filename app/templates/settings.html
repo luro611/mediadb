@@ -5,6 +5,17 @@
 <p class="help"><a href="{{ base }}/hilfe#3-einstellungen" target="mediadb-hilfe">{{ _("Was die einzelnen Einstellungen bedeuten, steht in der Anleitung.") }}</a></p>
 {% if message and part not in ('nas', 'update') %}<div class="ok">{{ _(message) }}</div>{% endif %}
 
+<section class="card" id="bereiche">
+ <h2>{{ _("Bereiche") }}</h2>
+ <p class="help">{{ _("Schalte aus, was du nicht sammelst. Ausgeschaltete Bereiche verschwinden aus der Leiste, der Startseite und der Suche; ihre Hintergrundarbeiten ruhen. Es wird nichts gelöscht: Schaltest du einen Bereich wieder ein, sind alle Einträge sofort wieder da.") }}</p>
+ {% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
+ <form method="post" action="{{ base }}/areas/save">
+  <div class="areapick">{% for a,icon in [('music','♪'),('films','▶'),('series','▦'),('books','❦')] %}<label><input type="checkbox" name="area" value="{{ a }}"{% if area_on(a) %} checked{% endif %}><span class="ai" aria-hidden="true">{{ icon }}</span><span><strong>{{ _(AREA_NAMES[a]) }}</strong></span></label>{% endfor %}</div>
+  <p class="help">{{ _("Die Merkliste gehört zu Filmen und Serien und erscheint, solange einer der beiden eingeschaltet ist. „Verliehen“ zeigt weiterhin alles, was gerade verliehen ist.") }}</p>
+  <button>{{ _("Bereiche speichern") }}</button>
+ </form>
+</section>
+
 <section class="card langcard" id="oberflaeche">
  <h2>{{ _("Sprache der Oberfläche") }}</h2>
  <div class="langgrid">
@@ -41,7 +52,7 @@
 </section>
 
 <form method="post" action="{{ base }}/settings/save" class="settings">
-<section class="card" id="sprache">
+<section class="card" id="sprache"{% if not (area_on('films') or area_on('series') or area_on('books')) %} hidden{% endif %}>
  <h2>{{ _("Sprache der Daten") }}</h2>
  <p class="help">{{ _("In dieser Sprache kommen Titel, Inhaltsangaben, Genres und Episodennamen von TMDB in die Datenbank. Das Land bestimmt Altersfreigabe, Kinostart und Streamingdienste. Die Sprache der Oberfläche stellst du oben unter „Sprache der Oberfläche“ ein; sie ist davon unabhängig.") }}</p>
  <label for="dl">{{ _("Datensprache und Land") }}</label>
@@ -49,7 +60,7 @@
  {% if lang != data_lang[:2] %}<p class="hint">{{ _("Die Oberfläche ist auf „§“ gestellt, die Daten kommen aber in „§“. Passt das so?", lang|upper, data_lang) }}</p>{% endif %}
 </section>
 
-<section class="card" id="tmdb">
+<section class="card" id="tmdb"{% if not area_on('watch') %} hidden{% endif %}>
  <h2>{{ _("TMDB (Filme und Serien)") }}</h2>
  <p class="help">{{ _("Kostenloser Schlüssel: Konto auf themoviedb.org anlegen, unter Einstellungen → API einen Schlüssel beantragen (Zweck: privat). Eintragen kannst du den „API-Schlüssel“ oder den langen „Lesezugriffstoken“.") }} <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org ›</a></p>
  <p class="status">{% if cfg.TMDB_API_KEY %}<span class="badge okb">{{ _("eingetragen") }}</span> <code>{{ masked.TMDB_API_KEY }}</code> {% if src.TMDB_API_KEY=='env' %}<span class="muted">{{ _("(aus .env)") }}</span>{% endif %}{% else %}<span class="badge missb">{{ _("fehlt") }}</span>{% endif %}</p>
@@ -58,7 +69,7 @@
  {% if src.TMDB_API_KEY=='app' %}<label class="checkbox"><input type="checkbox" name="TMDB_API_KEY_remove" value="1"> {{ _("Gespeicherten Schlüssel entfernen") }}</label>{% endif %}
 </section>
 
-<section class="card" id="musik">
+<section class="card" id="musik"{% if not area_on('music') %} hidden{% endif %}>
  <h2>{{ _("Musik") }}</h2>
  <label for="mc">{{ _("E-Mail-Adresse für MusicBrainz") }}</label>
  <input type="email" name="MB_CONTACT" id="mc" value="{{ contact }}" placeholder="du@example.com">
@@ -71,10 +82,10 @@
 
 <section class="card" id="dienste">
  <h2>{{ _("Dienste und Automatik") }}</h2>
- <label class="checkbox"><input type="checkbox" name="BARCODE_LOOKUP" value="1"{% if flags.BARCODE_LOOKUP %} checked{% endif %}> {{ _("Barcodes von DVDs und Blu-rays online nachschlagen (UPCitemdb)") }}</label>
- <label class="checkbox"><input type="checkbox" name="COVER_WEB" value="1"{% if flags.COVER_WEB %} checked{% endif %}> {{ _("Fehlende CD-Cover bei iTunes und Deezer suchen") }}</label>
- <label class="checkbox"><input type="checkbox" name="AUTO_UPDATE" value="1"{% if flags.AUTO_UPDATE %} checked{% endif %}> {{ _("Serien und Merkliste einmal am Tag aktualisieren") }}</label>
- <label class="checkbox"><input type="checkbox" name="MEDIATHEK" value="1"{% if flags.MEDIATHEK %} checked{% endif %}> {{ _("In den Mediatheken von ARD, ZDF, Arte und Co. suchen (MediathekViewWeb, nur Links)") }}</label>
+ <label class="checkbox"{% if not area_on('watch') %} hidden{% endif %}><input type="checkbox" name="BARCODE_LOOKUP" value="1"{% if flags.BARCODE_LOOKUP %} checked{% endif %}> {{ _("Barcodes von DVDs und Blu-rays online nachschlagen (UPCitemdb)") }}</label>
+ <label class="checkbox"{% if not area_on('music') %} hidden{% endif %}><input type="checkbox" name="COVER_WEB" value="1"{% if flags.COVER_WEB %} checked{% endif %}> {{ _("Fehlende CD-Cover bei iTunes und Deezer suchen") }}</label>
+ <label class="checkbox"{% if not area_on('watch') %} hidden{% endif %}><input type="checkbox" name="AUTO_UPDATE" value="1"{% if flags.AUTO_UPDATE %} checked{% endif %}> {{ _("Serien und Merkliste einmal am Tag aktualisieren") }}</label>
+ <label class="checkbox"{% if not area_on('watch') %} hidden{% endif %}><input type="checkbox" name="MEDIATHEK" value="1"{% if flags.MEDIATHEK %} checked{% endif %}> {{ _("In den Mediatheken von ARD, ZDF, Arte und Co. suchen (MediathekViewWeb, nur Links)") }}</label>
  <label class="checkbox"><input type="checkbox" name="UPDATE_CHECK" value="1"{% if flags.UPDATE_CHECK %} checked{% endif %}> {{ _("Alle sechs Stunden bei Codeberg nachsehen, ob es eine neue Version von MediaDB gibt") }}</label>
 </section>
 <div class="actions"><button>{{ _("Speichern") }}</button></div>
@@ -132,11 +143,11 @@ S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var
  <p class="help">{{ _("Läuft: MediaDB §", app_ver) }}{% if upd.latest %} · {{ _("Neueste auf Codeberg: §", upd.latest) }}{% endif %}{% if upd_checked %} · {{ _("geprüft am §", upd_checked) }}{% endif %}</p>
  <form method="post" action="{{ base }}/settings/update-check"><button class="quiet">{{ _("Jetzt nach neuer Version suchen") }}</button></form>
 </section>
-<section class="card">
+<section class="card"{% if not area_on('watch') %} hidden{% endif %}>
  <h3>{{ _("TMDB-Schlüssel prüfen") }}</h3>
  <form method="post" action="{{ base }}/settings/test-tmdb"><button class="quiet">{{ _("Jetzt prüfen") }}</button></form>
 </section>
-<section class="card" id="neuladen">
+<section class="card" id="neuladen"{% if not area_on('watch') %} hidden{% endif %}>
  <h3>{{ _("Alles in der Datensprache neu laden") }}</h3>
  {% if relang.state == 'running' %}<p id="rltxt">{{ _("§ von §", relang.done, relang.total) }}</p><progress id="rlbar" max="{{ relang.total or 1 }}" value="{{ relang.done }}" style="width:100%"></progress>
  <script>(function(){var T={{ _t("§ von §","%D","%T")|tojson }};function p(){fetch("{{ base }}/settings/relang/status").then(function(r){return r.json()}).then(function(d){if(d.state!=="running"){location.reload();return}document.getElementById("rltxt").textContent=T.replace("%D",d.done).replace("%T",d.total)+(d.current?" · "+d.current:"");var b=document.getElementById("rlbar");b.max=d.total||1;b.value=d.done;setTimeout(p,2000)}).catch(function(){setTimeout(p,5000)})}setTimeout(p,1500)})()</script>
