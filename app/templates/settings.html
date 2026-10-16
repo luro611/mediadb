@@ -2,6 +2,7 @@
 <p class="eyebrow">{{ _("MediaDB / Einstellungen") }}</p>
 <h1>{{ _("Ein*stellungen*") }}</h1>
 <p class="intro">{{ _("Hier stellst du ein, was bisher in der Datei .env stand. Änderungen gelten sofort, ein Neustart ist nicht nötig. Gespeichert wird in data/settings.json.") }}</p>
+<p class="help"><a href="https://codeberg.org/luro61/mediadb/src/branch/main/docs/ANLEITUNG.md#3-einstellungen" target="_blank" rel="noopener noreferrer">{{ _("Was die einzelnen Einstellungen bedeuten, steht in der Anleitung.") }}</a></p>
 {% if message and part not in ('nas', 'update') %}<div class="ok">{{ _(message) }}</div>{% endif %}
 
 <section class="card langcard" id="oberflaeche">

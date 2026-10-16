@@ -1,5 +1,9 @@
 # Änderungen
 
+## MediaDB 1.13.2 – Anleitung auf dem neuesten Stand
+- **Anleitung überarbeitet** (`docs/ANLEITUNG.md`): mit allen Funktionen bis 1.13, also Startseite, Als Nächstes, Ansichten Kacheln/Liste/Text, Statusanzeige, Merkliste, NAS-Freigaben, Musik vom Mac, Sichern und Updates mit Dockhand. Veraltetes korrigiert: Installation im Homelab, Einstellungen in der App statt in `.env`, Fehlersuche.
+- **Link „Anleitung“** unten auf jeder Seite neben der Versionsnummer und in den Einstellungen. Er öffnet die Anleitung auf Codeberg.
+
 ## MediaDB 1.13.1 – Sprache gut sichtbar in den Einstellungen
 - **Eigener Bereich „Sprache der Oberfläche“** ganz oben in den Einstellungen. Bisher steckte er klein in einer schmalen Kachel weit unten, und die Häkchen waren kaum zu sehen.
 - **Zwei getrennte Teile:** links die **Hauptsprache** mit eigenem Speichern-Knopf, rechts der **Umschalter oben in der Leiste** mit großen Knöpfen zum Anhaken und eigenem Speichern-Knopf.

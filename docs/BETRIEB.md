@@ -132,9 +132,9 @@ Die Datei `~/Desktop/mediadb-data.tar.gz` auf dem Mac ist zugleich eine Sicherun
 
 ## Neue Version einspielen
 
-Gibt es eine neue Version, steht unten auf jeder Seite „Neue Version … verfügbar“ (einmal am Tag bei Codeberg nachgesehen, abschaltbar unter Einstellungen). Der Link führt zu den Neuerungen.
+Gibt es eine neue Version, steht unten auf jeder Seite „Neue Version … verfügbar“ (alle sechs Stunden bei Codeberg nachgesehen, abschaltbar unter Einstellungen). Der Link führt zu den Neuerungen. Sofort nachsehen: Einstellungen → „Neue Version?“ → „Jetzt nach neuer Version suchen“.
 
-**Mit Dockhand:** Stack „mediadb“ → *Pull* (lädt das neue Image von Codeberg) → *Redeploy*. Welche Version läuft, steht unten auf jeder Seite (z. B. „MediaDB 1.9.1“).
+**Mit Dockhand:** Stack „mediadb“ → *Pull* (lädt das neue Image von Codeberg) → *Redeploy*. Welche Version läuft, steht unten auf jeder Seite (z. B. „MediaDB 1.13.1“). Steht dort nach dem Redeploy noch die alte Nummer, war das *Pull* nicht erfolgreich: noch einmal *Pull*, dann *Redeploy*.
 
 **Im Terminal des LXC:**
 ```
@@ -169,7 +169,7 @@ Ab Werk gilt:
 - **Nur Heimnetz:** Anfragen von öffentlichen Internet-Adressen werden abgewiesen. Heimnetz (192.168.x.x, 10.x.x.x usw.), der eigene Rechner und VPNs wie Tailscale oder WireGuard mit privaten Adressen sind erlaubt.
 - **Keine Anmeldung:** Für einen Nutzer im eigenen Heimnetz reicht das.
 
-Einstellungen in `.env` (danach neu starten):
+Diese Einstellungen stehen im Homelab in der Compose-Datei unter `environment:` (in Dockhand: Stack bearbeiten), auf dem Mac in `.env`. Danach neu starten (Dockhand: *Redeploy*):
 
 | Einstellung | Wirkung |
 |---|---|
