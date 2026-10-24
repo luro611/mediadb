@@ -1,5 +1,10 @@
 # Änderungen
 
+## MediaDB 1.22.2 – Besitzer nur bei Physischem, Gast ohne Passwort
+- **Besitzer nur bei physischen Exemplaren:** CD, DVD, Blu-ray, 4K, Serienbox und gedrucktes Buch. Dateien, E-Books, Hörbücher aus Ordnern und rein digitale Alben gehören immer dem Haushalt; dort gibt es keine Besitzer-Auswahl mehr, und beim Einlesen wird niemand automatisch Besitzer. Bereits eingelesene Dateien werden beim Update einmalig auf „Haushalt“ gesetzt.
+- **Besitzer gesammelt setzen** (Einstellungen → Nutzer und Anmeldung): alle physischen Exemplare auf einmal einer Person geben, wahlweise nur die, die noch dem Haushalt gehören. Offene Verleihvorgänge ziehen mit.
+- **Gast ohne Passwort, auch bei „Name und Passwort“:** Gäste brauchen kein Passwort und kommen über den Knopf „Als … ansehen, ohne Passwort“ auf der Anmeldeseite hinein. Sie können alles ansehen, aber nichts hinzufügen, ändern oder bewerten. Von außerhalb des Heimnetzes braucht auch ein Gast ein Passwort.
+
 ## MediaDB 1.22.1 – Korrektur: Filme, Serien und Bücher mit Konten
 - **Behoben:** Mit eingeschalteten Konten brachen in 1.22.0 Filme, Serien, Bücher und die Merkliste mit „Internal Server Error“ ab, auf der Startseite standen dort nur Striche; Musik lief weiter. Ursache: Das Docker-Image enthält SQLite 3.46, das die Art der Umleitung in persönliche Tabellen (Trigger mit `main.<tabelle>`) noch nicht erlaubt; auf dem Entwicklungsrechner lief eine neuere Version. Die Schreibbefehle verteilt MediaDB jetzt selbst, ganz ohne diese Trigger. Es gehen keine Daten verloren; alles, was du in 1.22.0 eingetragen hast, bleibt.
 

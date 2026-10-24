@@ -262,7 +262,8 @@ def add_copy(c, bid, data):
                      'VALUES(?,?,?,?,?,?,?,?,?,?,?)',
                      (bid, kind, norm_isbn(data.get('isbn')) or None, data.get('edition') or None, data.get('notes') or None,
                       data.get('path') or None, data.get('file_format') or None, data.get('size_bytes'), data.get('duration_s'),
-                      data['owner_id'] if 'owner_id' in data else U.current_id(), now())).lastrowid
+                      data['owner_id'] if 'owner_id' in data else (U.current_id() if U.physical_copy(kind, data.get('path')) else None),
+                      now())).lastrowid
 
 
 def copies_of(c, bid):

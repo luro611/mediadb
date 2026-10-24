@@ -21,6 +21,7 @@
 <label>{{ _("Name") }}<input name="name" autocomplete="username" autofocus required></label>
 <label>{{ _("Passwort") }}<input type="password" name="password" autocomplete="current-password" required></label>
 <button>{{ _("Anmelden") }}</button></form>
+{% for g in people if g.role == 'guest' and not g.needs %}<form method="post" action="{{ base }}/login" class="guestlogin"><input type="hidden" name="uid" value="{{ g.id }}"><input type="hidden" name="next" value="{{ next }}"><button class="quiet">{{ _("Als „§“ ansehen, ohne Passwort (nur lesen)", g.name) }}</button></form>{% endfor %}
 {% else %}
 <h1>{{ _("*Anmelden*") }}</h1>
 <p class="intro">{{ _("Diese Sammlung ist mit einem Passwort geschützt.") }}</p>

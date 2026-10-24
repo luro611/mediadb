@@ -138,7 +138,7 @@ S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var
 
 <section class="card settings" id="nutzer">
  <h2>{{ _("Nutzer und Anmeldung") }}</h2>
- {% if message and part == 'users' %}<div class="{{ 'ok' if message in ('Gespeichert.', 'Nutzer hinzugefügt.', 'Nutzer entfernt.', 'Konten eingeschaltet. Du bist als Verwalter angemeldet.') else 'warn' }}">{{ _(message) }}</div>{% endif %}
+ {% if message and part == 'users' %}<div class="{{ 'ok' if message in ('Gespeichert.', 'Nutzer hinzugefügt.', 'Nutzer entfernt.', 'Konten eingeschaltet. Du bist als Verwalter angemeldet.', 'Besitzer gespeichert.') else 'warn' }}">{{ _(message) }}</div>{% endif %}
  {% if not people %}
  <p class="help">{{ _("Mehrere Personen im Haushalt? Lege dich zuerst selbst als Verwalter an. Danach fügst du weitere Personen hinzu (Mitglied oder Gast) und wählst, wie man sich anmeldet. Die Sammlung bleibt, wie sie ist; alle sehen weiterhin alles.") }}</p>
  <form method="post" action="{{ base }}/settings/users/setup" class="userform">
@@ -159,12 +159,12 @@ S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var
     <select name="role" aria-label="{{ _('Rolle') }}">{% for r, l in ROLES.items() %}<option value="{{ r }}"{% if r == p.role %} selected{% endif %}>{{ _(l) }}</option>{% endfor %}</select>
     <input name="password" type="password" placeholder="{{ _('neu setzen') if p.secret else _('keins') }}" aria-label="{{ _('Passwort oder PIN') }}" autocomplete="new-password">
     <span class="muted">{{ p.last_login|fdate if p.last_login else '–' }}</span>
-    <span class="rowbtns">{% if p.secret and p.role != 'admin' and accounts_mode != 'password' %}<label class="checkbox"><input type="checkbox" name="remove_pw" value="1"> {{ _("PIN entfernen") }}</label>{% endif %}<button class="quiet small">{{ _("Speichern") }}</button></span>
+    <span class="rowbtns">{% if p.secret and p.role != 'admin' and (accounts_mode != 'password' or p.role == 'guest') %}<label class="checkbox"><input type="checkbox" name="remove_pw" value="1"> {{ _("PIN entfernen") }}</label>{% endif %}<button class="quiet small">{{ _("Speichern") }}</button></span>
    </form>
    <form method="post" action="{{ base }}/settings/users/{{ p.id }}/delete" class="userdel" onsubmit="return confirm({{ _t('§ entfernen? Die Sammlung bleibt unverändert.', p.name)|tojson|forceescape }})"><button class="linkbtn">{{ _("entfernen") }}</button></form>
   </div>{% endfor %}
  </div>
- {% set nopw = people|rejectattr('secret')|map(attribute='name')|list %}
+ {% set nopw = people|rejectattr('secret')|rejectattr('role', 'equalto', 'guest')|map(attribute='name')|list %}
  {% if accounts_mode == 'password' and nopw %}<div class="warn">{{ _("Ohne Passwort können sich bei „Name und Passwort“ nicht anmelden: §", nopw|join(', ')) }}</div>{% endif %}
  {% if accounts_mode == 'profiles' and public and nopw %}<p class="hint">{{ _("Zugriff aus dem Internet ist erlaubt: Von dort brauchen alle eine PIN. Profile ohne PIN gehen nur im Heimnetz.") }}</p>{% endif %}
  <h3>{{ _("Person hinzufügen") }}</h3>
@@ -174,7 +174,14 @@ S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var
   <input name="password" type="password" placeholder="{{ _('Passwort oder PIN') }}{% if accounts_mode != 'password' %} {{ _('(freiwillig)') }}{% endif %}" aria-label="{{ _('Passwort oder PIN') }}" autocomplete="new-password">
   <button>{{ _("Hinzufügen") }}</button>
  </form>
- <p class="help">{{ _("Verwalter: alles, auch Einstellungen und Nutzer. Mitglied: alles ansehen, hinzufügen und bearbeiten. Gast: nur ansehen. Verwalter brauchen immer ein Passwort.") }}</p>
+ <p class="help">{{ _("Verwalter: alles, auch Einstellungen und Nutzer. Mitglied: alles ansehen, hinzufügen und bearbeiten. Gast: nur ansehen, auch ohne Passwort. Verwalter brauchen immer ein Passwort.") }}</p>
+ <h3>{{ _("Besitzer gesammelt setzen") }}</h3>
+ <p class="help">{{ _("Alle CDs, DVDs, Blu-rays, Serienboxen und gedruckten Bücher auf einmal einer Person geben, z. B. nach dem Einrichten. Dateien, E-Books und rein digitale Alben gehören immer dem Haushalt.") }}</p>
+ <form method="post" action="{{ base }}/settings/users/assign" class="assignrow" onsubmit="return confirm({{ _t('Besitzer für alle gewählten Exemplare ändern?')|tojson|forceescape }})">
+  <select name="owner" aria-label="{{ _('Besitzer') }}">{% for p in people if p.role != 'guest' %}<option value="{{ p.id }}"{% if me and me.id == p.id %} selected{% endif %}>{{ p.name }}</option>{% endfor %}</select>
+  <select name="scope" aria-label="{{ _('Welche Exemplare') }}"><option value="unowned">{{ _("nur die, die dem Haushalt gehören") }}</option><option value="all">{{ _("alle, auch die schon jemandem gehören") }}</option></select>
+  <button class="quiet">{{ _("Zuordnen") }}</button>
+ </form>
  <h3>{{ _("Wie meldet man sich an?") }}</h3>
  <form method="post" action="{{ base }}/settings/users/mode" class="modepick">
   <label class="checkbox"><input type="radio" name="mode" value="profiles"{% if accounts_mode == 'profiles' %} checked{% endif %}> <span><strong>{{ _("Profilwahl") }}</strong> · {{ _("auf den eigenen Namen klicken, PIN freiwillig. Bequem im Heimnetz.") }}</span></label>

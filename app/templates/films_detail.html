@@ -55,7 +55,7 @@
 {% for k in copies %}<tr><td><span class="badge">{{ _(kinds.get(k.kind, k.kind)) }}</span></td><td>{{ k.edition or '' }}{% if k.region %} <span class="muted">{{ k.region }}</span>{% endif %}</td>
 <td>{% if k.path %}<code class="path">{{ k.path }}</code>{% elif k.barcode %}<code>{{ k.barcode }}</code>{% endif %}{% if k.notes %}<br><span class="muted">{{ k.notes }}</span>{% endif %}</td>
 <td class="tech">{{ [k.resolution, k.hdr, k.video_codec, k.container, ((k.duration_s//60)|string ~ ' min') if k.duration_s else '', ((k.size_bytes/1073741824)|round(1)|string ~ ' GB') if k.size_bytes and k.size_bytes > 100000000 else '']|select|join(' · ') }}{% if k.audio %}<br><span class="muted">{{ _("Ton:") }} {{ k.audio }}</span>{% endif %}{% if k.subtitles %}<br><span class="muted">{{ _("Untertitel:") }} {{ k.subtitles }}</span>{% endif %}</td>
-{% if accounts_on %}<td>{{ owner_pick(base ~ '/films/copies/' ~ k.id ~ '/owner', k.owner_id) }}</td>{% endif %}
+{% if accounts_on %}<td>{% if k.kind != 'file' and not k.path %}{{ owner_pick(base ~ '/films/copies/' ~ k.id ~ '/owner', k.owner_id) }}{% else %}<span class="muted small">{{ _("Haushalt") }}</span>{% endif %}</td>{% endif %}
 <td><form method="post" action="{{ base }}/films/copies/{{ k.id }}/delete" onsubmit="return confirm({{ _t('Exemplar entfernen?')|tojson|forceescape }})"><button class="quiet small">{{ _("entfernen") }}</button></form></td></tr>{% endfor %}</table></div>
 {% else %}<p class="muted">{{ _("Noch kein Exemplar eingetragen.") }}</p>{% endif %}
 <details class="card"><summary>{{ _("Exemplar hinzufügen") }}</summary>

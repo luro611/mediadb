@@ -239,8 +239,8 @@ def cast_list(row, n=None):
 # ---------------------------------------------------------------- Exemplare
 def add_copy(c, fid, data):
     d = {k: data.get(k) for k in COPY_FIELDS if data.get(k) not in (None, '')}
-    if 'owner_id' not in data:
-        d['owner_id'] = U.current_id()
+    if 'owner_id' not in data:  # Besitzer nur bei physischen Exemplaren, Dateien gehoeren dem Haushalt
+        d['owner_id'] = U.current_id() if U.physical_copy(d['kind'], d.get('path')) else None
     d['kind'] = d.get('kind') if d.get('kind') in KINDS else 'dvd'
     d['film_id'] = fid
     d['created_at'] = now()

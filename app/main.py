@@ -27,7 +27,7 @@ engine=create_engine(DB_URL, connect_args={'check_same_thread':False,'timeout':1
 Session=sessionmaker(bind=engine); Base=declarative_base()
 class Medium(Base):
  __tablename__='media'
- id=Column(Integer,primary_key=True); barcode=Column(String,index=True,unique=True); title=Column(String,nullable=False); artist=Column(String); artist_sort=Column(String); artist_mbid=Column(String); year=Column(String); date=Column(String); release_date=Column(String); ownership=Column(String); file_formats=Column(String); country=Column(String); label=Column(String); catalog_number=Column(String); format=Column(String); media_count=Column(Integer); disc_count=Column(Integer); track_count=Column(Integer); status=Column(String); packaging=Column(String); language=Column(String); script=Column(String); release_mbid=Column(String); release_group_mbid=Column(String); release_group_type=Column(String); asin=Column(String); annotation=Column(Text); disambiguation=Column(String); quality=Column(String); genre=Column(Text); genres=Column(Text); tags=Column(Text); styles=Column(Text); notes=Column(Text); cover_path=Column(String); cover_url=Column(String); source=Column(String); source_id=Column(String); created_at=Column(DateTime,default=datetime.utcnow); raw_json=Column(Text); next_at=Column(String); owner_id=Column(Integer,default=lambda: users.current_id())  # next_at: "Als Naechstes" vorgemerkt am (seit 1.11); owner_id: Besitzer, leer = Haushalt (seit 1.21)
+ id=Column(Integer,primary_key=True); barcode=Column(String,index=True,unique=True); title=Column(String,nullable=False); artist=Column(String); artist_sort=Column(String); artist_mbid=Column(String); year=Column(String); date=Column(String); release_date=Column(String); ownership=Column(String); file_formats=Column(String); country=Column(String); label=Column(String); catalog_number=Column(String); format=Column(String); media_count=Column(Integer); disc_count=Column(Integer); track_count=Column(Integer); status=Column(String); packaging=Column(String); language=Column(String); script=Column(String); release_mbid=Column(String); release_group_mbid=Column(String); release_group_type=Column(String); asin=Column(String); annotation=Column(Text); disambiguation=Column(String); quality=Column(String); genre=Column(Text); genres=Column(Text); tags=Column(Text); styles=Column(Text); notes=Column(Text); cover_path=Column(String); cover_url=Column(String); source=Column(String); source_id=Column(String); created_at=Column(DateTime,default=datetime.utcnow); raw_json=Column(Text); next_at=Column(String); owner_id=Column(Integer,default=lambda ctx: users.current_id() if (ctx.get_current_parameters().get('ownership') or 'cd') in ('cd','cd_digital') else None)  # next_at: "Als Naechstes" vorgemerkt am (seit 1.11); owner_id: Besitzer, leer = Haushalt (seit 1.21)
  tracks=relationship('Track',back_populates='medium',cascade='all, delete-orphan',order_by='Track.disc_number,Track.position')
 class Track(Base):
  __tablename__='tracks'; id=Column(Integer,primary_key=True); medium_id=Column(Integer,ForeignKey('media.id')); position=Column(Integer); disc_number=Column(Integer); number=Column(String); title=Column(String); length_ms=Column(Integer); duration=Column(String); recording_mbid=Column(String); artist=Column(String); medium=relationship('Medium',back_populates='tracks')
@@ -686,8 +686,9 @@ def _safe_next(n):
  return n if n.startswith('/') and not n.startswith('//') and '\\' not in n else '/media'
 def _public(request): return bool(request.scope.get('state',{}).get('public'))
 def _needs_secret(u,request):
- """Bei der Profilwahl ist die PIN freiwillig, von oeffentlichen Adressen aber immer noetig."""
- return users.mode()=='password' or bool(u['secret']) or _public(request)
+ """Bei der Profilwahl ist die PIN freiwillig, von oeffentlichen Adressen aber immer noetig. Gaeste ohne Passwort kommen
+ auch bei "Name und Passwort" im Heimnetz ohne hinein (nur lesen)."""
+ return (users.mode()=='password' and u['role']!='guest') or bool(u['secret']) or _public(request)
 @app.get('/login',response_class=HTMLResponse)
 def login_page(request:Request,next:str='/media',error:str='',u:int=0):
  if users.accounts_on():
@@ -700,7 +701,8 @@ def login_page(request:Request,next:str='/media',error:str='',u:int=0):
 def login(request:Request,password:str=Form(''),next:str=Form('/media'),uid:int=Form(0),name:str=Form('')):
  nxt=_safe_next(next)
  if users.accounts_on():
-  if users.mode()=='profiles': u=users.get(uid)
+  guest=users.get(uid) if uid else None
+  if users.mode()=='profiles' or (guest and guest['role']=='guest'): u=users.get(uid)
   else: u=users.by_name(name)
   if not u or (_needs_secret(u,request) and not users.secret_ok(u,password)):
    time.sleep(1.5); return RedirectResponse('/login?'+urlencode({'next':nxt,'error':'1','u':uid or ''}),303)
@@ -1402,12 +1404,18 @@ def export(request:Request,view:str='all',format:str='xlsx'):
  for r in rows: ws.append(r)
  out=BytesIO(); wb.save(out); out.seek(0); return StreamingResponse(out,media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',headers={'Content-Disposition':'attachment; filename=mediadb-musik.xlsx'})
 # ---------------- Besitzer (seit 1.21): beim ersten Verwalter gehoert ihm alles, was noch keinen Besitzer hat ----------------
-def _claim_owners(uid):
+def assign_physical(uid,only_unowned=True):
+ """Alle physischen Exemplare (CD, DVD, Blu-ray, 4K, Boxen, gedruckte Buecher) einer Person geben; only_unowned: nur die,
+ die noch dem Haushalt gehoeren. Offene Verleihvorgaenge ziehen mit. Liefert die Anzahl."""
  from . import films_db as _F, series_db as _S, books_db as _B, loans as _L
- for m in (_F,_S,_B):
-  with m.db() as c: c.execute('UPDATE copies SET owner_id=? WHERE owner_id IS NULL',(uid,))
- with _L.db() as c: c.execute('UPDATE loans SET owner_id=? WHERE owner_id IS NULL',(uid,))
- with engine.begin() as conn: conn.execute(text('UPDATE media SET owner_id=:u WHERE owner_id IS NULL'),{'u':uid})
+ cond='' if not only_unowned else ' AND owner_id IS NULL'; n=0
+ for m,phys in ((_F,"kind<>'file' AND path IS NULL"),(_S,'1'),(_B,"kind<>'ebook' AND path IS NULL")):
+  with m.db(plain=True) as c: n+=c.execute(f'UPDATE copies SET owner_id=? WHERE {phys}{cond}',(uid,)).rowcount
+ with engine.begin() as conn: n+=conn.execute(text(f"UPDATE media SET owner_id=:u WHERE ownership IN ('cd','cd_digital'){cond}"),{'u':uid}).rowcount
+ with _L.db() as c: c.execute('UPDATE loans SET owner_id=? WHERE returned_at IS NULL'+cond,(uid,))
+ return n
+users.ASSIGN_PHYSICAL=assign_physical
+def _claim_owners(uid): assign_physical(uid,True)
 def _claim_personal(uid):
  """Seit 1.22: bisherige Werte (gesehen, Bewertung, gelesen, Als Naechstes, Merkliste) werden die des ersten Verwalters."""
  from . import films_db as _F, series_db as _S, books_db as _B
@@ -1435,5 +1443,14 @@ def seen_by(area,item_id):
  return sorted(((users.owner_name(u),w) for u,w in rows if users.owner_name(u)),key=lambda x:x[0].lower())
 templates.env.globals['seen_by']=seen_by
 users.ON_FIRST_ADMIN+=[('owners_claimed',_claim_owners),('personal_claimed',_claim_personal)]
+def _digital_household():
+ """Seit 1.22.2 einmalig: Dateien, E-Books und rein digitale Alben gehoeren dem Haushalt (Besitzer nur bei Physischem)."""
+ from . import films_db as _F, books_db as _B
+ with _F.db(plain=True) as c: c.execute("UPDATE copies SET owner_id=NULL WHERE kind='file' OR path IS NOT NULL")
+ with _B.db(plain=True) as c: c.execute("UPDATE copies SET owner_id=NULL WHERE kind='ebook' OR path IS NOT NULL")
+ with engine.begin() as conn: conn.execute(text("UPDATE media SET owner_id=NULL WHERE ownership='digital'"))
+try:
+ if users.once('digital_household'): _digital_household()
+except Exception: logging.exception('Umstellung auf Haushalt fehlgeschlagen')
 try: users.claim_unowned()  # Installationen, die schon Konten haben (1.20)
 except Exception: logging.exception('Besitzer konnten nicht uebernommen werden')

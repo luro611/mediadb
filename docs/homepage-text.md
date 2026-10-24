@@ -1,6 +1,6 @@
 # Texte für lurohome.de/mediadb
 
-Stand: MediaDB 1.22.0 (24.10.2026). Für den Homepage-Chat (Projekt `Webseiten/lurohome`): was sich auf der Projektseite `src/mediadb.html` und auf der Karte der Startseite (`PROJEKTE` in `src/build.py`) ändern soll. Die Version liest `build.py` selbst aus `VERSION`.
+Stand: MediaDB 1.22.2 (24.10.2026). Für den Homepage-Chat (Projekt `Webseiten/lurohome`): was sich auf der Projektseite `src/mediadb.html` und auf der Karte der Startseite (`PROJEKTE` in `src/build.py`) ändern soll. Die Version liest `build.py` selbst aus `VERSION`.
 
 ## Karte auf der Startseite
 
@@ -14,8 +14,8 @@ Im Raster „Erfassen, ergänzen, wiederfinden“, gleicher Aufbau wie die vorha
 
 1. **Kicker:** Haushalt / Household
    **Überschrift:** Wer ist da? / Who’s there?
-   **DE:** Mehrere Personen, eine Sammlung. Beim Öffnen auf den eigenen Namen klicken (PIN freiwillig) oder richtig mit Name und Passwort anmelden. Verwalter dürfen alles, Mitglieder ansehen und eintragen, Gäste nur stöbern. Die Konten liegen auf deinem Server, nicht in einer Cloud.
-   **EN:** Several people, one collection. Click your own name when opening MediaDB (PIN optional) or sign in properly with name and password. Administrators may do everything, members view and add, guests just browse. Accounts live on your server, not in a cloud.
+   **DE:** Mehrere Personen, eine Sammlung. Beim Öffnen auf den eigenen Namen klicken (PIN freiwillig) oder richtig mit Name und Passwort anmelden. Verwalter dürfen alles, Mitglieder ansehen und eintragen, Gäste stöbern ohne Passwort, ändern aber nichts. Die Konten liegen auf deinem Server, nicht in einer Cloud.
+   **EN:** Several people, one collection. Click your own name when opening MediaDB (PIN optional) or sign in properly with name and password. Administrators may do everything, members view and add, guests browse without a password but change nothing. Accounts live on your server, not in a cloud.
 
 2. **Kicker:** Jeder für sich / Everyone their own
    **Überschrift:** Gesehen von … / Watched by …
@@ -24,8 +24,8 @@ Im Raster „Erfassen, ergänzen, wiederfinden“, gleicher Aufbau wie die vorha
 
 3. **Kicker:** Besitzer / Owner
    **Überschrift:** Wem gehört was? / Whose is it?
-   **DE:** Jede DVD, Blu-ray, Datei und jedes Buch hat einen Besitzer, oder es gehört dem ganzen Haushalt. Die Listen filtern nach „Meine“ oder „von …“, beim Verleihen steht, wessen Exemplar unterwegs ist.
-   **EN:** Every DVD, Blu-ray, file and book has an owner, or belongs to the whole household. Lists filter by “Mine” or “…’s”, and lending shows whose copy is out.
+   **DE:** Jede CD, DVD, Blu-ray und jedes Buch hat einen Besitzer, oder es gehört dem ganzen Haushalt; Dateien und E-Books gehören immer allen. Die Listen filtern nach „Meine“ oder „von …“, beim Verleihen steht, wessen Exemplar unterwegs ist.
+   **EN:** Every CD, DVD, Blu-ray and book has an owner, or belongs to the whole household; files and e-books always belong to everyone. Lists filter by “Mine” or “…’s”, and lending shows whose copy is out.
 
 ## Projektseite: geänderte Kacheln
 

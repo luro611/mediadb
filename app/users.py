@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS users(
   secret TEXT, last_login TEXT, created_at TEXT);
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
 """
+ASSIGN_PHYSICAL = None  # main.py: physische Exemplare gesammelt einer Person geben (Einstellungen -> Nutzer)
 ON_FIRST_ADMIN = []  # main.py: (Name, Funktion), die beim ersten Verwalter Vorhandenes einmalig uebernehmen (z. B. owner_id leer -> er)
 
 
@@ -156,7 +157,8 @@ def update(uid, name=None, role=None, pw=None, remove_pw=False):
             return 'Passwort oder PIN braucht mindestens 4 Zeichen.'
         fields['secret'] = hash_secret(pw)
     elif remove_pw:
-        if mode() == 'password' or (fields.get('role', u['role']) == 'admin'):
+        role = fields.get('role', u['role'])
+        if role == 'admin' or (mode() == 'password' and role != 'guest'):
             return 'Verwalter und alle bei „Name und Passwort“ brauchen ein Passwort.'
         fields['secret'] = None
     if not fields:
@@ -273,6 +275,21 @@ def parse_owner(value):
 def owner_name(uid):
     u = get(uid) if uid else None
     return u['name'] if u else ''
+
+
+def physical_copy(kind, path, digital_kinds=('file', 'ebook')):
+    """Seit 1.22.2: Besitzer gibt es nur bei physischen Exemplaren (CD, DVD, Blu-ray, 4K, Box, gedrucktes Buch, Hoerbuch-CD).
+    Dateien, E-Books und rein digitale Alben gehoeren immer dem Haushalt."""
+    return kind not in digital_kinds and not path
+
+
+def once(name):
+    """True genau beim ersten Aufruf mit diesem Namen (einmalige Umstellungen, gemerkt in nutzer.db)."""
+    with db() as c:
+        if c.execute('SELECT 1 FROM meta WHERE key=?', (name,)).fetchone():
+            return False
+        c.execute('INSERT OR REPLACE INTO meta(key, value) VALUES(?, ?)', (name, now()))
+    return True
 
 
 def claim_unowned():

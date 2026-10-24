@@ -129,7 +129,7 @@ async def users_setup(request):
 
 async def users_add(request):
     f, _ = await _form(request)
-    if U.mode() == 'password' and not f.get('password'):
+    if U.mode() == 'password' and not f.get('password') and f.get('role') != 'guest':
         return _users_back('Bei „Name und Passwort“ braucht jeder ein Passwort.')
     if f.get('role') == 'admin' and not f.get('password'):
         return _users_back('Verwalter und alle bei „Name und Passwort“ brauchen ein Passwort.')
@@ -151,6 +151,16 @@ async def users_save(request):
 async def users_delete(request):
     err = U.delete(int(request.path_params['uid']))
     return _users_back(err or 'Nutzer entfernt.')
+
+
+async def users_assign(request):
+    """Physische Exemplare gesammelt einer Person geben (z. B. einmalig nach dem Einrichten)."""
+    f, _ = await _form(request)
+    ok, uid = U.parse_owner(f.get('owner', ''))
+    if not ok or uid is None or not U.ASSIGN_PHYSICAL:
+        return _users_back('Unbekannter Besitzer.')
+    n = await run_in_threadpool(U.ASSIGN_PHYSICAL, uid, f.get('scope') != 'all')
+    return _users_back('Besitzer gespeichert.')
 
 
 async def users_mode(request):
@@ -284,6 +294,6 @@ routes = [Route('/', page), Route('/save', save, methods=['POST']), Route('/test
           Route('/nas/test', nas_test, methods=['POST']), Route('/nas/status', nas_status),
           Route('/nas/delete', nas_delete, methods=['POST']),
           Route('/users/setup', users_setup, methods=['POST']), Route('/users/add', users_add, methods=['POST']),
-          Route('/users/mode', users_mode, methods=['POST']), Route('/users/{uid:int}/save', users_save, methods=['POST']),
+          Route('/users/mode', users_mode, methods=['POST']), Route('/users/assign', users_assign, methods=['POST']), Route('/users/{uid:int}/save', users_save, methods=['POST']),
           Route('/users/{uid:int}/delete', users_delete, methods=['POST'])]
 app = Starlette(routes=routes)
