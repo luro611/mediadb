@@ -296,11 +296,13 @@ def claim_unowned():
 # ---------------------------------------------------------------- persoenliche Angaben (seit 1.22)
 # Gesehen, Bewertung, gelesen, "Als Naechstes" und die Merkliste gehoeren jeder Person selbst. Gespeichert werden sie in
 # eigenen Tabellen (z. B. film_user). Damit der uebrige Code unveraendert "films" lesen und schreiben kann, legt jede
-# Datenbankverbindung (nur mit Konten) eine voruebergehende Sicht gleichen Namens an, die die echte Tabelle verdeckt:
-# Sie zeigt die Werte der angemeldeten Person, Aenderungen leiten Trigger in die richtige Tabelle um. Ohne angemeldete
-# Person (Hintergrundaufgaben, Konten aus) gelten die Werte in der Tabelle selbst wie bisher.
-# Neue Zeilen muessen ausdruecklich in main.<tabelle> geschrieben werden (eine Sicht liefert keine neue Nummer).
+# Datenbankverbindung (nur mit Konten) eine voruebergehende Sicht gleichen Namens an, die die echte Tabelle verdeckt und
+# die Werte der angemeldeten Person zeigt. Schreibbefehle auf diese Namen verteilt die Verbindungsklasse Conn selbst auf
+# die echte und die persoenliche Tabelle (1.22.1: Trigger mit main.<tabelle> erlaubt SQLite erst ab etwa 3.50, das
+# Docker-Image hat 3.46). Ohne angemeldete Person (Hintergrundaufgaben, Konten aus) gelten die Werte in der Tabelle selbst.
+# Neue Zeilen muessen ausdruecklich in main.<tabelle> geschrieben werden.
 _SQL = {}
+_WRITE = re.compile(r'\s*(?P<verb>UPDATE(?:\s+OR\s+\w+)?|DELETE\s+FROM|(?:INSERT|REPLACE)(?:\s+OR\s+\w+)?\s+INTO)\s+(?P<t>\w+)\b', re.I)
 
 
 def _uid_sql():
@@ -314,52 +316,131 @@ def personal_table(c, table, utable, fk, fields):
     c.execute(f'CREATE TABLE IF NOT EXISTS {utable}({fk} INTEGER NOT NULL, user_id INTEGER NOT NULL, {cols}, PRIMARY KEY({fk}, user_id))')
 
 
-def _personal_sql(c, table, utable, fk, fields, cleanup=()):
-    cols = [r[1] for r in c.execute(f'PRAGMA main.table_info({table})')]
-    sel = [f'CASE WHEN mdb_uid() IS NULL THEN t.{x} ELSE coalesce(u.{x}, {fields[x]}) END AS {x}' if x in fields else f't.{x}' for x in cols]
-    sets = [f'{x}=CASE WHEN mdb_uid() IS NULL THEN NEW.{x} ELSE {x} END' if x in fields else f'{x}=NEW.{x}' for x in cols if x != 'id']
-    f = list(fields)
-    return [
-        f'CREATE TEMP VIEW {table} AS SELECT {", ".join(sel)} FROM main.{table} t '
-        f'LEFT JOIN main.{utable} u ON u.{fk}=t.id AND u.user_id=mdb_uid()',
-        f'CREATE TEMP TRIGGER {table}_upd INSTEAD OF UPDATE ON {table} BEGIN '
-        f'UPDATE main.{table} SET {", ".join(sets)} WHERE id=OLD.id; '
-        f'INSERT INTO main.{utable}({fk}, user_id, {", ".join(f)}) SELECT OLD.id, mdb_uid(), {", ".join("NEW." + x for x in f)} '
-        f'WHERE mdb_uid() IS NOT NULL ON CONFLICT({fk}, user_id) DO UPDATE SET {", ".join(x + "=excluded." + x for x in f)}; END',
-        f'CREATE TEMP TRIGGER {table}_del INSTEAD OF DELETE ON {table} BEGIN DELETE FROM main.{table} WHERE id=OLD.id; '
-        f'DELETE FROM main.{utable} WHERE {fk}=OLD.id; ' + ''.join(f'DELETE FROM main.{t} WHERE {k}=OLD.id; ' for t, k in cleanup) + 'END']
+def _view_sql(c, s):
+    if s[0] == 'personal':
+        table, utable, fk, fields = s[1:5]
+        cols = [r[1] for r in c.execute(f'PRAGMA main.table_info({table})')]
+        sel = [f'CASE WHEN mdb_uid() IS NULL THEN t.{x} ELSE coalesce(u.{x}, {fields[x]}) END AS {x}' if x in fields else f't.{x}' for x in cols]
+        return (f'CREATE TEMP VIEW {table} AS SELECT {", ".join(sel)} FROM main.{table} t '
+                f'LEFT JOIN main.{utable} u ON u.{fk}=t.id AND u.user_id=mdb_uid()')
+    if s[0] == 'set':  # Menge wie 'watched' (eine Zeile = gesehen): pro Person eine eigene Menge
+        view, utable, keys, vals = s[1:5]
+        allc = ', '.join(keys + vals)
+        return (f'CREATE TEMP VIEW {view} AS SELECT {allc} FROM main.{view} WHERE mdb_uid() IS NULL '
+                f'UNION ALL SELECT {allc} FROM main.{utable} WHERE user_id=mdb_uid()')
+    return f'CREATE TEMP VIEW {s[1]} AS SELECT * FROM main.{s[1]} WHERE mdb_uid() IS NULL OR user_id=mdb_uid()'  # 'rows': Merkliste
 
 
-def _set_sql(view, utable, keys, vals):
-    """Menge wie 'watched' (eine Zeile = gesehen): pro Person eine eigene Menge."""
-    allc = keys + vals
-    where = ' AND '.join(f'{k}=OLD.{k}' for k in keys)
-    return [
-        f'CREATE TEMP VIEW {view} AS SELECT {", ".join(allc)} FROM main.{view} WHERE mdb_uid() IS NULL '
-        f'UNION ALL SELECT {", ".join(allc)} FROM main.{utable} WHERE user_id=mdb_uid()',
-        f'CREATE TEMP TRIGGER {view}_ins INSTEAD OF INSERT ON {view} BEGIN '
-        f'INSERT INTO main.{view}({", ".join(allc)}) SELECT {", ".join("NEW." + x for x in allc)} WHERE mdb_uid() IS NULL; '
-        f'INSERT INTO main.{utable}(user_id, {", ".join(allc)}) SELECT mdb_uid(), {", ".join("NEW." + x for x in allc)} WHERE mdb_uid() IS NOT NULL; END',
-        f'CREATE TEMP TRIGGER {view}_upd INSTEAD OF UPDATE ON {view} BEGIN '
-        f'UPDATE main.{view} SET {", ".join(v + "=NEW." + v for v in vals)} WHERE mdb_uid() IS NULL AND {where}; '
-        f'UPDATE main.{utable} SET {", ".join(v + "=NEW." + v for v in vals)} WHERE user_id=mdb_uid() AND {where}; END',
-        f'CREATE TEMP TRIGGER {view}_del INSTEAD OF DELETE ON {view} BEGIN '
-        f'DELETE FROM main.{view} WHERE mdb_uid() IS NULL AND {where}; DELETE FROM main.{utable} WHERE user_id=mdb_uid() AND {where}; END']
+def _split(sql, sep=','):
+    """Text auf oberster Ebene (ausserhalb von Klammern und Anfuehrungszeichen) an sep (',' oder 'WHERE') teilen."""
+    parts, depth, quote, start, i, low = [], 0, None, 0, 0, sql.lower()
+    while i < len(sql):
+        ch = sql[i]
+        if quote:
+            quote = None if ch == quote else quote
+        elif ch in "'\"":
+            quote = ch
+        elif ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth -= 1
+        elif depth == 0 and sep == ',' and ch == ',':
+            parts.append(sql[start:i]); start = i + 1
+        elif depth == 0 and sep == 'where' and low.startswith('where', i) and not low[i - 1:i].isalnum() and not low[i + 5:i + 6].isalnum():
+            parts.append(sql[start:i]); start = i + 5
+        i += 1
+    parts.append(sql[start:])
+    return parts
 
 
-def _rows_sql(c, table):
-    """Tabelle mit Spalte user_id (Merkliste): jede Person sieht ihre Zeilen, ohne Person alle."""
-    cols = [r[1] for r in c.execute(f'PRAGMA main.table_info({table})') if r[1] != 'id']
-    return [
-        f'CREATE TEMP VIEW {table} AS SELECT * FROM main.{table} WHERE mdb_uid() IS NULL OR user_id=mdb_uid()',
-        f'CREATE TEMP TRIGGER {table}_upd INSTEAD OF UPDATE ON {table} BEGIN UPDATE main.{table} SET '
-        f'{", ".join(x + "=NEW." + x for x in cols)} WHERE id=OLD.id; END',
-        f'CREATE TEMP TRIGGER {table}_del INSTEAD OF DELETE ON {table} BEGIN DELETE FROM main.{table} WHERE id=OLD.id; END']
+def _qmarks(sql):
+    n, quote = 0, None
+    for ch in sql:
+        if quote:
+            quote = None if ch == quote else quote
+        elif ch in "'\"":
+            quote = ch
+        elif ch == '?':
+            n += 1
+    return n
+
+
+class Conn(sqlite3.Connection):
+    """sqlite3-Verbindung, die Schreibbefehle auf persoenlich verdeckte Tabellen selbst verteilt (siehe oben)."""
+    shadow = None
+
+    def execute(self, sql, params=()):
+        m = _WRITE.match(sql) if self.shadow else None
+        if m and m.group('t').lower() in self.shadow:
+            return self._redirect(m, sql, params)
+        return super().execute(sql, params)
+
+    def _x(self, sql, params=()):
+        return sqlite3.Connection.execute(self, sql, params)
+
+    def _redirect(self, m, sql, params):
+        spec, uid = self.shadow[m.group('t').lower()], current_id()
+        verb, rest = re.sub(r'\s+', ' ', m.group('verb').upper()), sql[m.end():]
+        if uid is None or spec[0] == 'rows' or verb.startswith(('INSERT', 'REPLACE')) and spec[0] == 'personal':
+            return self._x(sql[:m.start('t')] + 'main.' + sql[m.start('t'):], params)  # echte Tabelle, wie ohne Konten
+        uid = int(uid)
+        if spec[0] == 'set':
+            view, utable, keys, vals = spec[1:5]
+            if verb.startswith(('INSERT', 'REPLACE')):
+                cm = re.match(r'\s*\(([^)]*)\)\s*(.*)$', rest, re.S)
+                cols, tail = (cm.group(1), cm.group(2)) if cm else (', '.join(keys + vals), rest.strip())
+                tail = re.sub(r'^(VALUES\s*\(|SELECT\s)', lambda x: x.group(0) + f'{uid}, ', tail, count=1, flags=re.I)
+                return self._x(f'{verb} main.{utable}(user_id, {cols}) {tail}', params)
+            head, *cond = _split(rest, 'where')
+            where = f'user_id={uid}' + (f' AND ({cond[0]})' if cond else '')
+            return self._x(f'{verb} main.{utable} {head} WHERE {where}' if verb.startswith('UPDATE') else f'DELETE FROM main.{utable} WHERE {where}', params)
+        table, utable, fk, fields = spec[1:5]
+        cleanup = spec[5] if len(spec) > 5 else ()
+        if verb == 'DELETE FROM':
+            cond = _split(rest, 'where')
+            ids = [r[0] for r in self._x(f'SELECT id FROM {table}' + (f' WHERE {cond[1]}' if len(cond) > 1 else ''), params)]
+            cur = None
+            for i in ids:
+                cur = self._x(f'DELETE FROM main.{table} WHERE id=?', (i,))
+                self._x(f'DELETE FROM main.{utable} WHERE {fk}=?', (i,))
+                for t, k in cleanup:
+                    self._x(f'DELETE FROM main.{t} WHERE {k}=?', (i,))
+            return cur or self._x('SELECT 0')
+        sm = re.match(r'\s*SET\s(.*)$', rest, re.S | re.I)
+        set_part, *cond = _split(sm.group(1), 'where')
+        named = isinstance(params, dict)
+        assigns, pos = [], 0
+        for a in _split(set_part):
+            col, expr = a.split('=', 1)
+            n = _qmarks(expr)
+            assigns.append((col.strip(), expr.strip(), params if named else tuple(params[pos:pos + n])))
+            pos += n
+        wparams = params if named else tuple(params[pos:])
+        ids = [r[0] for r in self._x(f'SELECT id FROM {table}' + (f' WHERE {cond[0]}' if cond else ''), wparams)]
+        own = [a for a in assigns if a[0] in fields]
+        rest_a = [a for a in assigns if a[0] not in fields]
+        cur = None
+        for i in ids:
+            if own:  # neue persoenliche Werte aus Sicht der Person berechnen, dann in ihre Tabelle
+                p = params if named else sum((a[2] for a in own), ()) + (i,)
+                q = f'SELECT {", ".join(a[1] for a in own)} FROM {table} WHERE id=' + (':__id' if named else '?')
+                newv = self._x(q, dict(params, __id=i) if named else p).fetchone()
+                row = dict(self._x(f'SELECT {", ".join(fields)} FROM {table} WHERE id=?', (i,)).fetchone())
+                row.update({a[0]: v for a, v in zip(own, newv)})
+                cols = list(fields)
+                self._x(f'INSERT INTO main.{utable}({fk}, user_id, {", ".join(cols)}) VALUES({", ".join("?" * (len(cols) + 2))}) '
+                        f'ON CONFLICT({fk}, user_id) DO UPDATE SET {", ".join(x + "=excluded." + x for x in cols)}',
+                        (i, uid, *[row[x] for x in cols]))
+            if rest_a:
+                p = params if named else sum((a[2] for a in rest_a), ()) + (i,)
+                cur = self._x(f'UPDATE main.{table} SET {", ".join(a[0] + "=" + a[1] for a in rest_a)} WHERE id=' + (':__id' if named else '?'),
+                              dict(params, __id=i) if named else p)
+        return cur or self._x('SELECT 0')
 
 
 def personalize(c, key, specs):
-    """Fuer eine Verbindung die Sichten anlegen (nur mit Konten). specs: Liste von ('personal', table, utable, fk, fields[, cleanup]),
-    ('set', view, utable, keys, vals) oder ('rows', table). key: Name der Datenbank fuer den Zwischenspeicher."""
+    """Fuer eine Verbindung (aus sqlite3.connect(..., factory=Conn)) die Sichten anlegen, nur mit Konten.
+    specs: ('personal', table, utable, fk, fields[, cleanup]), ('set', view, utable, keys, vals) oder ('rows', table)."""
     if not accounts_on():
         return
     c.create_function('mdb_uid', 0, _uid_sql)
@@ -371,8 +452,10 @@ def personalize(c, key, specs):
             if s[1] not in have or s[2 if s[0] != 'rows' else 1] not in have:
                 complete = False  # Tabelle fehlt noch (Start laeuft); spaeter neu aufbauen
                 continue
-            out += _personal_sql(c, *s[1:]) if s[0] == 'personal' else _set_sql(*s[1:]) if s[0] == 'set' else _rows_sql(c, s[1])
+            out.append((s, _view_sql(c, s)))
         if complete:
             _SQL[key] = out
-    for stmt in out:
+    for _s, stmt in out:
         c.execute(stmt)
+    if isinstance(c, Conn):
+        c.shadow = {s[1]: s for s, _x in out}

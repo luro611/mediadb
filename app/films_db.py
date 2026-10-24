@@ -115,7 +115,7 @@ _ready = False
 @contextmanager
 def db(plain=False):
     """plain=True: ohne persoenliche Sichten (Aufbau der Tabellen beim Start)."""
-    c = sqlite3.connect(DB_PATH, timeout=15)
+    c = sqlite3.connect(DB_PATH, timeout=15, factory=U.Conn)
     c.row_factory = sqlite3.Row
     c.execute('PRAGMA foreign_keys=ON')
     if _ready and not plain:

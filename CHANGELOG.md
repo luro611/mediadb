@@ -1,5 +1,8 @@
 # Änderungen
 
+## MediaDB 1.22.1 – Korrektur: Filme, Serien und Bücher mit Konten
+- **Behoben:** Mit eingeschalteten Konten brachen in 1.22.0 Filme, Serien, Bücher und die Merkliste mit „Internal Server Error“ ab, auf der Startseite standen dort nur Striche; Musik lief weiter. Ursache: Das Docker-Image enthält SQLite 3.46, das die Art der Umleitung in persönliche Tabellen (Trigger mit `main.<tabelle>`) noch nicht erlaubt; auf dem Entwicklungsrechner lief eine neuere Version. Die Schreibbefehle verteilt MediaDB jetzt selbst, ganz ohne diese Trigger. Es gehen keine Daten verloren; alles, was du in 1.22.0 eingetragen hast, bleibt.
+
 ## MediaDB 1.22.0 – Mehrere Nutzer, Stufe 3: jede Person hat ihre eigenen Angaben
 - **Pro Person:** gesehen (mit Datum und Anzahl), gesehene Folgen, eigene Bewertung, gelesen, „Als Nächstes“ (auch bei Musik) und die Merkliste. Anna kann einen Film mit 3 bewerten, Lutz behält seine 7.
 - Listen wie „Noch nicht gesehen“, „Top 10: Muss ich sehen“, „Lieblingsfilme“, „Gelesen“ und die Zahlen auf der Startseite gelten für die angemeldete Person.
