@@ -44,7 +44,7 @@ def setup(templates_, ctx_, data_dir):
 
 
 def render(request, name, **kw):
-    return templates.TemplateResponse(request, name, ctx(request, area='films', tmdb_on=T.configured(), **kw))
+    return templates.TemplateResponse(request, name, ctx(request, area='films', tmdb_on=T.configured(), tmdb_state=T.key_state(), **kw))
 
 
 def go(path, message=''):

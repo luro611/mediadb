@@ -2,7 +2,7 @@
 <p class="eyebrow">{{ _("MediaDB / Filme / Hinzufügen") }}</p><h1>{{ _("Film-*Import*") }}</h1>
 <p class="intro">{{ _("Wähle den Ordner mit deinen Filmen. Zuerst wird nur gelesen und bei TMDB nachgeschlagen; gespeichert wird erst, wenn du unten auf „Übernehmen“ klickst. Liegt neben einem Film eine .nfo-Datei von Jellyfin oder Kodi, ist die Zuordnung sicher. Sonst helfen Namen wie „Titel (Jahr)“.") }}</p>
 {% if message %}<div class="warn">{{ _(message) }}</div>{% endif %}
-{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+{% include '_tmdb_hint.html' %}
 
 {% if job.state in ('scanning','applying') %}
 <div class="card"><h3>{{ _('Lese Dateien und frage TMDB …') if job.state=='scanning' else _('Speichere und lade Poster …') }}</h3>

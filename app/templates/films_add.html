@@ -2,7 +2,7 @@
 <p class="eyebrow">{{ _("MediaDB / Filme / Hinzufügen") }}</p><h1>{{ _("Film *hinzufügen*") }}</h1>
 <p class="intro">{{ _("Per Barcode, über die Titelsuche, aus einem Ordner mit Filmdateien oder ganz von Hand. Gespeichert wird erst, wenn du einen Treffer bestätigst.") }}</p>
 {% if message %}<div class="warn">{{ _(message) }}</div>{% endif %}
-{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+{% include '_tmdb_hint.html' %}
 <div class="grid addgrid">
 <div class="card"><h3>{{ _("Mit Barcode") }}</h3><p>{{ _("DVD, Blu-ray oder 4K UHD: Feld anklicken und scannen oder die Nummer eintippen.") }}{% if not barcode_lookup %} {{ _("Die Online-Barcode-Suche ist ausgeschaltet; gefunden werden nur Barcodes, die schon in deiner Sammlung stehen.") }}{% endif %}</p>
 <form method="post" action="{{ base }}/films/scan"><input autofocus class="wide" name="barcode" id="fbarcode" inputmode="numeric" placeholder="{{ _('Barcode scannen oder eingeben') }}" required>

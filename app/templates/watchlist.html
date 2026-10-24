@@ -6,7 +6,7 @@
 <p class="intro">{{ _("Neue Staffeln und Folgen deiner Serien und alles, was du dir vorgemerkt hast, etwa Tipps aus Videos. Termine und Streamingdienste kommen von TMDB und werden einmal am Tag aufgefrischt.") }}</p>
 {% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
 {% if upd.error %}<div class="warn">{{ _(upd.error) }}</div>{% endif %}
-{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+{% include '_tmdb_hint.html' %}
 
 <div class="updline">
 {% if upd.state == 'running' %}<span id="updtxt">{{ _("Aktualisiere: § von §", upd.done, upd.total) }}</span> <progress id="updbar" max="{{ upd.total or 1 }}" value="{{ upd.done }}"></progress>

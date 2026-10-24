@@ -574,7 +574,8 @@ def save_areas(area:list[str]=Form([])):
 @app.get('/willkommen',response_class=HTMLResponse)
 def welcome(request:Request,err:str='',schritt:str=''):
  """Erster Start: Schritt 1 die Sprache (Begruessung in allen Sprachen), Schritt 2 die Bereiche in der gewaehlten Sprache."""
- return templates.TemplateResponse(request,'welcome.html',ctx(request,area='welcome',err=err,step=2 if schritt=='2' or err else 1))
+ from . import films_tmdb as _T
+ return templates.TemplateResponse(request,'welcome.html',ctx(request,area='welcome',err=err,step=2 if schritt=='2' or err else 1,tmdb_state=_T.key_state()))
 @app.post('/willkommen')
 def welcome_save(lang:str=Form(i18n.DEFAULT),area:list[str]=Form([])):
  if not _save_areas(area): return RedirectResponse('/willkommen?schritt=2&err='+quote('Bitte mindestens einen Bereich ankreuzen.'),303)

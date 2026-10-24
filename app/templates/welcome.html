@@ -22,6 +22,9 @@
  </div>
  <button>{{ _("Los geht's") }}</button>
 </form>
+{% if tmdb_state == 'missing' %}<div class="card tmdbnote"><p><strong>{{ _("Gut zu wissen: Filme und Serien brauchen einen TMDB-Schlüssel.") }}</strong></p>
+ <p>{{ _("Erst mit ihm funktionieren Suche, Poster, Inhaltsangaben, Episodenführer und Merkliste vollständig. Für die private Nutzung ist er kostenlos: Konto auf themoviedb.org anlegen und unter Einstellungen → API beantragen. Danach trägst du ihn in MediaDB unter Einstellungen → TMDB ein. Musik und Bücher brauchen keinen Schlüssel.") }}</p>
+ <p><a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">{{ _("Schlüssel bei TMDB holen ›") }}</a></p></div>{% endif %}
 <p class="muted"><a href="{{ base }}/willkommen">{{ _("← Andere Sprache wählen") }}</a></p>
 {% endif %}
 {% endblock %}

@@ -1,5 +1,10 @@
 # Änderungen
 
+## MediaDB 1.19.1 – Hinweis auf den TMDB-Schlüssel
+- **Willkommensseite:** Solange kein TMDB-Schlüssel eingetragen ist, erklärt ein Hinweis, dass Filme und Serien erst mit diesem Schlüssel vollständig funktionieren (Suche, Poster, Inhaltsangaben, Episodenführer, Merkliste) und dass es ihn für die private Nutzung kostenlos bei themoviedb.org gibt.
+- **Filme, Serien und Merkliste:** Der Hinweis ist deutlicher und verlinkt direkt zu TMDB („Schlüssel bei TMDB holen“) und zu den Einstellungen.
+- **Falscher Schlüssel wird erkannt:** MediaDB prüft einen neu eingetragenen Schlüssel einmal im Hintergrund. Lehnt TMDB ihn ab, steht das bei Filmen, Serien und Merkliste, und in den Einstellungen erscheint „abgelehnt“ statt „eingetragen“. Vorher fand die Suche dann einfach nichts.
+
 ## MediaDB 1.19.0 – Hinzufügen verbessert
 - **Bessere Auflösung erkennen:** Liest du einen Film oder eine Serie ein, die es schon als Datei in einer anderen Auflösung gibt, zeigt die Vorschau alte und neue Auflösung und fragt: neue Datei nehmen und den Eintrag der alten entfernen, beide behalten oder überspringen. Ist die neue besser oder die alte nicht mehr da, ist „neue nehmen“ vorgewählt; ist sie schlechter, „überspringen“. Bei Serien gilt das Folge für Folge. Die alte Datei selbst bleibt auf dem NAS.
 - **Schon im Archiv:** Steht ein gescannter Barcode schon in der Sammlung, zeigt MediaDB das deutlich mit „Zum Film“ bzw. „Zur Serie“ und „Trotzdem neu suchen“. Treffer, die es schon gibt, sind in der Trefferliste hervorgehoben und verlinkt, darüber steht ein Hinweis.

@@ -2,7 +2,7 @@
 <p class="eyebrow">{{ _("MediaDB / Serien") }}</p>
 <h1>{{ _("*Serien*") }}</h1>
 {% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
-{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+{% include '_tmdb_hint.html' %}
 {% set active='' %}{% include '_series_nav.html' %}
 <form method="get" action="{{ base }}/series" class="filmfilter">
  {% if view!='all' %}<input type="hidden" name="view" value="{{ view }}">{% endif %}

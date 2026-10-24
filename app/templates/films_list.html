@@ -3,7 +3,7 @@
 <h1>{% if current_list %}{{ current_list.name }}{% elif coll %}{{ collection_name or _("Filmreihe") }}{% else %}{{ _("*Filme*") }}{% endif %}</h1>
 {% if current_list %}<p class="muted"><a href="{{ base }}/films/lists">{{ _("← Alle eigenen Listen") }}</a></p>{% elif coll %}<p class="muted"><a href="{{ base }}/films/collections">{{ _("← Alle Filmreihen") }}</a></p>{% endif %}
 {% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
-{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+{% include '_tmdb_hint.html' %}
 {% set active='' %}{% include '_films_nav.html' %}
 <form method="get" action="{{ base }}/films" class="filmfilter">
  {% if view!='all' %}<input type="hidden" name="view" value="{{ view }}">{% endif %}{% if list_id %}<input type="hidden" name="list" value="{{ list_id }}">{% endif %}{% if coll %}<input type="hidden" name="collection" value="{{ coll }}">{% endif %}

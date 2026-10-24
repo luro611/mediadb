@@ -25,7 +25,7 @@ def setup(templates_, ctx_, start_scheduler=True):
 
 
 def render(request, name, **kw):
-    return templates.TemplateResponse(request, name, ctx(request, area='watch', tmdb_on=T.configured(), **kw))
+    return templates.TemplateResponse(request, name, ctx(request, area='watch', tmdb_on=T.configured(), tmdb_state=T.key_state(), **kw))
 
 
 async def index(request):

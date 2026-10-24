@@ -2,7 +2,7 @@
 <p class="eyebrow">{{ _("MediaDB / Serien / Hinzufügen") }}</p><h1>{{ _("Serien-*Import*") }}</h1>
 <p class="intro">{{ _("Wähle den Ordner mit deinen Serien, etwa auf dem NAS. Die Folgen werden nach Serie gruppiert und jede Serie einmal bei TMDB nachgeschlagen; gespeichert wird erst, wenn du unten auf „Übernehmen“ klickst. Erkannt werden Namen wie Serie.S01E01, 1x01, E01 und Staffelordner. Eine tvshow.nfo von Jellyfin oder Kodi macht die Zuordnung sicher.") }}</p>
 {% if message %}<div class="warn">{{ _(message) }}</div>{% endif %}
-{% if not tmdb_on %}<div class="warn">{{ _("Für Filmdaten und Poster wird ein kostenloser TMDB-Schlüssel gebraucht. Du trägst ihn unter Einstellungen ein.") }} <a href="{{ base }}/settings#tmdb">{{ _("Zu den Einstellungen ›") }}</a></div>{% endif %}
+{% include '_tmdb_hint.html' %}
 
 {% if job.state in ('scanning','applying') %}
 {% set PH = {'collect': _t('Schritt 1 von 3: Ordner durchsuchen'), 'parse': _t('Schritt 2 von 3: Dateinamen auswerten'), 'tmdb': _t('Schritt 3 von 3: Serien bei TMDB suchen'), 'apply': _t('Speichere, lade Episodenführer und lese Dateien …')} %}

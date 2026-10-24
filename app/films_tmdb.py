@@ -34,6 +34,25 @@ def configured():
     return bool(api_key())
 
 
+KEY_STATE = {'key': None, 'state': 'unknown'}  # Ergebnis der letzten Anfrage mit diesem Schluessel
+
+
+def _mark(key, state):
+    KEY_STATE.update(key=key, state=state)
+
+
+def key_state():
+    """'missing', 'ok', 'bad' (TMDB lehnt ab) oder 'unknown' (noch nicht geprueft, TMDB nicht erreichbar).
+    Ein neuer Schluessel wird einmal im Hintergrund geprueft, die Seite wartet nicht darauf."""
+    key = api_key()
+    if not key:
+        return 'missing'
+    if KEY_STATE['key'] != key:
+        _mark(key, 'unknown')
+        threading.Thread(target=tmdb_get, args=('/configuration',), daemon=True).start()
+    return KEY_STATE['state']
+
+
 def _http_get(url, params=None, headers=None, timeout=15):
     """Einzige Stelle mit Netzwerkzugriff (Tests ersetzen diese Funktion)."""
     r = requests.get(url, params=params, headers=headers, timeout=timeout)
@@ -61,12 +80,14 @@ def tmdb_get(path, **params):
     except Exception as e:
         return None, f'TMDB nicht erreichbar ({e.__class__.__name__}).'
     if code == 401:
+        _mark(key, 'bad')
         return None, 'TMDB lehnt den Schlüssel ab. Bitte TMDB_API_KEY prüfen.'
     if code == 429:
         time.sleep(2)
         return tmdb_get(path, **params)
     if code != 200 or data is None:
         return None, f'TMDB antwortet mit Fehler {code}.'
+    _mark(key, 'ok')
     return data, None
 
 
