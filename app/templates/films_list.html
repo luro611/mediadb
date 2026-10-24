@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block content %}
+{% extends 'base.html' %}{% from '_owner.html' import owner_filter with context %}{% block content %}
 <p class="eyebrow">{{ _("MediaDB / Filme") }}</p>
 <h1>{% if current_list %}{{ current_list.name }}{% elif coll %}{{ collection_name or _("Filmreihe") }}{% else %}{{ _("*Filme*") }}{% endif %}</h1>
 {% if current_list %}<p class="muted"><a href="{{ base }}/films/lists">{{ _("← Alle eigenen Listen") }}</a></p>{% elif coll %}<p class="muted"><a href="{{ base }}/films/collections">{{ _("← Alle Filmreihen") }}</a></p>{% endif %}
@@ -11,9 +11,10 @@
  <select name="genre" id="fgenre" aria-label="{{ _('Genre') }}"><option value="">{{ _("Alle Genres") }}</option>{% for g,n in genres %}<option value="{{ g }}"{% if g==genre %} selected{% endif %}>{{ g }} ({{ n }})</option>{% endfor %}</select>
  <select name="decade" id="fdecade" aria-label="{{ _('Jahrzehnt') }}"><option value="">{{ _("Alle Jahre") }}</option>{% for d in decades %}<option value="{{ d }}"{% if d|string==decade %} selected{% endif %}>{{ _("§er", d) }}</option>{% endfor %}</select>
  <select name="kind" id="fkind" aria-label="{{ _('Format') }}"><option value="">{{ _("Alle Formate") }}</option>{% for k,label in FILM_KINDS.items() %}<option value="{{ k }}"{% if k==kind %} selected{% endif %}>{{ _(label) }}</option>{% endfor %}</select>
+ {{ owner_filter(owner) }}
  {% if view not in ('next','mustsee','recent_watched','recent_added') %}<select name="sort" id="fsort" aria-label="{{ _('Sortierung') }}">{% for k,label in sort_names.items() %}<option value="{{ k }}"{% if k==sort %} selected{% endif %}>{{ _(label) }}</option>{% endfor %}</select>
  <select name="dir" id="fdir" aria-label="{{ _('Richtung') }}"><option value="asc">{{ _("aufsteigend") }}</option><option value="desc"{% if dir=='desc' %} selected{% endif %}>{{ _("absteigend") }}</option></select>{% endif %}
- <button>{{ _("Anzeigen") }}</button>{% if filtered %} <a href="{{ base }}{{ url(q='',genre='',decade='',kind='',page='') }}">{{ _("Filter zurücksetzen") }}</a>{% endif %}
+ <button>{{ _("Anzeigen") }}</button>{% if filtered %} <a href="{{ base }}{{ url(q='',genre='',decade='',kind='',owner='',page='') }}">{{ _("Filter zurücksetzen") }}</a>{% endif %}
 </form>
 {% if pjob.state=='running' %}<div class="ok" id="pstat">{{ _("Poster werden gesucht: § von §. Du kannst weiterarbeiten, am Ende lädt die Seite einmal neu.", pjob.done, pjob.total or '…') }}</div>
 <script>(function(){var T={{ _t("Poster werden gesucht: § von §. Du kannst weiterarbeiten, am Ende lädt die Seite einmal neu.","%D","%T")|tojson }},el=document.getElementById("pstat");function p(){fetch("{{ base }}/films/posters/status").then(function(r){return r.json()}).then(function(d){if(d.state!=="running"){location.reload();return}el.textContent=T.replace("%D",d.done).replace("%T",d.total||"…");setTimeout(p,2500)}).catch(function(){setTimeout(p,5000)})}setTimeout(p,2500)})()</script>

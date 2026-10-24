@@ -10,6 +10,7 @@ from difflib import SequenceMatcher
 from . import films_db as F
 from . import fs
 from . import films_tmdb as T
+from . import users as U
 
 VIDEO_EXT = {'.mkv', '.mp4', '.m4v', '.avi', '.mov', '.wmv', '.ts', '.m2ts', '.mts', '.webm', '.mpg', '.mpeg', '.iso', '.divx', '.ogm', '.flv'}
 SKIP_DIRS = {'extras', 'extra', 'featurettes', 'behind the scenes', 'deleted scenes', 'interviews', 'scenes', 'shorts', 'trailers',
@@ -460,5 +461,5 @@ def start(target, *args):
         if JOB['state'] in ('scanning', 'applying'):
             return False
         JOB['state'] = 'scanning' if target is scan_worker else 'applying'
-    threading.Thread(target=target, args=args, daemon=True).start()
+    U.start_thread(target, *args)  # mit dem angemeldeten Nutzer (Besitzer neuer Exemplare)
     return True

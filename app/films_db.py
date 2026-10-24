@@ -11,6 +11,7 @@ import json, re, sqlite3, threading, unicodedata
 from contextlib import contextmanager
 from datetime import datetime, date
 from pathlib import Path
+from . import users as U
 
 DB_PATH = None
 KINDS = {'dvd': 'DVD', 'bluray': 'Blu-ray', 'uhd': '4K UHD', 'file': 'Datei'}
@@ -75,7 +76,7 @@ FILM_FIELDS = ['tmdb_id', 'imdb_id', 'title', 'original_title', 'year', 'release
                'directors', 'writers', 'cast_json', 'countries', 'original_language', 'studios', 'certification', 'collection_id',
                'collection_name', 'poster', 'backdrop', 'trailer_url', 'tmdb_rating', 'tmdb_votes', 'keywords', 'notes', 'source', 'raw_json']
 COPY_FIELDS = ['kind', 'barcode', 'edition', 'region', 'notes', 'path', 'container', 'resolution', 'video_codec', 'hdr',
-               'duration_s', 'audio', 'subtitles', 'size_bytes']
+               'duration_s', 'audio', 'subtitles', 'size_bytes', 'owner_id']
 
 
 def now():
@@ -96,6 +97,7 @@ def init(path):
         c.executescript(SCHEMA)
         if 'next_at' not in {r[1] for r in c.execute('PRAGMA table_info(films)')}:  # seit 1.11: "Als Naechstes"
             c.execute('ALTER TABLE films ADD COLUMN next_at TEXT')
+        U.add_owner_column(c, 'copies')  # seit 1.21: Besitzer
         c.executescript(TRIGGERS)
         if c.execute(f'SELECT count(*) FROM {FTS}').fetchone()[0] != c.execute('SELECT count(*) FROM films').fetchone()[0]:
             c.execute(f'DELETE FROM {FTS}')
@@ -226,6 +228,8 @@ def cast_list(row, n=None):
 # ---------------------------------------------------------------- Exemplare
 def add_copy(c, fid, data):
     d = {k: data.get(k) for k in COPY_FIELDS if data.get(k) not in (None, '')}
+    if 'owner_id' not in data:
+        d['owner_id'] = U.current_id()
     d['kind'] = d.get('kind') if d.get('kind') in KINDS else 'dvd'
     d['film_id'] = fid
     d['created_at'] = now()
@@ -323,8 +327,11 @@ LETTER_SQL = "CASE WHEN substr(f.sort_title,1,1) BETWEEN 'a' AND 'z' THEN upper(
 
 
 def query(c, view='all', q='', genre='', decade='', kind='', sort='title', direction='asc', list_id=None,
-          collection_id=None, limit=120, offset=0, letter=''):
+          collection_id=None, limit=120, offset=0, letter='', owner=(False, None)):
     where, args = [], []
+    if owner[0]:  # Besitzer (seit 1.21): mindestens ein Exemplar gehoert ihm; None = Haushalt
+        where.append('EXISTS (SELECT 1 FROM copies k WHERE k.film_id=f.id AND k.owner_id IS ?)')
+        args.append(owner[1])
     if letter and (letter == '#' or (len(letter) == 1 and 'A' <= letter <= 'Z')):
         where.append(f'{LETTER_SQL}=?')
         args.append(letter)

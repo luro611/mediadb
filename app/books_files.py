@@ -14,6 +14,7 @@ from . import books_api as A
 from . import books_extras as BE
 from .films_art import image_ext
 from . import fs
+from . import users as U
 
 EBOOK_EXT = {'.epub', '.pdf', '.mobi', '.azw', '.azw3', '.kf8', '.fb2', '.cbz', '.cbr'}
 AUDIO_EXT = {'.mp3', '.m4a', '.m4b', '.ogg', '.opus', '.flac', '.aac', '.wma'}
@@ -576,7 +577,7 @@ def start(target, *args):
         if JOB['state'] in ('scanning', 'applying'):
             return False
         JOB['state'] = 'scanning' if target is scan_worker else 'applying'
-    threading.Thread(target=target, args=args, daemon=True).start()
+    U.start_thread(target, *args)  # mit dem angemeldeten Nutzer (Besitzer neuer Exemplare)
     return True
 
 
@@ -738,5 +739,5 @@ def start_table(target, *args):
         if JOB['state'] in ('scanning', 'applying'):
             return False
         JOB['state'] = 'scanning' if target is table_scan_worker else 'applying'
-    threading.Thread(target=target, args=args, daemon=True).start()
+    U.start_thread(target, *args)  # mit dem angemeldeten Nutzer (Besitzer neuer Exemplare)
     return True

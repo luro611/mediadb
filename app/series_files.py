@@ -14,6 +14,7 @@ from . import films_tmdb as T
 from . import films_files as FF
 from . import fs
 from . import series_db as S
+from . import users as U
 
 VIDEO_EXT = FF.VIDEO_EXT - {'.iso'}
 SKIP_DIRS = FF.SKIP_DIRS | {'extras', 'specials-extra', 'bonus'}
@@ -457,5 +458,5 @@ def start(target, *args):
         if JOB['state'] in ('scanning', 'applying'):
             return False
         JOB['state'] = 'scanning' if target is scan_worker else 'applying'
-    threading.Thread(target=target, args=args, daemon=True).start()
+    U.start_thread(target, *args)  # mit dem angemeldeten Nutzer (Besitzer neuer Exemplare)
     return True

@@ -5,11 +5,19 @@ Tabellen:
          letzte Anmeldung
   meta   mode: 'off' (wie bisher, ggf. APP_PASSWORD), 'profiles' (Profilwahl, PIN freiwillig), 'password' (Name und Passwort)
 Die Anmeldung steht in einem signierten Cookie (Nutzer, Ablauf). Der Pruefwert des Passworts geht in die Signatur ein:
-Aendert sich das Passwort, sind alte Anmeldungen ungueltig."""
-import hashlib, hmac, re, secrets, sqlite3, threading, time
+Aendert sich das Passwort, sind alte Anmeldungen ungueltig.
+
+Besitzer (seit 1.21): Exemplare (Filme, Serienboxen, Buecher) und Musik-Alben haben die Spalte owner_id; leer = Haushalt
+(gemeinsam). Wer etwas anlegt, wird Besitzer: Die Middleware merkt sich den angemeldeten Nutzer fuer die Anfrage
+(set_current), current_id() liefert ihn auch in Hintergrundaufgaben, die mit start_thread() gestartet werden."""
+import contextvars, hashlib, hmac, re, secrets, sqlite3, threading, time
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
-from .films_db import now
+
+
+def now():
+    return datetime.now().isoformat(timespec='seconds')
 
 DB_PATH = None
 SECRET = lambda: b''  # Schluessel fuer die Signatur; main.py setzt security.Settings.secret
@@ -18,7 +26,8 @@ MAX_AGE = 60 * 60 * 24 * 30
 ROLES = {'admin': 'Verwalter', 'member': 'Mitglied', 'guest': 'Gast'}
 MODES = ('off', 'profiles', 'password')
 _init_lock = threading.Lock()
-_cache = {'users': None, 'mode': None}  # die Middleware fragt bei jeder Anfrage; Aenderungen leeren den Zwischenspeicher
+_cache = {'users': None, 'mode': None}
+_current = contextvars.ContextVar('mediadb_user', default=None)  # die Middleware fragt bei jeder Anfrage; Aenderungen leeren den Zwischenspeicher
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users(
@@ -26,6 +35,7 @@ CREATE TABLE IF NOT EXISTS users(
   secret TEXT, last_login TEXT, created_at TEXT);
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
 """
+ON_FIRST_ADMIN = []  # main.py: Funktionen, die beim ersten Verwalter vorhandene Eintraege uebernehmen (owner_id leer -> er)
 
 
 def init(path):
@@ -212,3 +222,72 @@ def user_from_token(secret_key, tok):
     if exp < time.time() or not get(uid) or not hmac.compare_digest(sig, _sig(secret_key, uid, exp)):
         return None
     return get(uid)
+
+
+# ---------------------------------------------------------------- Besitzer (seit 1.21)
+def set_current(user):
+    _current.set(user)
+
+
+def current():
+    u = _current.get()
+    return u if u and accounts_on() else None
+
+
+def current_id():
+    u = current()
+    return u['id'] if u else None
+
+
+def start_thread(target, *args):
+    """Hintergrundaufgabe mit dem angemeldeten Nutzer (fuer den Besitzer neuer Eintraege)."""
+    ctx = contextvars.copy_context()
+    threading.Thread(target=ctx.run, args=(target, *args), daemon=True).start()
+
+
+def add_owner_column(c, table):
+    """Spalte owner_id in einer bestehenden Tabelle ergaenzen (sqlite3-Verbindung)."""
+    if 'owner_id' not in {r[1] for r in c.execute(f'PRAGMA table_info({table})')}:
+        c.execute(f'ALTER TABLE {table} ADD COLUMN owner_id INTEGER')
+
+
+def owner_filter(value):
+    """Filter aus der Adresse: '' alle, 'me' meine, 'h' Haushalt, sonst Nummer. Liefert (aktiv, owner_id oder None)."""
+    if not accounts_on() or not value:
+        return False, None
+    if value == 'me':
+        uid = current_id()
+        return (True, uid) if uid else (False, None)
+    if value == 'h':
+        return True, None
+    return (True, int(value)) if str(value).isdigit() and get(int(value)) else (False, None)
+
+
+def parse_owner(value):
+    """Auswahl im Formular: '' = Haushalt. Liefert (gueltig, owner_id oder None)."""
+    if not value:
+        return True, None
+    return (True, int(value)) if str(value).isdigit() and get(int(value)) else (False, None)
+
+
+def owner_name(uid):
+    u = get(uid) if uid else None
+    return u['name'] if u else ''
+
+
+def claim_unowned():
+    """Einmalig: Eintraege ohne Besitzer gehoeren dem ersten Verwalter (Konzept, Stufe 2)."""
+    a = admins()
+    if not a:
+        return
+    with db() as c:
+        if c.execute("SELECT 1 FROM meta WHERE key='owners_claimed'").fetchone():
+            return
+        c.execute("INSERT OR REPLACE INTO meta(key, value) VALUES('owners_claimed', ?)", (now(),))
+    first = min(a, key=lambda u: u['id'])['id']
+    for fn in ON_FIRST_ADMIN:
+        try:
+            fn(first)
+        except Exception:
+            import logging
+            logging.exception('Besitzer konnten nicht uebernommen werden')

@@ -2,7 +2,7 @@
 
 MediaDB ist eine **private Mediendatenbank für das eigene Heimnetz** mit vier Bereichen: **Musik, Filme, Serien und Bücher**, dazu **Merkliste**, **Als Nächstes** und **Verliehen an …**. Du erfasst CDs, DVDs, Blu-rays, Bücher und deine Dateien (Musik, Filme, Serien, E-Books, Hörbücher), die App ergänzt Titellisten, Cover, Filmdaten, Episodenführer und Buchangaben aus freien Internetquellen. Bedient wird alles im Browser, am Rechner wie am Handy. Die Daten bleiben bei dir.
 
-Diese Anleitung beschreibt MediaDB 1.20.0. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet. Eine englische Fassung gibt es in [MANUAL.md](MANUAL.md); die App zeigt sie bei allen Oberflächensprachen außer Deutsch.
+Diese Anleitung beschreibt MediaDB 1.21.0. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet. Eine englische Fassung gibt es in [MANUAL.md](MANUAL.md); die App zeigt sie bei allen Oberflächensprachen außer Deutsch.
 
 **Inhalt:** [1. Überblick](#1-überblick) · [2. Installation](#2-installation) · [3. Einstellungen](#3-einstellungen) · [4. Bedienung allgemein](#4-bedienung-allgemein) · [5. Musik](#5-musik) · [6. Filme](#6-filme) · [7. Serien](#7-serien) · [8. Merkliste](#8-merkliste) · [9. Bücher](#9-bücher) · [10. Verliehen an …](#10-verliehen-an) · [11. Mediatheken](#11-mediatheken) · [12. Dateien von NAS und Mac](#12-dateien-von-nas-und-mac) · [13. Sichern und Updates](#13-sichern-und-updates) · [14. Woher kommen die Daten?](#14-woher-kommen-die-daten) · [15. Grenzen](#15-grenzen) · [16. Fehlersuche](#16-fehlersuche)
 
@@ -57,7 +57,11 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
   - **Profilwahl:** Beim Öffnen auf den eigenen Namen klicken, eine PIN ist freiwillig (Verwalter brauchen immer eine). Bequem im Heimnetz.
   - **Name und Passwort:** richtige Anmeldung, 30 Tage gültig; jeder braucht ein Passwort.
   
-  Oben in der Leiste steht, wer angemeldet ist; ein Klick darauf wechselt das Profil bzw. meldet ab. **„Aus“** schaltet die Konten wieder ab, die Nutzer bleiben gespeichert. Die Sammlung ist für alle dieselbe; Besitzer pro Exemplar und „gesehen“ pro Person folgen in den nächsten Versionen (Plan: `docs/KONZEPT_NUTZER.md`).
+  Oben in der Leiste steht, wer angemeldet ist; ein Klick darauf wechselt das Profil bzw. meldet ab. **„Aus“** schaltet die Konten wieder ab, die Nutzer bleiben gespeichert. Die Sammlung ist für alle dieselbe; „gesehen“ pro Person folgt in einer der nächsten Versionen (Plan: `docs/KONZEPT_NUTZER.md`).
+
+  **Besitzer:** Mit Konten hat jedes Exemplar (DVD, Blu-ray, Datei, Buch, Serienbox) und jedes Musik-Album einen Besitzer. Wer etwas einträgt, wird Besitzer; beim Einschalten der Konten gehört die vorhandene Sammlung dem ersten Verwalter. Auf der Seite des Eintrags lässt sich der Besitzer ändern, auch auf **„Haushalt“** (gemeinsam). In den Listen filtert **„Alle Besitzer · Meine · Haushalt · von …“**, unter „Verliehen“ zeigt jeder Eintrag, wem das Exemplar gehört, mit dem Reiter **„Meine verliehenen“**.
+
+  ![Exemplare mit Besitzer](bilder/besitzer-exemplare.png)
 
   ![Profilwahl beim Öffnen](bilder/anmelden-profile.png)
 

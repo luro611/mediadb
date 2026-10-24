@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 from .films_db import now, parse_date
+from . import users as U
 
 DB_PATH = None
 _init_lock = threading.Lock()
@@ -34,6 +35,7 @@ def init(path):
     DB_PATH = Path(path)
     with _init_lock, db() as c:
         c.executescript(SCHEMA)
+        U.add_owner_column(c, 'loans')  # seit 1.21: wem das verliehene Exemplar gehoert
 
 
 @contextmanager
@@ -67,17 +69,17 @@ def person_id(c, name, create=True):
     return c.execute('INSERT INTO people(name, created_at) VALUES(?,?)', (name, now())).lastrowid
 
 
-def lend(c, area, item_id, title, person, lent_at=None, due_at=None, note=None, copy_id=None, detail=None, subtitle=None):
+def lend(c, area, item_id, title, person, lent_at=None, due_at=None, note=None, copy_id=None, detail=None, subtitle=None, owner_id=None):
     """Neuer Verleihvorgang. lent_at: ISO-Datum (auch nur Jahr) oder None fuer unbekannt. Gibt die Nummer zurueck."""
     if area not in AREAS:
         raise ValueError(area)
     pid = person_id(c, person)
     if not pid:
         raise ValueError('person')
-    return c.execute('''INSERT INTO loans(area, item_id, copy_id, title, subtitle, detail, person_id, lent_at, due_at, note, created_at)
-                        VALUES(?,?,?,?,?,?,?,?,?,?,?)''',
+    return c.execute('''INSERT INTO loans(area, item_id, copy_id, title, subtitle, detail, person_id, lent_at, due_at, note, owner_id, created_at)
+                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''',
                      (area, int(item_id), copy_id, (title or '?')[:300], subtitle or None, detail or None, pid, lent_at or None,
-                      due_at or None, (note or '').strip() or None, now())).lastrowid
+                      due_at or None, (note or '').strip() or None, owner_id, now())).lastrowid
 
 
 def give_back(c, lid, when=None):

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}{% from '_editions.html' import editions_list with context %}{{ editions_list() }}
+{% extends 'base.html' %}{% from '_owner.html' import owner_pick with context %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}{% from '_editions.html' import editions_list with context %}{{ editions_list() }}
 {% set f = film %}
 <p class="eyebrow"><a href="{{ base }}/films">{{ _("MediaDB / Filme") }}</a></p>
 {% if message %}<div class="ok{% if request.query_params.get('added') %} addmore{% endif %}">{{ _(message) }}{% if request.query_params.get('added') %} <a class="btnlink" href="{{ base }}/films/add">{{ _("Weiteren Film hinzufügen") }}</a>{% endif %}</div>{% endif %}
@@ -50,10 +50,11 @@
 
 {% set mt_src = '/mediathek/film/' ~ f.id %}{% include '_mediathek.html' %}
 <h2 id="exemplare">{{ _("Exemplare") }}</h2>
-{% if copies %}<div class="tablewrap"><table class="copies"><tr><th>{{ _("Format") }}</th><th>{{ _("Fassung") }}</th><th>{{ _("Barcode / Datei") }}</th><th>{{ _("Technik") }}</th><th></th></tr>
+{% if copies %}<div class="tablewrap"><table class="copies"><tr><th>{{ _("Format") }}</th><th>{{ _("Fassung") }}</th><th>{{ _("Barcode / Datei") }}</th><th>{{ _("Technik") }}</th>{% if accounts_on %}<th>{{ _("Besitzer") }}</th>{% endif %}<th></th></tr>
 {% for k in copies %}<tr><td><span class="badge">{{ _(kinds.get(k.kind, k.kind)) }}</span></td><td>{{ k.edition or '' }}{% if k.region %} <span class="muted">{{ k.region }}</span>{% endif %}</td>
 <td>{% if k.path %}<code class="path">{{ k.path }}</code>{% elif k.barcode %}<code>{{ k.barcode }}</code>{% endif %}{% if k.notes %}<br><span class="muted">{{ k.notes }}</span>{% endif %}</td>
 <td class="tech">{{ [k.resolution, k.hdr, k.video_codec, k.container, ((k.duration_s//60)|string ~ ' min') if k.duration_s else '', ((k.size_bytes/1073741824)|round(1)|string ~ ' GB') if k.size_bytes and k.size_bytes > 100000000 else '']|select|join(' · ') }}{% if k.audio %}<br><span class="muted">{{ _("Ton:") }} {{ k.audio }}</span>{% endif %}{% if k.subtitles %}<br><span class="muted">{{ _("Untertitel:") }} {{ k.subtitles }}</span>{% endif %}</td>
+{% if accounts_on %}<td>{{ owner_pick(base ~ '/films/copies/' ~ k.id ~ '/owner', k.owner_id) }}</td>{% endif %}
 <td><form method="post" action="{{ base }}/films/copies/{{ k.id }}/delete" onsubmit="return confirm({{ _t('Exemplar entfernen?')|tojson|forceescape }})"><button class="quiet small">{{ _("entfernen") }}</button></form></td></tr>{% endfor %}</table></div>
 {% else %}<p class="muted">{{ _("Noch kein Exemplar eingetragen.") }}</p>{% endif %}
 <details class="card"><summary>{{ _("Exemplar hinzufügen") }}</summary>

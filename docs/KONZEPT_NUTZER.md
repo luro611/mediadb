@@ -5,7 +5,7 @@ Stand: 24.10.2026, abgestimmt mit Lutz. Umsetzung in drei Stufen, jede als eigen
 ## Grundidee
 Eine gemeinsame Sammlung für den ganzen Haushalt. Alle sehen alles. Dazu kommen Konten, ein Besitzer pro Exemplar und persönliche Angaben wie „gesehen“ und Bewertung. Getrennte Datenbanken pro Person gibt es bewusst nicht: Sie würden doppelte Einträge erzeugen und das gemeinsame Stöbern erschweren.
 
-## Stufe 1: Konten und Anmeldung
+## Stufe 1: Konten und Anmeldung (fertig, 1.20.0)
 - **Nutzer** liegen in einer eigenen kleinen Datenbank `data/nutzer.db`: Name, Rolle, Passwort oder PIN (nur als Prüfwert gespeichert, scrypt), letzte Anmeldung.
 - **Rollen:**
   - **Verwalter:** alles, dazu Einstellungen, NAS-Freigaben, Nutzer anlegen, Updates.
@@ -19,7 +19,7 @@ Eine gemeinsame Sammlung für den ganzen Haushalt. Alle sehen alles. Dazu kommen
 - Mindestens ein Verwalter bleibt immer. Ändert sich ein Passwort, sind alte Anmeldungen dieses Nutzers ungültig.
 - Oben in der Leiste steht, wer angemeldet ist; „Wechseln“ bzw. „Abmelden“.
 
-## Stufe 2: Besitzer
+## Stufe 2: Besitzer (fertig, 1.21.0)
 - Der Besitzer hängt am **Exemplar** (die DVD kann Lutz gehören, die Blu-ray Anna); bei Musik, die keine Exemplare hat, am Album.
 - Wer etwas einträgt, wird Besitzer. Ändern lässt es sich auf der Seite, auch auf „Haushalt“ (gemeinsam).
 - Filter in den Listen: „Alle · Meins · von …“.

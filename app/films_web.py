@@ -20,6 +20,7 @@ from . import films_tmdb as T
 from . import films_art as A
 from . import audio as au
 from . import fs
+from . import users as U
 
 templates = None
 ctx = None
@@ -75,10 +76,12 @@ async def index(request):
     page = max(1, _int(p.get('page'), 1))
     q, genre, decade, kind = p.get('q', '').strip(), p.get('genre', ''), p.get('decade', ''), p.get('kind', '')
     letter = p.get('l', '') if p.get('l', '') == '#' or (len(p.get('l', '')) == 1 and 'A' <= p.get('l', '') <= 'Z') else ''
+    owner = U.owner_filter(p.get('owner', ''))
+    own = p.get('owner', '') if owner[0] else ''
 
     def load():
         with F.db() as c:
-            rows, total = F.query(c, view, q, genre, decade, kind, sort, direction, list_id, coll, PAGE, (page - 1) * PAGE, letter)
+            rows, total = F.query(c, view, q, genre, decade, kind, sort, direction, list_id, coll, PAGE, (page - 1) * PAGE, letter, owner)
             lst = c.execute('SELECT * FROM lists WHERE id=?', (list_id,)).fetchone() if list_id else None
             cname = c.execute('SELECT collection_name FROM films WHERE collection_id=? LIMIT 1', (coll,)).fetchone() if coll else None
             people = [dict(x) for x in F.find_people(c, q)] if len(q) >= 3 else []
@@ -88,14 +91,14 @@ async def index(request):
                         collection_name=cname[0] if cname else '')
     data = await run_in_threadpool(load)
     keep = {k: v for k, v in dict(q=q, genre=genre, decade=decade, kind=kind, sort=sort if sort != 'title' else '',
-                                  dir=direction if direction != 'asc' else '', list=list_id or '', collection=coll or '', l=letter).items() if v}
+                                  dir=direction if direction != 'asc' else '', list=list_id or '', collection=coll or '', l=letter, owner=own).items() if v}
     def url(**kw):
         d = {**keep, 'view': view if view != 'all' else ''}
         d.update(kw)
         return '/films?' + urlencode({k: v for k, v in d.items() if v not in ('', None)})
     pages = (data['total'] + PAGE - 1) // PAGE if view not in ('mustsee', 'recent_watched', 'recent_added') else 1
-    filtered = bool(q or genre or decade or kind)
-    return render(request, 'films_list.html', view=view, q=q, genre=genre, decade=decade, kind=kind, sort=sort, dir=direction,
+    filtered = bool(q or genre or decade or kind or own)
+    return render(request, 'films_list.html', owner=own, view=view, q=q, genre=genre, decade=decade, kind=kind, sort=sort, dir=direction,
                   page=page, pages=pages, url=url, view_names=VIEW_NAMES, sort_names=SORT_NAMES, list_id=list_id, coll=coll,
                   filtered=filtered, letter=letter, abc=['#'] + [chr(x) for x in range(65, 91)], message=p.get('message', ''), **data)
 
@@ -439,6 +442,22 @@ async def copy_delete(request):
     return go(f'/films/{fid}' if fid else '/films', 'Exemplar entfernt.')
 
 
+async def copy_owner(request):
+    """Besitzer eines Exemplars aendern (seit 1.21); leer = Haushalt."""
+    cid = request.path_params['cid']
+    f, _ = await _form(request)
+    ok, uid = U.parse_owner(f.get('owner', ''))
+
+    def do():
+        with F.db() as c:
+            r = c.execute('SELECT film_id FROM copies WHERE id=?', (cid,)).fetchone()
+            if r and ok:
+                c.execute('UPDATE copies SET owner_id=? WHERE id=?', (uid, cid))
+            return r[0] if r else None
+    pid = await run_in_threadpool(do)
+    return go(f'/films/{pid}#exemplare' if pid else '/films', 'Besitzer gespeichert.' if ok else 'Unbekannter Besitzer.')
+
+
 # ---------------------------------------------------------------- Poster und Hintergrundbilder
 async def posters_fetch(request):
     A.start(IMAGES)
@@ -669,7 +688,7 @@ routes = [
     Route('/save', save, methods=['POST']), Route('/manual', manual, methods=['POST']),
     Route('/files', files_page), Route('/files/browse', files_browse), Route('/files/scan', files_scan, methods=['POST']),
     Route('/files/apply', files_apply, methods=['POST']), Route('/files/status', files_status), Route('/files/reset', files_reset, methods=['POST']),
-    Route('/copies/{cid:int}/delete', copy_delete, methods=['POST']),
+    Route('/copies/{cid:int}/delete', copy_delete, methods=['POST']), Route('/copies/{cid:int}/owner', copy_owner, methods=['POST']),
     Route('/person/{pid:int}', person_page),
     Route('/posters/fetch-missing', posters_fetch, methods=['POST']), Route('/posters/status', posters_status),
     Route('/{fid:int}/poster', poster_page), Route('/{fid:int}/poster/set', poster_set, methods=['POST']),

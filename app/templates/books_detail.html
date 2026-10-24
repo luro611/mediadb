@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}
+{% extends 'base.html' %}{% from '_owner.html' import owner_pick with context %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}
 <p class="eyebrow"><a href="{{ base }}/books">{{ _("MediaDB / Bücher") }}</a></p>
 {% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
 <div class="filmhead bookhead">
@@ -66,6 +66,7 @@
 <h2 id="exemplare">{{ _("Exemplare") }}</h2>
 {% if copies %}<div class="tablewrap"><table class="copies">{% for k in copies %}<tr><td><span class="badge">{{ _(kinds.get(k.kind,k.kind)) }}</span>{% if k.file_format %} <span class="badge">{{ k.file_format }}</span>{% endif %}</td>
 <td>{% if k.path %}<code class="path">{{ host_label(k.path) }}</code>{% endif %}{% if k.isbn %}<code>{{ k.isbn|isbn }}</code>{% endif %} {{ k.edition or '' }}{% if k.duration_s %} · {{ k.duration_s|hours }}{% endif %}{% if k.size_bytes %} · {{ (k.size_bytes / 1048576)|round(1) }} MB{% endif %}</td>
+{% if accounts_on %}<td>{{ owner_pick(base ~ '/books/copies/' ~ k.id ~ '/owner', k.owner_id) }}</td>{% endif %}
 <td><form method="post" action="{{ base }}/books/copies/{{ k.id }}/delete" onsubmit="return confirm({{ _t('Exemplar entfernen?')|tojson|forceescape }})"><button class="quiet small">{{ _("entfernen") }}</button></form></td></tr>{% endfor %}</table></div>{% else %}<p class="muted">{{ _("Kein Exemplar eingetragen.") }}</p>{% endif %}
 <details class="card"><summary>{{ _("Exemplar hinzufügen") }}</summary>
 <form method="post" action="{{ base }}/books/{{ b.id }}/copies"><input type="hidden" name="anchor" value="exemplare">

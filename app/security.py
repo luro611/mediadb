@@ -153,6 +153,7 @@ class Gate:
         if self.acc and self.acc.accounts_on():
             user = self.acc.user_from_token(self.s.secret(), _cookie(headers, self.acc.COOKIE))
             scope['state']['user'] = user
+            self.acc.set_current(user)  # fuer den Besitzer neuer Eintraege
             if user and user['role'] != 'admin' and (path == '/settings' or path.startswith('/settings/')):
                 return await _respond(send, 303, b'', [(b'location', f'{base}/kein-zugriff?was=settings'.encode())])
             if user and user['role'] == 'guest' and scope.get('method') not in ('GET', 'HEAD') and not path.startswith(('/login', '/logout')):

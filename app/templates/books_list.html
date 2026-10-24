@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block content %}
+{% extends 'base.html' %}{% from '_owner.html' import owner_filter with context %}{% block content %}
 <p class="eyebrow">{{ _("MediaDB / Bücher") }}</p>
 <h1>{{ _("*Bücher*") }}</h1>
 {% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
@@ -9,9 +9,10 @@
  <select name="genre" id="bgenre" aria-label="{{ _('Genre') }}"><option value="">{{ _("Alle Genres") }}</option>{% for g,n in genres %}<option value="{{ g }}"{% if g==genre %} selected{% endif %}>{{ g }} ({{ n }})</option>{% endfor %}</select>
  <select name="kind" id="bkind" aria-label="{{ _('Format') }}"><option value="">{{ _("Alle Formate") }}</option>{% for k,label in BOOK_KINDS.items() %}<option value="{{ k }}"{% if k==kind %} selected{% endif %}>{{ _(label) }}</option>{% endfor %}</select>
  {% if book_langs|length > 1 %}<select name="lang" id="blang" aria-label="{{ _('Sprache') }}"><option value="">{{ _("Alle Sprachen") }}</option>{% for l,n in book_langs %}<option value="{{ l }}"{% if l==lang %} selected{% endif %}>{{ _(BOOK_LANGS.get(l, l)) }} ({{ n }})</option>{% endfor %}</select>{% endif %}
+ {{ owner_filter(owner) }}
  {% if view not in ('next','recent_read','recent_added') %}<select name="sort" id="bsort" aria-label="{{ _('Sortierung') }}">{% for k,label in sort_names.items() %}<option value="{{ k }}"{% if k==sort %} selected{% endif %}>{{ _(label) }}</option>{% endfor %}</select>
  <select name="dir" id="bdir" aria-label="{{ _('Richtung') }}"><option value="asc">{{ _("aufsteigend") }}</option><option value="desc"{% if dir=='desc' %} selected{% endif %}>{{ _("absteigend") }}</option></select>{% endif %}
- <button>{{ _("Anzeigen") }}</button>{% if filtered %} <a href="{{ base }}{{ url(q='',genre='',kind='',lang='',page='') }}">{{ _("Filter zurücksetzen") }}</a>{% endif %}
+ <button>{{ _("Anzeigen") }}</button>{% if filtered %} <a href="{{ base }}{{ url(q='',genre='',kind='',lang='',owner='',page='') }}">{{ _("Filter zurücksetzen") }}</a>{% endif %}
 </form>
 <div class="listhead"><p class="muted">{{ _("§ Bücher", total) }} · <a href="{{ base }}/books/add">{{ _("Buch hinzufügen") }}</a></p>{% set larea='books' %}{% include '_layout.html' %}</div>
 {% if view not in ('next','recent_read','recent_added') and letters|length > 1 %}<nav class="abcbar abcpick" aria-label="{{ _('Anfangsbuchstabe') }}">{% for L in abc %}{% if letters.get(L) %}<a href="{{ base }}{{ url(l=L, page='') }}"{% if letter==L %} class="on" aria-current="true"{% endif %}>{{ L }}</a>{% else %}<span>{{ L }}</span>{% endif %}{% endfor %}<a href="{{ base }}{{ url(l='', page='') }}" class="all{% if not letter %} on{% endif %}">{{ _("Alle") }}</a></nav>{% endif %}

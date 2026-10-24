@@ -16,6 +16,7 @@ from . import series_db as S
 from . import books_db as BK
 from . import films_web as FW
 from . import home as H
+from . import users as U
 
 templates = None
 ctx = None
@@ -59,7 +60,7 @@ def _music_row(mid):
         return None
     with closing(sqlite3.connect(Path(H.MUSIC_DB).as_uri() + '?mode=ro', uri=True, timeout=10)) as c:
         c.row_factory = sqlite3.Row
-        r = c.execute('SELECT id, title, artist, ownership, format FROM media WHERE id=?', (mid,)).fetchone()
+        r = c.execute('SELECT * FROM media WHERE id=?', (mid,)).fetchone()
         return dict(r) if r else None
 
 
@@ -69,22 +70,22 @@ def physical(area, item_id):
         r = _music_row(item_id)
         if not r or (r['ownership'] or 'cd') not in ('cd', 'cd_digital'):
             return []
-        return [{'copy_id': None, 'kind': 'CD', 'extra': r['format'] if r['format'] and r['format'] != 'CD' else ''}]
+        return [{'copy_id': None, 'kind': 'CD', 'extra': r['format'] if r['format'] and r['format'] != 'CD' else '', 'owner_id': r['owner_id'] if 'owner_id' in r.keys() else None}]
     if area == 'film':
         with F.db() as c:
-            rows = c.execute("SELECT id, kind, edition FROM copies WHERE film_id=? AND kind<>'file' AND path IS NULL ORDER BY id",
+            rows = c.execute("SELECT id, kind, edition, owner_id FROM copies WHERE film_id=? AND kind<>'file' AND path IS NULL ORDER BY id",
                              (item_id,)).fetchall()
-        return [{'copy_id': k['id'], 'kind': F.KINDS.get(k['kind'], k['kind']), 'extra': k['edition'] or ''} for k in rows]
+        return [{'copy_id': k['id'], 'kind': F.KINDS.get(k['kind'], k['kind']), 'extra': k['edition'] or '', 'owner_id': k['owner_id']} for k in rows]
     if area == 'series':
         with S.db() as c:
-            rows = c.execute('SELECT id, kind, seasons, edition FROM copies WHERE series_id=? ORDER BY id', (item_id,)).fetchall()
-        return [{'copy_id': k['id'], 'kind': S.KINDS.get(k['kind'], k['kind']), 'extra': k['edition'] or '', 'seasons': k['seasons'] or ''}
+            rows = c.execute('SELECT id, kind, seasons, edition, owner_id FROM copies WHERE series_id=? ORDER BY id', (item_id,)).fetchall()
+        return [{'copy_id': k['id'], 'kind': S.KINDS.get(k['kind'], k['kind']), 'extra': k['edition'] or '', 'seasons': k['seasons'] or '', 'owner_id': k['owner_id']}
                 for k in rows]
     if area == 'book':
         with BK.db() as c:
-            rows = c.execute("SELECT id, kind, edition FROM copies WHERE book_id=? AND path IS NULL AND kind<>'ebook' ORDER BY id",
+            rows = c.execute("SELECT id, kind, edition, owner_id FROM copies WHERE book_id=? AND path IS NULL AND kind<>'ebook' ORDER BY id",
                              (item_id,)).fetchall()
-        return [{'copy_id': k['id'], 'kind': BK.KINDS.get(k['kind'], k['kind']), 'extra': k['edition'] or ''} for k in rows]
+        return [{'copy_id': k['id'], 'kind': BK.KINDS.get(k['kind'], k['kind']), 'extra': k['edition'] or '', 'owner_id': k['owner_id']} for k in rows]
     return []
 
 
@@ -130,16 +131,19 @@ async def index(request):
     p = request.query_params
     q, area, person = p.get('q', '').strip(), p.get('area', ''), p.get('person', '').strip()
     area = area if area in L.AREAS else ''
+    own_on, own = U.owner_filter(p.get('owner', ''))
 
     def load():
         with L.db() as c:
             rows, ppl, hist, st = L.open_all(c, area or None), L.people(c), L.history(c, limit=60), L.stats(c)
+        if own_on:  # z. B. „meine verliehenen“
+            rows = [r for r in rows if r.get('owner_id') == own]
         groups = {}
         for r in rows:
             groups.setdefault((r['person_id'], r['person']), []).append(r)
         return dict(groups=list(groups.items()), people=ppl, history=hist, stats=st, results=_search(q) if q else [])
     d = await run_in_threadpool(load)
-    return render(request, 'lend.html', q=q, sel_area=area, person=person, message=p.get('message', ''), **d)
+    return render(request, 'lend.html', q=q, sel_area=area, person=person, message=p.get('message', ''), owner=p.get('owner', '') if own_on else '', **d)
 
 
 def _search(q):
@@ -190,7 +194,7 @@ async def add(request):
             return 'Dieses Exemplar ist schon verliehen.'
         with L.db() as c:
             L.lend(c, area, item_id, f.get('title') or '?', f.get('person'), lent_at, due_at, f.get('note'), pick['copy_id'],
-                   _detail_text(area, item_id, pick['copy_id']), f.get('subtitle'))
+                   _detail_text(area, item_id, pick['copy_id']), f.get('subtitle'), pick.get('owner_id'))
         return 'Als verliehen eingetragen.'
     return go(back, await run_in_threadpool(do))
 

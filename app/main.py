@@ -27,7 +27,7 @@ engine=create_engine(DB_URL, connect_args={'check_same_thread':False,'timeout':1
 Session=sessionmaker(bind=engine); Base=declarative_base()
 class Medium(Base):
  __tablename__='media'
- id=Column(Integer,primary_key=True); barcode=Column(String,index=True,unique=True); title=Column(String,nullable=False); artist=Column(String); artist_sort=Column(String); artist_mbid=Column(String); year=Column(String); date=Column(String); release_date=Column(String); ownership=Column(String); file_formats=Column(String); country=Column(String); label=Column(String); catalog_number=Column(String); format=Column(String); media_count=Column(Integer); disc_count=Column(Integer); track_count=Column(Integer); status=Column(String); packaging=Column(String); language=Column(String); script=Column(String); release_mbid=Column(String); release_group_mbid=Column(String); release_group_type=Column(String); asin=Column(String); annotation=Column(Text); disambiguation=Column(String); quality=Column(String); genre=Column(Text); genres=Column(Text); tags=Column(Text); styles=Column(Text); notes=Column(Text); cover_path=Column(String); cover_url=Column(String); source=Column(String); source_id=Column(String); created_at=Column(DateTime,default=datetime.utcnow); raw_json=Column(Text); next_at=Column(String)  # next_at: "Als Naechstes" vorgemerkt am (seit 1.11)
+ id=Column(Integer,primary_key=True); barcode=Column(String,index=True,unique=True); title=Column(String,nullable=False); artist=Column(String); artist_sort=Column(String); artist_mbid=Column(String); year=Column(String); date=Column(String); release_date=Column(String); ownership=Column(String); file_formats=Column(String); country=Column(String); label=Column(String); catalog_number=Column(String); format=Column(String); media_count=Column(Integer); disc_count=Column(Integer); track_count=Column(Integer); status=Column(String); packaging=Column(String); language=Column(String); script=Column(String); release_mbid=Column(String); release_group_mbid=Column(String); release_group_type=Column(String); asin=Column(String); annotation=Column(Text); disambiguation=Column(String); quality=Column(String); genre=Column(Text); genres=Column(Text); tags=Column(Text); styles=Column(Text); notes=Column(Text); cover_path=Column(String); cover_url=Column(String); source=Column(String); source_id=Column(String); created_at=Column(DateTime,default=datetime.utcnow); raw_json=Column(Text); next_at=Column(String); owner_id=Column(Integer,default=lambda: users.current_id())  # next_at: "Als Naechstes" vorgemerkt am (seit 1.11); owner_id: Besitzer, leer = Haushalt (seit 1.21)
  tracks=relationship('Track',back_populates='medium',cascade='all, delete-orphan',order_by='Track.disc_number,Track.position')
 class Track(Base):
  __tablename__='tracks'; id=Column(Integer,primary_key=True); medium_id=Column(Integer,ForeignKey('media.id')); position=Column(Integer); disc_number=Column(Integer); number=Column(String); title=Column(String); length_ms=Column(Integer); duration=Column(String); recording_mbid=Column(String); artist=Column(String); medium=relationship('Medium',back_populates='tracks')
@@ -527,6 +527,7 @@ def add_url(area=None):
  """Ziel von „Hinzufügen“: der aktuelle Bereich, sonst der erste eingeschaltete."""
  if area in ADD_URLS and config.area_on(area): return ADD_URLS[area]
  return next((ADD_URLS[a] for a in config.AREAS if config.area_on(a)),'/add')
+templates.env.globals.update(owner_name=users.owner_name,all_users=lambda: list(users.users().values()))  # Besitzer (seit 1.21)
 templates.env.globals.update(add_url=add_url,area_on=config.area_on,areas_on=config.areas,AREA_NAMES={'music':'Musik','films':'Filme','series':'Serien','books':'Bücher'})
 AREA_PATHS=[('music',('/media','/add','/manual','/scan','/import','/audio','/discography','/export')),('films',('/films','/mediathek/film')),
  ('series',('/series','/mediathek/series')),('books',('/books',)),('watch',('/watchlist','/mediathek/watchlist'))]
@@ -757,7 +758,7 @@ def create(request:Request, ownership:str=Form('cd'), file_formats:str=Form(''),
 SORTS={'genre':('genre','artist','release_date'),'artist':('artist','release_date','title'),'title':('title','artist'),'year':('year','artist','title'),'release_date':('release_date','artist','title')}
 def qs(**kw): return urlencode({k:v for k,v in kw.items() if v})
 @app.get('/media',response_class=HTMLResponse)
-def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:str='artist',dir:str='asc',view:str='all',message:str='',mode:str='',interpret:str='',l:str=''):
+def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:str='artist',dir:str='asc',view:str='all',message:str='',mode:str='',interpret:str='',l:str='',owner:str=''):
  s=Session(); list_mode=bool(q or artist or genre or year or interpret or mode=='list'); view={'mp3':'digital'}.get(view,view); view=view if view in ('cd','digital','next') else 'all'; sort=sort if sort in SORTS else 'artist'; dir='desc' if dir=='desc' else 'asc'; stmt=select(Medium)
  if artist: stmt=stmt.where(or_(Medium.artist.ilike(f'%{artist}%'),Medium.tracks.any(Track.artist.ilike(f'%{artist}%'))))
  for col,val in [(Medium.genre,genre),(Medium.year,year)]:
@@ -770,6 +771,8 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
  if view=='cd': stmt=stmt.where(Medium.ownership.in_(['cd','cd_digital']))
  elif view=='digital': stmt=stmt.where(Medium.ownership=='digital')
  elif view=='next': stmt=stmt.where(Medium.next_at.isnot(None))
+ own_on,own_id=users.owner_filter(owner); owner=owner if own_on else ''  # Besitzer (seit 1.21)
+ if own_on: stmt=stmt.where(Medium.owner_id.is_(None) if own_id is None else Medium.owner_id==own_id)
  tabs={'all':0,'cd':0,'digital':0,'next':s.scalar(select(func.count()).select_from(Medium).where(Medium.next_at.isnot(None)))}
  for o,n in s.execute(select(Medium.ownership,func.count()).group_by(Medium.ownership)).all():
   o=o or 'cd'; tabs['all']+=n; tabs['cd']+=(n if o in ('cd','cd_digital') else 0); tabs['digital']+=(n if o=='digital' else 0)
@@ -778,8 +781,9 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
  names=SORTS[sort]; first=kx(names[0])
  order=[case((first=='',1),else_=0), first.desc() if dir=='desc' else first]
  for n in names[1:]: order+=[case((kx(n)=='',1),else_=0), kx(n)]
- filt={'q':q,'artist':artist,'genre':genre,'year':year,'interpret':interpret,'mode':'list' if mode=='list' else '','view':'' if view=='all' else view}
+ filt={'q':q,'artist':artist,'genre':genre,'year':year,'interpret':interpret,'mode':'list' if mode=='list' else '','view':'' if view=='all' else view,'owner':owner}
  tab_links={k:'/media?'+qs(**{**filt,'view':'' if k=='all' else k},sort=sort,dir=dir) for k in ('all','next','cd','digital')}
+ owner_links={k:'/media?'+qs(**{**filt,'owner':k},sort=sort,dir=dir) for k in ['','me','h']+[str(u) for u in users.users()]}  # Gaeste haben keine Reiter, die Adresse bleibt trotzdem gueltig
  links={c:'/media?'+qs(**filt,sort=c,dir=('desc' if sort==c and dir=='asc' else 'asc')) for c in SORTS}
  items=s.scalars(stmt.order_by(*order)).all(); counts={}
  if interpret: ik=au.norm_full(interpret); items=[x for x in items if au.norm_full(x.artist or 'Ohne Künstler')==ik]
@@ -793,7 +797,7 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
   arts=[]
   for key,e in idx.items():
    name=max(e['names'],key=e['names'].get); c=unicodedata.normalize('NFKD',key[:1].upper())[:1]
-   arts.append({'name':name,'key':key,'n':e['n'],'dig':e['dig'],'cd':e['n']-e['dig'],'covers':e['covers'],'l':c if 'A'<=c<='Z' else '#','url':(f"/media/{e['first']}" if e['n']==1 else '/media?'+qs(interpret=name,view=filt['view']))})  # nur ein Eintrag: direkt oeffnen
+   arts.append({'name':name,'key':key,'n':e['n'],'dig':e['dig'],'cd':e['n']-e['dig'],'covers':e['covers'],'l':c if 'A'<=c<='Z' else '#','url':(f"/media/{e['first']}" if e['n']==1 else '/media?'+qs(interpret=name,view=filt['view'],owner=filt['owner']))})  # nur ein Eintrag: direkt oeffnen
   arts.sort(key=lambda a:(a['l']!='#',a['key']))  # Zahlen (#) zuerst
   firsts={}
   for a in arts: firsts[a['l']]=firsts.get(a['l'],0)+1  # Anzahl Interpreten je Buchstabe
@@ -801,7 +805,7 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
   sel=l if (l in firsts or l=='all') else next((x for x in abc if x in firsts),'all')  # ohne Auswahl: erster belegter Buchstabe
   letter_links={x:'/media?'+qs(view=filt['view'],l=x) for x in abc+['all']}
   shown=arts if sel=='all' else [a for a in arts if a['l']==sel]
-  return templates.TemplateResponse(request,'artists.html',ctx(request,arts=shown,n_arts=len(arts),sel=sel,letter_links=letter_links,firsts=firsts,abc=abc,total=len(items),view=view,tabs=tabs,tab_links=tab_links,message=message,q=q,artist=artist,genre=genre,year=year,sort=sort,dir=dir,mode='artists',interpret='',all_url='/media',refresh=dict(REFRESH,show_done=bool(not REFRESH['running'] and REFRESH['total'] and time.time()-REFRESH['finished']<600))))
+  return templates.TemplateResponse(request,'artists.html',ctx(request,owner=owner,owner_links=owner_links,arts=shown,n_arts=len(arts),sel=sel,letter_links=letter_links,firsts=firsts,abc=abc,total=len(items),view=view,tabs=tabs,tab_links=tab_links,message=message,q=q,artist=artist,genre=genre,year=year,sort=sort,dir=dir,mode='artists',interpret='',all_url='/media',refresh=dict(REFRESH,show_done=bool(not REFRESH['running'] and REFRESH['total'] and time.time()-REFRESH['finished']<600))))
  def letter(v):
   v=unicodedata.normalize('NFKD',(v or '').strip())[:1].upper()
   return v if 'A'<=v<='Z' else '#'
@@ -813,7 +817,7 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
  if abc_src:
   for x in items: first_of.setdefault(letter(getattr(x,abc_src)),x.id)
  for x in items: k=(x.artist or '').strip().lower(); counts[k]=counts.get(k,0)+1
- return templates.TemplateResponse(request,'list.html',ctx(request,mode='list',interpret=interpret,back_l=back_l,items=items,counts=counts,first_of=first_of,abc=['#']+[chr(c) for c in range(65,91)],abc_src=abc_src,letter=letter,q=q,artist=artist,genre=genre,year=year,sort=sort,dir=dir,links=links,all_url='/media?'+qs(sort=sort,dir=dir,view=filt['view']),view=view,tabs=tabs,tab_links=tab_links,message=message,refresh=dict(REFRESH,show_done=bool(not REFRESH['running'] and REFRESH['total'] and time.time()-REFRESH['finished']<600))))
+ return templates.TemplateResponse(request,'list.html',ctx(request,owner=owner,owner_links=owner_links,mode='list',interpret=interpret,back_l=back_l,items=items,counts=counts,first_of=first_of,abc=['#']+[chr(c) for c in range(65,91)],abc_src=abc_src,letter=letter,q=q,artist=artist,genre=genre,year=year,sort=sort,dir=dir,links=links,all_url='/media?'+qs(sort=sort,dir=dir,view=filt['view']),view=view,tabs=tabs,tab_links=tab_links,message=message,refresh=dict(REFRESH,show_done=bool(not REFRESH['running'] and REFRESH['total'] and time.time()-REFRESH['finished']<600))))
 @app.get('/media/{id}',response_class=HTMLResponse)
 def detail(request:Request,id:int,message:str=''):
  s=Session(); item=s.get(Medium,id)
@@ -1036,6 +1040,12 @@ def set_next(request:Request,area:str,item_id:int,on:str=Form(''),back:str=Form(
  path,_,frag=_safe_next(sec.strip_base(back,sec.get_base(request))).partition('#')
  msg='Für „Als Nächstes“ vorgemerkt.' if on else 'Von „Als Nächstes“ genommen.'
  return RedirectResponse(path+('&' if '?' in path else '?')+'message='+quote(msg)+('#'+frag if frag.isalnum() else ''),303)
+@app.post('/media/{id}/owner')
+def media_owner(id:int,owner:str=Form('')):
+ """Besitzer eines Albums (seit 1.21); leer = Haushalt."""
+ ok,uid=users.parse_owner(owner); s=Session(); x=s.get(Medium,id)
+ if x and ok: x.owner_id=uid; s.commit()
+ s.close(); return RedirectResponse(f'/media/{id}?message='+quote('Besitzer gespeichert.' if ok else 'Unbekannter Besitzer.'),303)
 @app.post('/media/{id}/delete')
 def delete(id:int):
  s=Session(); x=s.get(Medium,id)
@@ -1158,7 +1168,7 @@ async def audio_apply(request:Request):
  form=await request.form(max_fields=100000,max_files=0); choices={}
  for k,v in form.items():
   if k.startswith('d_') and k[2:].isdigit(): choices[int(k[2:])]=str(v)
- threading.Thread(target=audio_apply_worker,args=(choices,),daemon=True).start()
+ users.start_thread(audio_apply_worker,choices)  # Besitzer neuer Alben: wer uebernimmt
  return RedirectResponse('/audio',303)
 @app.get('/audio/status')
 def audio_status():
@@ -1307,7 +1317,7 @@ async def import_match(request:Request):
 async def import_apply(request:Request):
  if IMP['state']!='ready': return RedirectResponse('/import',303)
  f=await request.form(); ch={int(k[2:]):str(v) for k,v in f.items() if k.startswith('d_') and k[2:].isdigit()}
- threading.Thread(target=import_apply_worker,args=(ch,),daemon=True).start(); return RedirectResponse('/import',303)
+ users.start_thread(import_apply_worker,ch); return RedirectResponse('/import',303)
 @app.get('/import/status')
 def import_status():
  return {'state':IMP['state'],'done':IMP['done'],'total':IMP['total']}
@@ -1373,3 +1383,13 @@ def export(request:Request,view:str='all',format:str='xlsx'):
  wb=Workbook(); ws=wb.active; ws.title='MediaDB'; ws.append(EXCEL_FIELDS)
  for r in rows: ws.append(r)
  out=BytesIO(); wb.save(out); out.seek(0); return StreamingResponse(out,media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',headers={'Content-Disposition':'attachment; filename=mediadb-musik.xlsx'})
+# ---------------- Besitzer (seit 1.21): beim ersten Verwalter gehoert ihm alles, was noch keinen Besitzer hat ----------------
+def _claim_owners(uid):
+ from . import films_db as _F, series_db as _S, books_db as _B, loans as _L
+ for m in (_F,_S,_B):
+  with m.db() as c: c.execute('UPDATE copies SET owner_id=? WHERE owner_id IS NULL',(uid,))
+ with _L.db() as c: c.execute('UPDATE loans SET owner_id=? WHERE owner_id IS NULL',(uid,))
+ with engine.begin() as conn: conn.execute(text('UPDATE media SET owner_id=:u WHERE owner_id IS NULL'),{'u':uid})
+users.ON_FIRST_ADMIN.append(_claim_owners)
+try: users.claim_unowned()  # Installationen, die schon Konten haben (1.20)
+except Exception: logging.exception('Besitzer konnten nicht uebernommen werden')

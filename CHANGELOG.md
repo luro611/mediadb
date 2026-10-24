@@ -1,5 +1,13 @@
 # Änderungen
 
+## MediaDB 1.21.0 – Mehrere Nutzer, Stufe 2: Besitzer
+- **Jedes Exemplar hat einen Besitzer:** DVDs, Blu-rays, Dateien, Bücher und Serienboxen, bei Musik das Album. Wer etwas einträgt (auch per Barcode, Ordner-Import oder Tabelle), wird Besitzer. Leer heißt **Haushalt** (gemeinsam).
+- **Ändern** auf der Seite des Eintrags: In der Exemplar-Tabelle steht eine Auswahl mit allen Personen und „Haushalt“. Gäste sehen nur den Namen.
+- **Filter** in den Listen von Filmen, Serien und Büchern sowie Reiter bei der Musik: „Alle Besitzer · Meine · Haushalt · von …“.
+- **Verleihen:** Beim Verleihen merkt sich MediaDB, wem das Exemplar gehört; die Liste zeigt „gehört …“ und hat den Reiter „Meine verliehenen“.
+- **Übernahme:** Beim ersten Verwalter (oder beim Update, wenn es schon Konten gibt) gehört ihm alles, was noch keinen Besitzer hat, auch offene Verleihvorgänge. Ohne Konten ändert sich nichts.
+- Anleitung mit neuem Bildschirmfoto.
+
 ## MediaDB 1.20.0 – Mehrere Nutzer (Stufe 1: Konten und Anmeldung)
 - **Konten:** In den Einstellungen unter „Nutzer und Anmeldung“ legt man sich selbst als Verwalter an und fügt weitere Personen hinzu, als **Mitglied** (alles ansehen, hinzufügen, bearbeiten) oder **Gast** (nur ansehen). Die Einstellungen sieht nur ein Verwalter. Die Sammlung bleibt für alle dieselbe.
 - **Zwei Arten der Anmeldung, umschaltbar:** **Profilwahl** (auf den eigenen Namen klicken, PIN freiwillig, bequem im Heimnetz) oder **Name und Passwort** (30 Tage gültig). „Aus“ schaltet die Konten wieder ab; ohne Konten bleibt alles wie bisher, `APP_PASSWORD` gilt weiter.

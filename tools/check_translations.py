@@ -11,6 +11,8 @@ LANGS = ['en', 'fr', 'es', 'it']
 PAT = re.compile(r"""\b_t?\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')""")
 # Texte, die ohne _() im Quelltext stehen (Listen, Meldungen aus Python); bei neuen Meldungen hier ergänzen
 EXTRA = [
+    # Besitzer (1.21)
+    "Besitzer gespeichert.", "Unbekannter Besitzer.",
     # Nutzer und Anmeldung (1.20)
     "Bitte einen Namen eingeben.", "Passwort oder PIN braucht mindestens 4 Zeichen.", "Diesen Namen gibt es schon.", "Nutzer nicht gefunden.", "Mindestens ein Verwalter muss bleiben.", "Verwalter und alle bei „Name und Passwort“ brauchen ein Passwort.", "Unbekannte Art der Anmeldung.", "Bitte zuerst einen Verwalter anlegen.", "Jeder Verwalter braucht ein Passwort.", "Es gibt schon Nutzer.", "Der Verwalter braucht ein Passwort mit mindestens 4 Zeichen.", "Konten eingeschaltet. Du bist als Verwalter angemeldet.", "Bei „Name und Passwort“ braucht jeder ein Passwort.", "Nutzer hinzugefügt.", "Nutzer entfernt.", "Verwalter", "Mitglied", "Gast",
     # Rueckmeldung beim Speichern (1.18.1)

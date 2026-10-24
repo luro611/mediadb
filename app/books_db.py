@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 from .films_db import sort_key, now, parse_date  # gemeinsame Hilfsfunktionen
+from . import users as U
 
 DB_PATH = None
 KINDS = {'hardcover': 'Hardcover', 'paperback': 'Taschenbuch', 'ebook': 'E-Book', 'audiobook': 'Hörbuch', 'other': 'Sonstiges'}
@@ -81,6 +82,7 @@ def init(path):
         for col, typ in NEW_COLUMNS.items():
             if col not in have:
                 c.execute(f'ALTER TABLE books ADD COLUMN {col} {typ}')
+        U.add_owner_column(c, 'copies')  # seit 1.21: Besitzer
         c.executescript(TRIGGERS)
         if c.execute(f'SELECT count(*) FROM {FTS}').fetchone()[0] != c.execute('SELECT count(*) FROM books').fetchone()[0]:
             c.execute(f'DELETE FROM {FTS}')
@@ -245,10 +247,11 @@ def set_rating(c, bid, rating):
 # ---------------------------------------------------------------- Exemplare
 def add_copy(c, bid, data):
     kind = data.get('kind') if data.get('kind') in KINDS else 'paperback'
-    return c.execute('INSERT INTO copies(book_id, kind, isbn, edition, notes, path, file_format, size_bytes, duration_s, created_at) '
-                     'VALUES(?,?,?,?,?,?,?,?,?,?)',
+    return c.execute('INSERT INTO copies(book_id, kind, isbn, edition, notes, path, file_format, size_bytes, duration_s, owner_id, created_at) '
+                     'VALUES(?,?,?,?,?,?,?,?,?,?,?)',
                      (bid, kind, norm_isbn(data.get('isbn')) or None, data.get('edition') or None, data.get('notes') or None,
-                      data.get('path') or None, data.get('file_format') or None, data.get('size_bytes'), data.get('duration_s'), now())).lastrowid
+                      data.get('path') or None, data.get('file_format') or None, data.get('size_bytes'), data.get('duration_s'),
+                      data['owner_id'] if 'owner_id' in data else U.current_id(), now())).lastrowid
 
 
 def copies_of(c, bid):
@@ -342,8 +345,11 @@ LETTER_SQL = {'title': "CASE WHEN substr(b.sort_title,1,1) BETWEEN 'a' AND 'z' T
               'author': "CASE WHEN substr(b.sort_author,1,1) BETWEEN 'a' AND 'z' THEN upper(substr(b.sort_author,1,1)) ELSE '#' END"}
 
 
-def query(c, view='all', q='', genre='', kind='', lang='', sort='author', direction='asc', limit=120, offset=0, letter=''):
+def query(c, view='all', q='', genre='', kind='', lang='', sort='author', direction='asc', limit=120, offset=0, letter='', owner=(False, None)):
     where, args = [], []
+    if owner[0]:  # Besitzer (seit 1.21): mindestens ein Exemplar gehoert ihm; None = Haushalt
+        where.append('EXISTS (SELECT 1 FROM copies k WHERE k.book_id=b.id AND k.owner_id IS ?)')
+        args.append(owner[1])
     lkey = 'author' if sort == 'author' else 'title'
     if letter and (letter == '#' or (len(letter) == 1 and 'A' <= letter <= 'Z')):
         where.append(f'{LETTER_SQL[lkey]}=?')

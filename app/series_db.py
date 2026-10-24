@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 from .films_db import sort_key, now, parse_date  # gemeinsame Hilfsfunktionen
+from . import users as U
 
 DB_PATH = None
 KINDS = {'dvd': 'DVD', 'bluray': 'Blu-ray', 'uhd': '4K UHD'}
@@ -95,6 +96,7 @@ def init(path):
         for col, typ in NEW_COLUMNS.items():
             if col not in have:
                 c.execute(f'ALTER TABLE series ADD COLUMN {col} {typ}')
+        U.add_owner_column(c, 'copies')  # seit 1.21: Besitzer
         old = c.execute('PRAGMA user_version').fetchone()[0]
         if old < SCHEMA_VERSION:  # Suchtext hat sich geaendert: Trigger neu anlegen, Index neu fuellen
             for (name,) in c.execute("SELECT name FROM sqlite_master WHERE type='trigger'").fetchall():
@@ -386,9 +388,9 @@ def known_paths(c):
 
 def add_copy(c, sid, data):
     kind = data.get('kind') if data.get('kind') in KINDS else 'dvd'
-    return c.execute('INSERT INTO copies(series_id, kind, barcode, edition, seasons, notes, created_at) VALUES(?,?,?,?,?,?,?)',
+    return c.execute('INSERT INTO copies(series_id, kind, barcode, edition, seasons, notes, owner_id, created_at) VALUES(?,?,?,?,?,?,?,?)',
                      (sid, kind, data.get('barcode') or None, data.get('edition') or None, data.get('seasons') or None,
-                      data.get('notes') or None, now())).lastrowid
+                      data.get('notes') or None, data['owner_id'] if 'owner_id' in data else U.current_id(), now())).lastrowid
 
 
 def copies_of(c, sid):
@@ -443,8 +445,11 @@ _HAVE_FILES = """(SELECT count(DISTINCT e.season||'x'||e.episode) FROM episodes 
 _SEEN = "(SELECT count(*) FROM watched w WHERE w.series_id=s.id AND w.season>0)"
 
 
-def query(c, view='all', q='', genre='', letter='', sort='title', direction='asc', limit=120, offset=0, provider=''):
+def query(c, view='all', q='', genre='', letter='', sort='title', direction='asc', limit=120, offset=0, provider='', owner=(False, None)):
     where, args = [], {'today': today()}
+    if owner[0]:  # Besitzer (seit 1.21): mindestens eine Box gehoert ihm; None = Haushalt
+        where.append('EXISTS (SELECT 1 FROM copies k WHERE k.series_id=s.id AND k.owner_id IS :owner)')
+        args['owner'] = owner[1]
     if provider:
         where.append("(', '||coalesce(nullif(s.providers_own,''), s.providers, '')||',') LIKE :prov")
         args['prov'] = f'%, {provider},%'

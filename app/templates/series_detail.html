@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}
+{% extends 'base.html' %}{% from '_owner.html' import owner_pick with context %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}
 <p class="eyebrow"><a href="{{ base }}/series">{{ _("MediaDB / Serien") }}</a></p>
 {% if message %}<div class="ok{% if request.query_params.get('added') %} addmore{% endif %}">{{ _(message) }}{% if request.query_params.get('added') %} <a class="btnlink" href="{{ base }}/series/add">{{ _("Weitere Serie hinzufügen") }}</a>{% endif %}</div>{% endif %}
 {% if s.backdrop %}<div class="backdrop" style="background-image:url('{{ base }}/film-images/{{ s.backdrop }}')" role="img" aria-label=""></div>{% endif %}
@@ -73,6 +73,7 @@
 
 <h2 id="boxen">{{ _("DVD- und Blu-ray-Boxen") }}</h2>
 {% if copies %}<div class="tablewrap"><table class="copies">{% for k in copies %}<tr><td><span class="badge">{{ _(kinds.get(k.kind,k.kind)) }}</span></td><td>{{ _("Staffeln:") }} {{ k.seasons or '–' }}</td><td>{% if k.barcode %}<code>{{ k.barcode }}</code>{% endif %} {{ k.edition or '' }}</td>
+{% if accounts_on %}<td>{{ owner_pick(base ~ '/series/copies/' ~ k.id ~ '/owner', k.owner_id) }}</td>{% endif %}
 <td><form method="post" action="{{ base }}/series/copies/{{ k.id }}/delete"><button class="quiet small">{{ _("entfernen") }}</button></form></td></tr>{% endfor %}</table></div>{% else %}<p class="muted">{{ _("Keine Box eingetragen.") }}</p>{% endif %}
 <details class="card"><summary>{{ _("Box hinzufügen") }}</summary>
 <form method="post" action="{{ base }}/series/{{ s.id }}/copies"><input type="hidden" name="anchor" value="boxen">

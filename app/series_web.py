@@ -10,6 +10,7 @@ from . import series_db as S
 from . import series_files as X
 from . import films_tmdb as T
 from . import films_web as FW
+from . import users as U
 from .films_art import MAX_UPLOAD
 
 templates = None
@@ -49,14 +50,16 @@ async def index(request):
     q, genre, prov = p.get('q', '').strip(), p.get('genre', ''), p.get('dienst', '')
     letter = p.get('l', '') if p.get('l', '') == '#' or (len(p.get('l', '')) == 1 and 'A' <= p.get('l', '') <= 'Z') else ''
     page = max(1, _int(p.get('page'), 1))
+    owner = U.owner_filter(p.get('owner', ''))
+    own = p.get('owner', '') if owner[0] else ''
 
     def load():
         with S.db() as c:
-            rows, total = S.query(c, view, q, genre, letter, sort, direction, PAGE, (page - 1) * PAGE, provider=prov)
+            rows, total = S.query(c, view, q, genre, letter, sort, direction, PAGE, (page - 1) * PAGE, provider=prov, owner=owner)
             return dict(rows=rows, total=total, counts=S.view_counts(c), genres=S.genres(c), letters=S.letter_counts(c), providers=S.providers_all(c),
                         people_hits=[dict(x) for x in S.find_people(c, q)] if len(q) >= 3 else [])
     d = await run_in_threadpool(load)
-    keep = {k: v for k, v in dict(q=q, genre=genre, dienst=prov, sort=sort if sort != 'title' else '', dir=direction if direction != 'asc' else '', l=letter).items() if v}
+    keep = {k: v for k, v in dict(q=q, genre=genre, dienst=prov, sort=sort if sort != 'title' else '', dir=direction if direction != 'asc' else '', l=letter, owner=own).items() if v}
 
     def url(**kw):
         x = {**keep, 'view': view if view != 'all' else ''}
@@ -64,7 +67,7 @@ async def index(request):
         return '/series?' + urlencode({k: v for k, v in x.items() if v not in ('', None)})
     return render(request, 'series_list.html', view=view, q=q, genre=genre, prov=prov, sort=sort, dir=direction, letter=letter, url=url,
                   page=page, pages=(d['total'] + PAGE - 1) // PAGE, view_names=VIEW_NAMES, sort_names=SORT_NAMES,
-                  abc=['#'] + [chr(x) for x in range(65, 91)], filtered=bool(q or genre or prov), message=p.get('message', ''), **d)
+                  abc=['#'] + [chr(x) for x in range(65, 91)], filtered=bool(q or genre or prov or own), owner=own, message=p.get('message', ''), **d)
 
 
 async def missing(request):
@@ -293,6 +296,22 @@ async def copy_delete(request):
     return go(f'/series/{sid}#boxen' if sid else '/series', 'Box entfernt.')
 
 
+async def copy_owner(request):
+    """Besitzer eines Exemplars aendern (seit 1.21); leer = Haushalt."""
+    cid = request.path_params['cid']
+    f, _ = await _form(request)
+    ok, uid = U.parse_owner(f.get('owner', ''))
+
+    def do():
+        with S.db() as c:
+            r = c.execute('SELECT series_id FROM copies WHERE id=?', (cid,)).fetchone()
+            if r and ok:
+                c.execute('UPDATE copies SET owner_id=? WHERE id=?', (uid, cid))
+            return r[0] if r else None
+    pid = await run_in_threadpool(do)
+    return go(f'/series/{pid}#boxen' if pid else '/series', 'Besitzer gespeichert.' if ok else 'Unbekannter Besitzer.')
+
+
 async def file_delete(request):
     fid = request.path_params['fid']
 
@@ -472,7 +491,7 @@ routes = [
     Route('/search', search), Route('/save', save, methods=['POST']), Route('/manual', manual, methods=['POST']),
     Route('/files', files_page), Route('/files/browse', FW.files_browse), Route('/files/scan', files_scan, methods=['POST']),
     Route('/files/apply', files_apply, methods=['POST']), Route('/files/status', files_status), Route('/files/reset', files_reset, methods=['POST']),
-    Route('/copies/{cid:int}/delete', copy_delete, methods=['POST']),
+    Route('/copies/{cid:int}/delete', copy_delete, methods=['POST']), Route('/copies/{cid:int}/owner', copy_owner, methods=['POST']),
     Route('/file/{fid:int}/delete', file_delete, methods=['POST']), Route('/file/{fid:int}/move', file_move, methods=['POST']),
     Route('/{sid:int}', detail), Route('/{sid:int}/edit', edit_page), Route('/{sid:int}/edit', _action(_edit), methods=['POST']),
     Route('/{sid:int}/watched', _action(_watched), methods=['POST']), Route('/{sid:int}/next-seen', _action(_next_seen), methods=['POST']),

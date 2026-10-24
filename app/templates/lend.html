@@ -31,7 +31,8 @@
  {% else %}<p class="muted">{{ _("Nichts gefunden.") }}</p>{% endif %}{% endif %}
 </section>
 
-<nav class="lendtabs" aria-label="{{ _('Bereich') }}"><a href="{{ base }}/lend"{% if not sel_area %} class="on"{% endif %}>{{ _("Alle") }}</a>{% for a,(label,_u) in LEND_AREAS.items() %}<a href="{{ base }}/lend?area={{ a }}"{% if sel_area==a %} class="on"{% endif %}>{{ _(label) }}</a>{% endfor %}<a href="{{ base }}/lend/text" class="right">{{ _("Als Text zum Kopieren") }}</a></nav>
+<nav class="lendtabs" aria-label="{{ _('Bereich') }}"><a href="{{ base }}/lend{% if owner %}?owner={{ owner }}{% endif %}"{% if not sel_area %} class="on"{% endif %}>{{ _("Alle") }}</a>{% for a,(label,_u) in LEND_AREAS.items() %}<a href="{{ base }}/lend?area={{ a }}{% if owner %}&amp;owner={{ owner }}{% endif %}"{% if sel_area==a %} class="on"{% endif %}>{{ _(label) }}</a>{% endfor %}<a href="{{ base }}/lend/text" class="right">{{ _("Als Text zum Kopieren") }}</a></nav>
+{% if accounts_on and me %}<nav class="lendtabs owners" aria-label="{{ _('Besitzer') }}"><a href="{{ base }}/lend{% if sel_area %}?area={{ sel_area }}{% endif %}"{% if not owner %} class="on"{% endif %}>{{ _("Von allen") }}</a><a href="{{ base }}/lend?owner=me{% if sel_area %}&amp;area={{ sel_area }}{% endif %}"{% if owner == 'me' %} class="on"{% endif %}>{{ _("Meine verliehenen") }}</a></nav>{% endif %}
 
 {% if groups %}{% for (pid, name), rows in groups %}
 <section class="card lendperson">

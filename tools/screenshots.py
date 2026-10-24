@@ -56,6 +56,7 @@ def shots(data):
         # mit eingeschalteten Konten (Profilwahl), siehe accounts(); immer am Ende
         ('anmelden-profile', '/login', {ACCOUNTS: 'guest'}, 900),
         ('einstellungen-nutzer', '/settings', {ACCOUNTS: 'admin'}, '#nutzer'),
+        ('besitzer-exemplare', f'/films/{f("Kometenjagd")}', {ACCOUNTS: 'admin'}, 'table.copies'),
     ]
 
 

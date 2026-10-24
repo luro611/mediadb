@@ -123,6 +123,7 @@ async def users_setup(request):
     err = U.set_mode(f.get('mode') if f.get('mode') in ('profiles', 'password') else 'profiles')
     if err:
         return _users_back(err)
+    await run_in_threadpool(U.claim_unowned)  # die vorhandene Sammlung gehoert dem ersten Verwalter
     return _login_as(_users_back('Konten eingeschaltet. Du bist als Verwalter angemeldet.'), uid)
 
 

@@ -11,6 +11,7 @@ from . import books_files as X
 from . import books_extras as BE
 from . import films_web as FW
 from . import fs
+from . import users as U
 from .films_art import MAX_UPLOAD
 
 templates = None
@@ -59,15 +60,17 @@ async def index(request):
     q, genre, kind, lang = p.get('q', '').strip(), p.get('genre', ''), p.get('kind', ''), p.get('lang', '')
     letter = p.get('l', '') if p.get('l', '') == '#' or (len(p.get('l', '')) == 1 and 'A' <= p.get('l', '') <= 'Z') else ''
     page = max(1, _int(p.get('page'), 1))
+    owner = U.owner_filter(p.get('owner', ''))
+    own = p.get('owner', '') if owner[0] else ''
 
     def load():
         with B.db() as c:
-            rows, total = B.query(c, view, q, genre, kind, lang, sort, direction, PAGE, (page - 1) * PAGE, letter)
+            rows, total = B.query(c, view, q, genre, kind, lang, sort, direction, PAGE, (page - 1) * PAGE, letter, owner)
             return dict(rows=[dict(r) for r in rows], total=total, counts=B.view_counts(c), genres=B.genres(c), book_langs=B.languages(c),
                         letters=B.letter_counts(c, sort), authors_hits=[dict(x) for x in B.find_authors(c, q)] if len(q) >= 3 else [])
     d = await run_in_threadpool(load)
     keep = {k: v for k, v in dict(q=q, genre=genre, kind=kind, lang=lang, sort=sort if sort != 'author' else '',
-                                  dir=direction if direction != 'asc' else '', l=letter).items() if v}
+                                  dir=direction if direction != 'asc' else '', l=letter, owner=own).items() if v}
 
     def url(**kw):
         x = {**keep, 'view': view if view != 'all' else ''}
@@ -75,8 +78,8 @@ async def index(request):
         return '/books?' + urlencode({k: v for k, v in x.items() if v not in ('', None)})
     return render(request, 'books_list.html', view=view, q=q, genre=genre, kind=kind, lang=lang, sort=sort, dir=direction,
                   letter=letter, url=url, page=page, pages=(d['total'] + PAGE - 1) // PAGE, view_names=VIEW_NAMES,
-                  sort_names=SORT_NAMES, abc=['#'] + [chr(x) for x in range(65, 91)], filtered=bool(q or genre or kind or lang),
-                  message=p.get('message', ''), **d)
+                  sort_names=SORT_NAMES, abc=['#'] + [chr(x) for x in range(65, 91)], filtered=bool(q or genre or kind or lang or own),
+                  owner=own, message=p.get('message', ''), **d)
 
 
 async def series_page(request):
@@ -359,6 +362,22 @@ async def copy_delete(request):
     return go(f'/books/{bid}#exemplare' if bid else '/books', 'Exemplar entfernt.')
 
 
+async def copy_owner(request):
+    """Besitzer eines Exemplars aendern (seit 1.21); leer = Haushalt."""
+    cid = request.path_params['cid']
+    f, _ = await _form(request)
+    ok, uid = U.parse_owner(f.get('owner', ''))
+
+    def do():
+        with B.db() as c:
+            r = c.execute('SELECT book_id FROM copies WHERE id=?', (cid,)).fetchone()
+            if r and ok:
+                c.execute('UPDATE copies SET owner_id=? WHERE id=?', (uid, cid))
+            return r[0] if r else None
+    pid = await run_in_threadpool(do)
+    return go(f'/books/{pid}#exemplare' if pid else '/books', 'Besitzer gespeichert.' if ok else 'Unbekannter Besitzer.')
+
+
 async def delete(request):
     bid = request.path_params['bid']
 
@@ -554,7 +573,7 @@ routes = [
     Route('/files', files_page), Route('/files/browse', FW.files_browse), Route('/files/scan', files_scan, methods=['POST']),
     Route('/files/list', list_scan, methods=['POST']), Route('/files/apply', files_apply, methods=['POST']),
     Route('/files/status', files_status), Route('/files/reset', files_reset, methods=['POST']),
-    Route('/copies/{cid:int}/delete', copy_delete, methods=['POST']), Route('/author/{aid:int}', author_page),
+    Route('/copies/{cid:int}/delete', copy_delete, methods=['POST']), Route('/copies/{cid:int}/owner', copy_owner, methods=['POST']), Route('/author/{aid:int}', author_page),
     Route('/{bid:int}', detail), Route('/{bid:int}/edit', edit_page), Route('/{bid:int}/edit', _action(_edit), methods=['POST']),
     Route('/{bid:int}/status', _action(_status), methods=['POST']), Route('/{bid:int}/read-date', _action(_read_date), methods=['POST']),
     Route('/{bid:int}/rating', _action(_rating), methods=['POST']), Route('/{bid:int}/notes', _action(_notes), methods=['POST']),

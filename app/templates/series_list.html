@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block content %}
+{% extends 'base.html' %}{% from '_owner.html' import owner_filter with context %}{% block content %}
 <p class="eyebrow">{{ _("MediaDB / Serien") }}</p>
 <h1>{{ _("*Serien*") }}</h1>
 {% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
@@ -9,9 +9,10 @@
  <input type="search" name="q" id="sq" value="{{ q }}" placeholder="{{ _('Titel, Darsteller, Sender, Barcode …') }}">
  <select name="genre" id="sgenre" aria-label="{{ _('Genre') }}"><option value="">{{ _("Alle Genres") }}</option>{% for g,n in genres %}<option value="{{ g }}"{% if g==genre %} selected{% endif %}>{{ g }} ({{ n }})</option>{% endfor %}</select>
  {% if providers %}<select name="dienst" id="sprov" aria-label="{{ _('Streamingdienst') }}"><option value="">{{ _("Alle Dienste") }}</option>{% for g,n in providers %}<option value="{{ g }}"{% if g==prov %} selected{% endif %}>{{ g }} ({{ n }})</option>{% endfor %}</select>{% endif %}
+ {{ owner_filter(owner) }}
  {% if view not in ('next','recent_added') %}<select name="sort" id="ssort" aria-label="{{ _('Sortierung') }}">{% for k,label in sort_names.items() %}<option value="{{ k }}"{% if k==sort %} selected{% endif %}>{{ _(label) }}</option>{% endfor %}</select>
  <select name="dir" id="sdir" aria-label="{{ _('Richtung') }}"><option value="asc">{{ _("aufsteigend") }}</option><option value="desc"{% if dir=='desc' %} selected{% endif %}>{{ _("absteigend") }}</option></select>{% endif %}
- <button>{{ _("Anzeigen") }}</button>{% if filtered %} <a href="{{ base }}{{ url(q='',genre='',dienst='',page='') }}">{{ _("Filter zurücksetzen") }}</a>{% endif %}
+ <button>{{ _("Anzeigen") }}</button>{% if filtered %} <a href="{{ base }}{{ url(q='',genre='',dienst='',owner='',page='') }}">{{ _("Filter zurücksetzen") }}</a>{% endif %}
 </form>
 <div class="listhead"><p class="muted">{{ _("§ Serien", total) }} · <a href="{{ base }}/series/add">{{ _("Serie hinzufügen") }}</a></p>{% set larea='series' %}{% include '_layout.html' %}</div>
 {% if view not in ('next','recent_added') and letters|length > 1 %}<nav class="abcbar abcpick" aria-label="{{ _('Anfangsbuchstabe') }}">{% for L in abc %}{% if letters.get(L) %}<a href="{{ base }}{{ url(l=L, page='') }}"{% if letter==L %} class="on" aria-current="true"{% endif %}>{{ L }}</a>{% else %}<span>{{ L }}</span>{% endif %}{% endfor %}<a href="{{ base }}{{ url(l='', page='') }}" class="all{% if not letter %} on{% endif %}">{{ _("Alle") }}</a></nav>{% endif %}
