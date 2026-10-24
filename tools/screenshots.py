@@ -66,7 +66,7 @@ DEMO_PW = 'demo1234'  # nur fuer die erfundenen Konten der Beispiel-Sammlung
 USERS_SETUP = f"""import sys; sys.path.insert(0, '.')
 from app import users as U
 U.init(sys.argv[1])
-U.create('Maren', 'admin', '{DEMO_PW}'); U.create('Jonas', 'member'); U.create('Besuch', 'guest')"""
+U.create('Maren', 'admin', '{DEMO_PW}'); U.create('Jonas', 'member')"""
 
 
 def accounts(browser, base, on, lang):

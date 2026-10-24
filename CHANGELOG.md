@@ -1,5 +1,10 @@
 # Änderungen
 
+## MediaDB 1.22.3 – Gastzugang eingebaut
+- **„Gast“ ist von selbst da:** Mit Konten zeigt die Anmeldeseite immer die Kachel „Gast“ (bzw. bei „Name und Passwort“ den Knopf „Als Gast ansehen, ohne Passwort“). Man muss dafür keine eigene Person mehr anlegen. Gäste können alles ansehen, aber nichts hinzufügen, ändern oder bewerten.
+- **Schalter** unter Einstellungen → Nutzer und Anmeldung → Gastzugang. Abgeschaltet verschwindet die Kachel, und ein angemeldeter Gast ist sofort abgemeldet. Von außerhalb des Heimnetzes gibt es keinen Gastzugang.
+- Selbst angelegte Personen mit der Rolle Gast funktionieren weiter wie bisher.
+
 ## MediaDB 1.22.2 – Besitzer nur bei Physischem, Gast ohne Passwort
 - **Besitzer nur bei physischen Exemplaren:** CD, DVD, Blu-ray, 4K, Serienbox und gedrucktes Buch. Dateien, E-Books, Hörbücher aus Ordnern und rein digitale Alben gehören immer dem Haushalt; dort gibt es keine Besitzer-Auswahl mehr, und beim Einlesen wird niemand automatisch Besitzer. Bereits eingelesene Dateien werden beim Update einmalig auf „Haushalt“ gesetzt.
 - **Besitzer gesammelt setzen** (Einstellungen → Nutzer und Anmeldung): alle physischen Exemplare auf einmal einer Person geben, wahlweise nur die, die noch dem Haushalt gehören. Offene Verleihvorgänge ziehen mit.

@@ -321,3 +321,4 @@ nav a.navhelp:not(.brand){display:inline-flex;align-items:center;justify-content
 .seenby{margin:8px 0 0;text-transform:none;letter-spacing:0;font:400 13px Inter,sans-serif}
 .guestlogin{margin:18px 0 0}.guestlogin button{margin:0}
 .assignrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) auto;gap:10px;align-items:center;margin:12px 0}.assignrow select,.assignrow button{margin:0}@media(max-width:700px){.assignrow{grid-template-columns:1fr}}
+.guesttile{border-style:dashed}

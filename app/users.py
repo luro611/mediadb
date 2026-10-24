@@ -26,7 +26,7 @@ MAX_AGE = 60 * 60 * 24 * 30
 ROLES = {'admin': 'Verwalter', 'member': 'Mitglied', 'guest': 'Gast'}
 MODES = ('off', 'profiles', 'password')
 _init_lock = threading.Lock()
-_cache = {'users': None, 'mode': None}
+_cache = {'users': None, 'mode': None, 'guest': None}
 _current = contextvars.ContextVar('mediadb_user', default=None)  # die Middleware fragt bei jeder Anfrage; Aenderungen leeren den Zwischenspeicher
 
 SCHEMA = """
@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS users(
   secret TEXT, last_login TEXT, created_at TEXT);
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
 """
+GUEST_NAME = '__gast__'  # eingebauter Gast (seit 1.22.3): ohne Passwort, nur lesen; angezeigt als "Gast"/"Guest"
 ASSIGN_PHYSICAL = None  # main.py: physische Exemplare gesammelt einer Person geben (Einstellungen -> Nutzer)
 ON_FIRST_ADMIN = []  # main.py: (Name, Funktion), die beim ersten Verwalter Vorhandenes einmalig uebernehmen (z. B. owner_id leer -> er)
 
@@ -62,7 +63,7 @@ def db():
 
 
 def _forget():
-    _cache.update(users=None, mode=None)
+    _cache.update(users=None, mode=None, guest=None)
 
 
 # ---------------------------------------------------------------- Lesen
@@ -72,6 +73,37 @@ def users():
         with db() as c:
             _cache['users'] = {r['id']: dict(r) for r in c.execute('SELECT * FROM users ORDER BY name COLLATE NOCASE')}
     return _cache['users']
+
+
+def people():
+    """Alle Nutzer ohne den eingebauten Gast (fuer Listen und Auswahl)."""
+    return [u for u in users().values() if u['name'] != GUEST_NAME]
+
+
+def guest_on():
+    """Gastzugang ohne Passwort anbieten (Einstellungen -> Nutzer); ohne Eintrag eingeschaltet."""
+    if _cache['guest'] is None:
+        with db() as c:
+            r = c.execute("SELECT value FROM meta WHERE key='guest_access'").fetchone()
+        _cache['guest'] = not r or r[0] != '0'
+    return _cache['guest']
+
+
+def set_guest(on):
+    with db() as c:
+        c.execute("INSERT OR REPLACE INTO meta(key, value) VALUES('guest_access', ?)", ('1' if on else '0',))
+    _forget()
+
+
+def builtin_guest():
+    """Konto des eingebauten Gasts, bei Bedarf angelegt (persoenliche Angaben brauchen eine Nummer)."""
+    g = next((u for u in users().values() if u['name'] == GUEST_NAME), None)
+    if not g:
+        with db() as c:
+            c.execute('INSERT OR IGNORE INTO users(name, role, created_at) VALUES(?, ?, ?)', (GUEST_NAME, 'guest', now()))
+        _forget()
+        g = next((u for u in users().values() if u['name'] == GUEST_NAME), None)
+    return g
 
 
 def get(uid):
@@ -222,6 +254,8 @@ def user_from_token(secret_key, tok):
     except Exception:
         return None
     if exp < time.time() or not get(uid) or not hmac.compare_digest(sig, _sig(secret_key, uid, exp)):
+        return None
+    if get(uid)['name'] == GUEST_NAME and not guest_on():  # Gastzugang abgeschaltet: Gast ist abgemeldet
         return None
     return get(uid)
 

@@ -6,7 +6,9 @@
 <div class="profiles">{% for p in people %}
  {% if p.needs %}<a class="profile" href="{{ base }}/login?u={{ p.id }}&amp;next={{ next|urlencode }}"><span class="pinit" aria-hidden="true">{{ p.name[:1] }}</span><strong>{{ p.name }}</strong><span class="muted">{{ _(ROLES[p.role]) }} · {{ _("mit PIN") }}</span></a>
  {% else %}<form method="post" action="{{ base }}/login"><input type="hidden" name="uid" value="{{ p.id }}"><input type="hidden" name="next" value="{{ next }}"><button class="profile"><span class="pinit" aria-hidden="true">{{ p.name[:1] }}</span><strong>{{ p.name }}</strong><span class="muted">{{ _(ROLES[p.role]) }}</span></button></form>{% endif %}
-{% endfor %}</div>
+{% endfor %}
+ {% if guest %}<form method="post" action="{{ base }}/login"><input type="hidden" name="uid" value="{{ guest.id }}"><input type="hidden" name="next" value="{{ next }}"><button class="profile guesttile"><span class="pinit" aria-hidden="true">{{ _("Gast")[:1] }}</span><strong>{{ _("Gast") }}</strong><span class="muted">{{ _("nur ansehen, ohne PIN") }}</span></button></form>{% endif %}
+</div>
 {% elif mode == 'profiles' %}
 <h1>{{ _("Hallo, *§*", pick.name) }}</h1>
 {% if error %}<div class="warn">{{ _("Falsche PIN oder falsches Passwort.") }}</div>{% endif %}
@@ -21,6 +23,7 @@
 <label>{{ _("Name") }}<input name="name" autocomplete="username" autofocus required></label>
 <label>{{ _("Passwort") }}<input type="password" name="password" autocomplete="current-password" required></label>
 <button>{{ _("Anmelden") }}</button></form>
+{% if guest %}<form method="post" action="{{ base }}/login" class="guestlogin"><input type="hidden" name="uid" value="{{ guest.id }}"><input type="hidden" name="next" value="{{ next }}"><button class="quiet">{{ _("Als Gast ansehen, ohne Passwort (nur lesen)") }}</button></form>{% endif %}
 {% for g in people if g.role == 'guest' and not g.needs %}<form method="post" action="{{ base }}/login" class="guestlogin"><input type="hidden" name="uid" value="{{ g.id }}"><input type="hidden" name="next" value="{{ next }}"><button class="quiet">{{ _("Als „§“ ansehen, ohne Passwort (nur lesen)", g.name) }}</button></form>{% endfor %}
 {% else %}
 <h1>{{ _("*Anmelden*") }}</h1>

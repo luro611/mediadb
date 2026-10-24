@@ -175,6 +175,11 @@ S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var
   <button>{{ _("Hinzufügen") }}</button>
  </form>
  <p class="help">{{ _("Verwalter: alles, auch Einstellungen und Nutzer. Mitglied: alles ansehen, hinzufügen und bearbeiten. Gast: nur ansehen, auch ohne Passwort. Verwalter brauchen immer ein Passwort.") }}</p>
+ <h3>{{ _("Gastzugang") }}</h3>
+ <form method="post" action="{{ base }}/settings/users/guest" class="modepick">
+  <label class="checkbox"><input type="checkbox" name="on" value="1"{% if guest_on %} checked{% endif %}> <span><strong>{{ _("Gastzugang ohne Passwort anbieten") }}</strong> · {{ _("Auf der Anmeldeseite steht dann „Gast“. Gäste können alles ansehen, aber nichts hinzufügen, ändern oder bewerten. Nur im Heimnetz.") }}</span></label>
+  <button class="quiet">{{ _("Speichern") }}</button>
+ </form>
  <h3>{{ _("Besitzer gesammelt setzen") }}</h3>
  <p class="help">{{ _("Alle CDs, DVDs, Blu-rays, Serienboxen und gedruckten Bücher auf einmal einer Person geben, z. B. nach dem Einrichten. Dateien, E-Books und rein digitale Alben gehören immer dem Haushalt.") }}</p>
  <form method="post" action="{{ base }}/settings/users/assign" class="assignrow" onsubmit="return confirm({{ _t('Besitzer für alle gewählten Exemplare ändern?')|tojson|forceescape }})">

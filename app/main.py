@@ -591,7 +591,7 @@ def nav_langs():
  return [c for c in i18n.LANGS if c in v]
 def ctx(request,**kw):
  lang=get_lang(request)
- return {'request':request,'lang':lang,'langs':i18n.LANGS,'nav_langs':nav_langs(),'custom_css':custom_css(),'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on or users.accounts_on(),'accounts_on':users.accounts_on(),'accounts_mode':users.mode(),'me':request.scope.get('state',{}).get('user'),'ROLES':users.ROLES,'layout':partial(get_layout,request),'layout_cls':partial(layout_cls,request),**kw}
+ return {'request':request,'lang':lang,'langs':i18n.LANGS,'nav_langs':nav_langs(),'custom_css':custom_css(),'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on or users.accounts_on(),'accounts_on':users.accounts_on(),'accounts_mode':users.mode(),'me':request.scope.get('state',{}).get('user'),'ROLES':users.ROLES,'GUEST_NAME':users.GUEST_NAME,'layout':partial(get_layout,request),'layout_cls':partial(layout_cls,request),**kw}
 @app.get('/layout/{area}/{mode}')
 def set_layout(request:Request,area:str,mode:str,next:str='/'):
  next=sec.strip_base(next,sec.get_base(request))
@@ -694,7 +694,8 @@ def login_page(request:Request,next:str='/media',error:str='',u:int=0):
  if users.accounts_on():
   pick=users.get(u) if users.mode()=='profiles' else None
   return templates.TemplateResponse(request,'login.html',ctx(request,next=_safe_next(next),error=error,login_page=True,mode=users.mode(),
-   people=[dict(x,needs=_needs_secret(x,request)) for x in users.users().values()],pick=pick and dict(pick,needs=_needs_secret(pick,request))))
+   people=[dict(x,needs=_needs_secret(x,request)) for x in users.people()],pick=pick and dict(pick,needs=_needs_secret(pick,request)),
+   guest=users.builtin_guest() if users.guest_on() and not _public(request) else None))
  if not SEC.auth_on: return RedirectResponse(_safe_next(next),303)
  return templates.TemplateResponse(request,'login.html',ctx(request,next=_safe_next(next),error=error,login_page=True,mode='app'))
 @app.post('/login')
@@ -704,6 +705,7 @@ def login(request:Request,password:str=Form(''),next:str=Form('/media'),uid:int=
   guest=users.get(uid) if uid else None
   if users.mode()=='profiles' or (guest and guest['role']=='guest'): u=users.get(uid)
   else: u=users.by_name(name)
+  if u and u['name']==users.GUEST_NAME and not users.guest_on(): u=None  # eingebauter Gast abgeschaltet
   if not u or (_needs_secret(u,request) and not users.secret_ok(u,password)):
    time.sleep(1.5); return RedirectResponse('/login?'+urlencode({'next':nxt,'error':'1','u':uid or ''}),303)
   users.touch(u['id'])

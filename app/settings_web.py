@@ -44,7 +44,7 @@ def _view():
                 flags={k: C.flag(k) for k in ('BARCODE_LOOKUP', 'COVER_WEB', 'AUTO_UPDATE', 'MEDIATHEK', 'UPDATE_CHECK')}, relang=RELANG,
                 stored_lang=C.stored().get('TMDB_LANGUAGE'),
                 password_on=bool(os.getenv('APP_PASSWORD')), public=os.getenv('ALLOW_PUBLIC', '0') in ('1', 'true', 'yes', 'ja', 'on'),
-                ui_langs=i18n.LANGS, people=list(U.users().values()),
+                ui_langs=i18n.LANGS, people=U.people(), guest_on=U.guest_on(),
                 nas_shares=[{k: v for k, v in x.items() if k != 'password'} | {'has_password': bool(x.get('password'))} for x in nas.shares()],
                 nas_logins=nas.logins(), upd=updates.STATE, upd_info=updates.info(), app_ver=C.version(),
                 upd_checked=time.strftime('%d.%m.%Y %H:%M', time.localtime(updates.STATE['checked'])) if updates.STATE['checked'] else '')
@@ -161,6 +161,13 @@ async def users_assign(request):
         return _users_back('Unbekannter Besitzer.')
     n = await run_in_threadpool(U.ASSIGN_PHYSICAL, uid, f.get('scope') != 'all')
     return _users_back('Besitzer gespeichert.')
+
+
+async def users_guest(request):
+    """Eingebauten Gastzugang (ohne Passwort, nur lesen) an- oder abschalten."""
+    f, _ = await _form(request)
+    await run_in_threadpool(U.set_guest, f.get('on') == '1')
+    return _users_back('Gespeichert.')
 
 
 async def users_mode(request):
@@ -294,6 +301,7 @@ routes = [Route('/', page), Route('/save', save, methods=['POST']), Route('/test
           Route('/nas/test', nas_test, methods=['POST']), Route('/nas/status', nas_status),
           Route('/nas/delete', nas_delete, methods=['POST']),
           Route('/users/setup', users_setup, methods=['POST']), Route('/users/add', users_add, methods=['POST']),
-          Route('/users/mode', users_mode, methods=['POST']), Route('/users/assign', users_assign, methods=['POST']), Route('/users/{uid:int}/save', users_save, methods=['POST']),
+          Route('/users/mode', users_mode, methods=['POST']), Route('/users/assign', users_assign, methods=['POST']),
+          Route('/users/guest', users_guest, methods=['POST']), Route('/users/{uid:int}/save', users_save, methods=['POST']),
           Route('/users/{uid:int}/delete', users_delete, methods=['POST'])]
 app = Starlette(routes=routes)
