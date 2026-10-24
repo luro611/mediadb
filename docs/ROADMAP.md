@@ -15,6 +15,7 @@ Musik und Fundament: CDs und Audiodateien, MusicBrainz, Cover, Genres, Import/Ex
 9. ✅ **1.17.2 Englische Anleitung** (`docs/MANUAL.md`) für alle Oberflächensprachen außer Deutsch.
    ✅ **1.18.0 Umzug zu GitHub** (Code, Image `ghcr.io`, Releases, Update-Hinweis), weil Codeberg seit 2026 überwiegend KI-geschriebene Projekte verbietet.
    ✅ **1.18.1 Fehler und Rückmeldungen** (Barcode-Suche, sichtbares „Gespeichert“, Sicherheitsfrage beim Neuladen, Staffel-Knopf).
+   ✅ **1.19.0 Hinzufügen verbessert** (bessere Auflösung beim Einlesen, „Schon im Archiv“, „Weiteren Film hinzufügen“, Fassung mit Vorschlägen).
 10. **Offen:** Betrieb und Datenquellen auf Englisch, Anleitung in weiteren Sprachen; gemeinsame Konten für Familien.
 11. **Home-Assistant-Add-on:** eigenes kleines Repository, verweist auf das Docker-Image.
 

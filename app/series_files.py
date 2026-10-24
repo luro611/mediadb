@@ -8,6 +8,7 @@ Erkannte Schreibweisen (Punkte, Unterstriche und Leerzeichen sind egal):
   Serie/Staffel 2/Folge 3.mkv, Season 02/03 - Titel.mkv                -> Serie und Staffel aus den Ordnern
 Jellyfin/Kodi: tvshow.nfo im Serienordner (TMDB-/TVDB-/IMDb-Nummer) und Folgen-.nfo (season/episode) werden bevorzugt."""
 import logging, os, re, threading, xml.etree.ElementTree as ET
+from collections import Counter
 from difflib import SequenceMatcher
 from . import films_tmdb as T
 from . import films_files as FF
@@ -284,7 +285,18 @@ def scan_worker(folders):
             if r['status'] == 'match' and r['tmdb_id'] in have:
                 r['status'] = 'known'
                 r['series_id'], r['series_title'] = have[r['tmdb_id']]
-            if r['status'] in ('match', 'known') or (r['status'] == 'unsure' and r.get('sim', 0) >= 0.7):
+                eps = {(f['season'], f['episode']) for f in g['files'] if f['episode'] is not None}
+                with S.db() as c:
+                    old = [dict(x) for x in c.execute('SELECT id, season, episode, path, resolution FROM ep_files WHERE series_id=?', (r['series_id'],))
+                           if (x['season'], x['episode']) in eps]
+                new_res = Counter(FF.resolution_from_name(os.path.basename(f['path'])) for f in g['files'] if (f['season'], f['episode']) in {(o['season'], o['episode']) for o in old})
+                r.update(FF.compare_files(old, new_res.most_common(1)[0][0] if new_res else None))
+                if old:
+                    r['n_overlap'] = len({(o['season'], o['episode']) for o in old})
+                    r['old_res'] = sorted({o['resolution'] or '' for o in old}, key=FF.res_px, reverse=True)
+            if r['status'] == 'known' and r.get('suggest') in ('replace', 'skip'):
+                r['default'] = 'skip' if r['suggest'] == 'skip' else f"replace:{r['tmdb_id']}"
+            elif r['status'] in ('match', 'known') or (r['status'] == 'unsure' and r.get('sim', 0) >= 0.7):
                 r['default'] = f"tmdb:{r['tmdb_id']}"  # bei 'Bitte pruefen' den besten Vorschlag vorwaehlen, wenn er halbwegs passt
             else:
                 r['default'] = 'plain' if r['status'] == 'nf' else 'skip'
@@ -393,7 +405,7 @@ def file_data(f, season, ep):
 
 
 def apply_worker(choices, images_dir):
-    res = {'new': 0, 'attached': 0, 'plain': 0, 'skipped': 0, 'files': 0}
+    res = {'new': 0, 'attached': 0, 'plain': 0, 'skipped': 0, 'files': 0, 'replaced': 0}
     try:
         total = sum(it['n_files'] for it in JOB['items'])
         JOB.update(state='applying', total=total, done=0, phase='apply')
@@ -406,9 +418,9 @@ def apply_worker(choices, images_dir):
                     JOB['done'] += it['n_files']
                     continue
                 with S.db() as c:
-                    if ch.startswith('tmdb:') and ch[5:].isdigit():
-                        existed = S.by_tmdb(c, int(ch[5:]))
-                        sid, err = save_from_tmdb(c, int(ch[5:]), images_dir)
+                    if ch.partition(':')[0] in ('tmdb', 'replace') and ch.partition(':')[2].isdigit():
+                        existed = S.by_tmdb(c, int(ch.partition(':')[2]))
+                        sid, err = save_from_tmdb(c, int(ch.partition(':')[2]), images_dir)
                         if not sid:
                             raise RuntimeError(err)
                         res['attached' if existed else 'new'] += 1
@@ -423,6 +435,11 @@ def apply_worker(choices, images_dir):
                         season, ep = place_file(c, sid, f)
                     data = file_data(f, season, ep)  # ffprobe ausserhalb der Transaktion
                     with S.db() as c:
+                        if ch.startswith('replace:'):  # Eintraege der alten Dateien dieser Folge; die Dateien selbst bleiben
+                            for o in it.get('old_files') or []:
+                                if (o['season'], o['episode']) == (season, ep):
+                                    c.execute('DELETE FROM ep_files WHERE id=? AND series_id=?', (o['id'], sid))
+                                    res['replaced'] += 1
                         S.add_file(c, sid, data)
                     res['files'] += 1
                     JOB['done'] += 1

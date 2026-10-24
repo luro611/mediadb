@@ -289,9 +289,14 @@ def scan_worker(folders):
             if r['status'] == 'match' and r['tmdb_id'] in have:
                 r['status'] = 'known'
                 r['film_id'], r['film_title'] = have[r['tmdb_id']]
+                with F.db() as c:
+                    old = [dict(x) for x in c.execute("SELECT id, path, resolution FROM copies WHERE film_id=? AND kind='file'", (r['film_id'],))]
+                r.update(compare_files(old, resolution_from_name(it['name']) or resolution_from_name(os.path.basename(it['folder']))))
             # nicht gefunden: mit Jahr im Namen vermutlich ein Film (anlegen), ohne Jahr eher ein eigenes Video (ueberspringen)
-            r['default'] = {'match': f"tmdb:{r['tmdb_id']}", 'known': f"tmdb:{r['tmdb_id']}", 'unsure': 'skip',
+            r['default'] = {'match': f"tmdb:{r['tmdb_id']}", 'known': f"{r.get('suggest', 'tmdb')}:{r['tmdb_id']}", 'unsure': 'skip',
                             'nf': 'plain' if r.get('year') else 'skip'}[r['status']]
+            if r['default'] == f"skip:{r['tmdb_id']}":
+                r['default'] = 'skip'
             out.append(r)
             JOB['done'] += 1
         # dieselbe TMDB-Nummer mehrfach (z. B. 1080p und 4K): bleibt ein Film mit mehreren Exemplaren
@@ -363,6 +368,30 @@ def fetch_images(c, fid, poster_path, backdrop_path, images_dir):
         A.fill_missing(c, images_dir, fid)
 
 
+def res_px(res):
+    """'1080p' -> 1080, sonst 0 (unbekannt)."""
+    m = re.match(r'(\d{3,4})[pi]?$', str(res or ''))
+    return int(m.group(1)) if m else 0
+
+
+def compare_files(old, new_res):
+    """Vorhandene Dateien eines Eintrags mit einer neu gefundenen vergleichen (Auflösung).
+    Liefert {'old_files': [...], 'new_res': ..., 'suggest': 'replace'|'skip'|'tmdb'} oder {} ohne vorhandene Dateien.
+    replace = neue Datei nehmen, alte Eintraege entfernen; skip = neue ist schlechter; tmdb = beide behalten."""
+    if not old:
+        return {}
+    for o in old:
+        o['gone'] = not fs.exists(o['path'])
+    new, best = res_px(new_res), max(res_px(o['resolution']) for o in old)
+    if all(o['gone'] for o in old) or (new and best and new > best):
+        suggest = 'replace'
+    elif new and best and new < best:
+        suggest = 'skip'
+    else:
+        suggest = 'tmdb'
+    return {'old_files': old, 'new_res': new_res, 'suggest': suggest}
+
+
 def resolution_from_name(name):
     """'11.Rebels.2024.German.1080p.BluRay' -> '1080p'; 4K/UHD -> '2160p'. Sonst None."""
     n = (name or '').lower()
@@ -386,7 +415,7 @@ def copy_from_file(path, disc='', edition=''):
 
 
 def apply_worker(choices, images_dir):
-    res = {'new': 0, 'attached': 0, 'plain': 0, 'skipped': 0}
+    res = {'new': 0, 'attached': 0, 'plain': 0, 'skipped': 0, 'replaced': 0}
     try:
         JOB.update(state='applying', total=len(JOB['items']), done=0)
         for it in JOB['items']:
@@ -395,11 +424,16 @@ def apply_worker(choices, images_dir):
                 with F.db() as c:
                     if ch == 'skip' or c.execute('SELECT 1 FROM copies WHERE path=?', (it['path'],)).fetchone():
                         res['skipped'] += 1
-                    elif ch.startswith('tmdb:') and ch[5:].isdigit():
-                        existed = F.film_by_tmdb(c, int(ch[5:]))
-                        fid, err = save_from_tmdb(c, int(ch[5:]), images_dir)
+                    elif ch.partition(':')[0] in ('tmdb', 'replace') and ch.partition(':')[2].isdigit():
+                        tmdb_id = int(ch.partition(':')[2])
+                        existed = F.film_by_tmdb(c, tmdb_id)
+                        fid, err = save_from_tmdb(c, tmdb_id, images_dir)
                         if not fid:
                             raise RuntimeError(err)
+                        if ch.startswith('replace:'):  # nur die Eintraege der alten Dateien; die Dateien selbst bleiben unberuehrt
+                            for o in it.get('old_files') or []:
+                                c.execute("DELETE FROM copies WHERE id=? AND film_id=? AND kind='file'", (o['id'], fid))
+                            res['replaced'] += 1
                         F.add_copy(c, fid, copy_from_file(it['path'], it['disc'], it.get('edition')))
                         if not F.get_film(c, fid)['poster']:
                             from . import films_art as A

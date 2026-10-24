@@ -1,5 +1,12 @@
 # Änderungen
 
+## MediaDB 1.19.0 – Hinzufügen verbessert
+- **Bessere Auflösung erkennen:** Liest du einen Film oder eine Serie ein, die es schon als Datei in einer anderen Auflösung gibt, zeigt die Vorschau alte und neue Auflösung und fragt: neue Datei nehmen und den Eintrag der alten entfernen, beide behalten oder überspringen. Ist die neue besser oder die alte nicht mehr da, ist „neue nehmen“ vorgewählt; ist sie schlechter, „überspringen“. Bei Serien gilt das Folge für Folge. Die alte Datei selbst bleibt auf dem NAS.
+- **Schon im Archiv:** Steht ein gescannter Barcode schon in der Sammlung, zeigt MediaDB das deutlich mit „Zum Film“ bzw. „Zur Serie“ und „Trotzdem neu suchen“. Treffer, die es schon gibt, sind in der Trefferliste hervorgehoben und verlinkt, darüber steht ein Hinweis.
+- **Weiteren Film hinzufügen:** Nach dem Speichern steht auf der Film- bzw. Serienseite ein Knopf, der direkt zum nächsten Hinzufügen führt.
+- **Fassung mit Vorschlägen:** Das Feld „Fassung“ bietet eine Liste (Kinofassung, Director’s Cut, Extended Edition, Uncut, Steelbook, Mediabook …); eigene Angaben gehen weiterhin.
+- Die Titelsuche nach einem Barcode zeigt den Hinweis „kein Produkt gefunden“ nur noch direkt nach dem Scannen.
+
 ## MediaDB 1.18.1 – Fehler und Rückmeldungen
 - **Barcode findet den richtigen Film:** Liefert der Barcode-Dienst Händlernamen wie „Chocolat By Lasse Hallström | Dvd | Condition“, sucht MediaDB jetzt auch nach dem Titel vor „By …“ und überspringt Händlerangaben zum Zustand (Condition, Used, Neu, OVP …). Vorher kamen dabei falsche Treffer.
 - **Gespeichert ist sichtbar:** Springt die Seite nach dem Speichern an eine Stelle weiter unten (Gesehen, Bewertung, Staffeln), erscheint die Meldung jetzt schwebend unten im Bild und verschwindet nach ein paar Sekunden; der gespeicherte Abschnitt leuchtet kurz auf. Gesehen, ungesehen und Bewertung melden sich bei Filmen, Serien und Büchern nun ausdrücklich.

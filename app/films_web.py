@@ -190,7 +190,7 @@ async def scan(request):
     r = await run_in_threadpool(work)
     if kind == 'auto':
         kind = T.guess_kind(r['product'], 'dvd')
-    return render(request, 'films_candidates.html', barcode=bc, kind=kind, kinds=F.KINDS, edition='', year='', attach=None, **r)
+    return render(request, 'films_candidates.html', barcode=bc, kind=kind, kinds=F.KINDS, edition='', year='', attach=None, scanned=True, **r)
 
 
 async def search(request):
@@ -230,7 +230,7 @@ async def save(request):
     fid, msg = await run_in_threadpool(work)
     if not fid:
         return go('/films/add', msg or 'Speichern fehlgeschlagen.')
-    return go(f'/films/{fid}', msg)
+    return go(f'/films/{fid}?added=1', msg)
 
 
 async def manual(request):
@@ -247,7 +247,7 @@ async def manual(request):
                 F.add_copy(c, fid, {k: f.get(k) for k in ('kind', 'barcode', 'edition') if f.get(k)})
             return fid
     fid = await run_in_threadpool(work)
-    return go(f'/films/{fid}', 'Gespeichert.')
+    return go(f'/films/{fid}?added=1', 'Gespeichert.')
 
 
 # ---------------------------------------------------------------- Detail und Aktionen

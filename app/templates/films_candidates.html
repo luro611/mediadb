@@ -1,30 +1,32 @@
-{% extends 'base.html' %}{% block content %}
+{% extends 'base.html' %}{% block content %}{% from '_editions.html' import editions_list with context %}{{ editions_list() }}
 <p class="eyebrow">{{ _("MediaDB / Filme / Hinzufügen") }}</p>
 <h1>{% if attach %}{{ _("Anderen Film *zuordnen*") }}{% else %}{{ _("Treffer *wählen*") }}{% endif %}</h1>
 {% if attach %}<p class="intro">{{ _("Wähle den richtigen Film für „§“. Alle Angaben werden dann neu von TMDB übernommen; Exemplare, Bewertung, gesehen und Notizen bleiben.", attach.title) }}</p>{% endif %}
 {% if barcode %}<p class="muted">{{ _("Barcode") }} <code>{{ barcode }}</code>{% if product %} · {{ _("Produkt laut Barcode-Dienst:") }} „{{ product }}“{% endif %}</p>{% endif %}
 {% if err %}<div class="warn">{{ _(err) }}</div>{% endif %}
 {% if local %}
-<div class="ok"><p>{{ _("Dieser Barcode steht schon in deiner Sammlung:") }}</p><ul>{% for f in local %}<li><a href="{{ base }}/films/{{ f.id }}">{{ f.title }}{% if f.year %} ({{ f.year }}){% endif %}</a></li>{% endfor %}</ul></div>
+<div class="warn archived"><h3>{{ _("Schon im *Archiv*") }}</h3><p>{{ _("Dieser Barcode steht schon in deiner Sammlung:") }}</p><ul>{% for f in local %}<li><a href="{{ base }}/films/{{ f.id }}">{{ f.title }}{% if f.year %} ({{ f.year }}){% endif %}</a></li>{% endfor %}</ul>
+ <div class="actions"><a class="btnlink" href="{{ base }}/films/{{ local[0].id }}">{{ _("Zum Film") }}</a><a class="quietlink" href="{{ base }}/films/search?q={{ local[0].title|urlencode }}&amp;barcode={{ barcode }}&amp;kind={{ kind }}">{{ _("Trotzdem neu suchen") }}</a></div></div>
 <p class="muted">{{ _("Ein zweites Exemplar fügst du auf der Seite des Films hinzu.") }}</p>
 {% else %}
-{% if barcode and not product and not err %}<div class="warn">{{ _("Zu diesem Barcode wurde kein Produkt gefunden. Bitte nach dem Titel suchen; der Barcode wird mit gespeichert.") }}</div>{% endif %}
+{% if scanned and barcode and not product and not err %}<div class="warn">{{ _("Zu diesem Barcode wurde kein Produkt gefunden. Bitte nach dem Titel suchen; der Barcode wird mit gespeichert.") }}</div>{% endif %}
 <form method="get" action="{{ base }}/films/search" class="card inline-form">
  <input type="hidden" name="barcode" value="{{ barcode }}"><input type="hidden" name="kind" value="{{ kind }}"><input type="hidden" name="edition" value="{{ edition }}">{% if attach %}<input type="hidden" name="attach" value="{{ attach.id }}">{% endif %}
  <label for="cq">{{ _("Titel") }}</label><input id="cq" name="q" value="{{ query }}" required><label for="cy">{{ _("Jahr") }}</label><input id="cy" name="year" value="{{ year }}" inputmode="numeric" maxlength="4" class="short"><button>{{ _("Suchen") }}</button>
 </form>
 {% if cands %}
+{% set haves = cands|selectattr('have')|list %}{% if haves and not attach %}<div class="warn archived"><h3>{{ _("Schon im *Archiv*") }}</h3><p>{{ _("Diese Treffer gibt es schon in deiner Sammlung:") }} {% for c in haves %}<a href="{{ base }}/films/{{ c.have }}">{{ c.title }}{% if c.year %} ({{ c.year }}){% endif %}</a>{{ ', ' if not loop.last }}{% endfor %}.</p><p class="muted">{{ _("Hast du ein weiteres Exemplar, wähle den Treffer unten trotzdem aus. Sonst brauchst du nichts zu tun.") }}</p></div>{% endif %}
 <div class="cands">{% for c in cands %}
-<form method="post" action="{{ base }}{{ '/films/%d/rematch' % attach.id if attach else '/films/save' }}" class="cand card">
+<form method="post" action="{{ base }}{{ '/films/%d/rematch' % attach.id if attach else '/films/save' }}" class="cand card{% if c.have and not attach %} have{% endif %}">
  <input type="hidden" name="tmdb_id" value="{{ c.tmdb_id }}">
  {% if c.poster_url %}<img src="{{ c.poster_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}<span class="pph small">{{ c.title }}</span>{% endif %}
  <div><h3>{{ c.title }}{% if c.year %} <span class="muted">({{ c.year }})</span>{% endif %}</h3>
   {% if c.original_title and c.original_title!=c.title %}<p class="sub">{{ c.original_title }}</p>{% endif %}
   {% if c.overview %}<p class="ov">{{ c.overview }}{% if c.overview|length>=280 %} …{% endif %}</p>{% endif %}
-  {% if c.have %}<p class="badge">{{ _("schon in der Sammlung") }}</p>{% endif %}
+  {% if c.have %}<p><a class="badge have" href="{{ base }}/films/{{ c.have }}">{{ _("schon im Archiv") }} →</a></p>{% endif %}
   {% if not attach %}<div class="row3">
    <span><label for="k{{ loop.index }}">{{ _("Format") }}</label><select name="kind" id="k{{ loop.index }}">{% for k,l in kinds.items() %}<option value="{{ k }}"{% if k==kind %} selected{% endif %}>{{ _(l) }}</option>{% endfor %}</select></span>
-   <span><label for="e{{ loop.index }}">{{ _("Fassung (optional)") }}</label><input name="edition" id="e{{ loop.index }}" value="{{ edition }}" placeholder="{{ _('z. B. Director’s Cut, Steelbook') }}"></span>
+   <span><label for="e{{ loop.index }}">{{ _("Fassung (optional)") }}</label><input name="edition" id="e{{ loop.index }}" value="{{ edition }}" list="editions" autocomplete="off" placeholder="{{ _('z. B. Director’s Cut, Steelbook') }}"></span>
    <span><label for="b{{ loop.index }}">{{ _("Barcode") }}</label><input name="barcode" id="b{{ loop.index }}" value="{{ barcode }}" inputmode="numeric"></span></div>{% endif %}
   <button>{% if attach %}{{ _("Diesen Film zuordnen") }}{% elif c.have %}{{ _("Als weiteres Exemplar hinzufügen") }}{% else %}{{ _("Das ist mein Film") }}{% endif %}</button>
  </div></form>{% endfor %}</div>

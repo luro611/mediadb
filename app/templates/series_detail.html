@@ -1,6 +1,6 @@
 {% extends 'base.html' %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}
 <p class="eyebrow"><a href="{{ base }}/series">{{ _("MediaDB / Serien") }}</a></p>
-{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+{% if message %}<div class="ok{% if request.query_params.get('added') %} addmore{% endif %}">{{ _(message) }}{% if request.query_params.get('added') %} <a class="btnlink" href="{{ base }}/series/add">{{ _("Weitere Serie hinzufügen") }}</a>{% endif %}</div>{% endif %}
 {% if s.backdrop %}<div class="backdrop" style="background-image:url('{{ base }}/film-images/{{ s.backdrop }}')" role="img" aria-label=""></div>{% endif %}
 <div class="filmhead">
  <div class="filmposter">{% if s.poster %}<img src="{{ base }}/film-images/{{ s.poster }}" alt="{{ _('Poster') }} {{ s.title }}">{% else %}<span class="pph">{{ s.title }}</span>{% endif %}<p><a href="{{ base }}/series/{{ s.id }}/poster" class="small">{{ _("Poster ändern ›") }}</a></p></div>

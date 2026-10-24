@@ -1,7 +1,7 @@
-{% extends 'base.html' %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}
+{% extends 'base.html' %}{% from '_next.html' import next_btn with context %}{% from '_lend.html' import lend_box with context %}{% block content %}{% from '_editions.html' import editions_list with context %}{{ editions_list() }}
 {% set f = film %}
 <p class="eyebrow"><a href="{{ base }}/films">{{ _("MediaDB / Filme") }}</a></p>
-{% if message %}<div class="ok">{{ _(message) }}</div>{% endif %}
+{% if message %}<div class="ok{% if request.query_params.get('added') %} addmore{% endif %}">{{ _(message) }}{% if request.query_params.get('added') %} <a class="btnlink" href="{{ base }}/films/add">{{ _("Weiteren Film hinzufügen") }}</a>{% endif %}</div>{% endif %}
 {% if f.backdrop %}<div class="backdrop" style="background-image:url('{{ base }}/film-images/{{ f.backdrop }}')" role="img" aria-label=""></div>{% endif %}
 <div class="filmhead">
  <div class="filmposter">{% if f.poster %}<img src="{{ base }}/film-images/{{ f.poster }}" alt="{{ _('Poster') }} {{ f.title }}">{% else %}<span class="pph">{{ f.title }}</span>{% endif %}<p><a href="{{ base }}/films/{{ f.id }}/poster" class="small">{{ _("Poster ändern ›") }}</a></p></div>
@@ -59,7 +59,7 @@
 <details class="card"><summary>{{ _("Exemplar hinzufügen") }}</summary>
 <form method="post" action="{{ base }}/films/{{ f.id }}/copies"><input type="hidden" name="anchor" value="exemplare">
 <div class="row3"><span><label for="ck">{{ _("Format") }}</label><select name="kind" id="ck">{% for k,l in kinds.items() if k!='file' %}<option value="{{ k }}">{{ _(l) }}</option>{% endfor %}</select></span>
-<span><label for="ce">{{ _("Fassung (optional)") }}</label><input name="edition" id="ce" placeholder="{{ _('z. B. Director’s Cut, Steelbook') }}"></span>
+<span><label for="ce">{{ _("Fassung (optional)") }}</label><input name="edition" id="ce" list="editions" autocomplete="off" placeholder="{{ _('z. B. Director’s Cut, Steelbook') }}"></span>
 <span><label for="cb">{{ _("Barcode") }}</label><input name="barcode" id="cb" inputmode="numeric"></span></div>
 <label for="cn">{{ _("Notiz") }}</label><input name="notes" id="cn"><button>{{ _("Hinzufügen") }}</button></form></details>
 

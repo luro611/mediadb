@@ -130,7 +130,7 @@ async def scan(request):
     kind = f.get('kind') if f.get('kind') in S.KINDS else T.guess_kind(r['product'], 'dvd')
     if kind == 'file':
         kind = 'dvd'
-    return render(request, 'series_candidates.html', barcode=bc, kind=kind, kinds=S.KINDS, year='', attach=None, **r)
+    return render(request, 'series_candidates.html', barcode=bc, kind=kind, kinds=S.KINDS, year='', attach=None, scanned=True, **r)
 
 
 async def search(request):
@@ -165,7 +165,7 @@ async def save(request):
                 S.add_copy(c, sid, f)
             return sid, ('Box zur vorhandenen Serie hinzugefügt.' if existed and f.get('kind') else 'Gespeichert.')
     sid, msg = await run_in_threadpool(work)
-    return go(f'/series/{sid}', msg) if sid else go('/series/add', msg or 'Speichern fehlgeschlagen.')
+    return go(f'/series/{sid}?added=1', msg) if sid else go('/series/add', msg or 'Speichern fehlgeschlagen.')
 
 
 async def manual(request):

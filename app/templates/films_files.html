@@ -16,7 +16,7 @@
 <form method="post" action="{{ base }}/films/files/reset"><button>{{ _("Zurück") }}</button></form>
 
 {% elif job.state=='done' %}
-<div class="ok"><h3>{{ _("Fertig") }}</h3><p>{{ _("§ Filme neu angelegt, § als weiteres Exemplar zu vorhandenen Filmen, § ohne TMDB angelegt, § übersprungen.", job.result.new, job.result.attached, job.result.plain, job.result.skipped) }}</p></div>
+<div class="ok"><h3>{{ _("Fertig") }}</h3><p>{{ _("§ Filme neu angelegt, § als weiteres Exemplar zu vorhandenen Filmen, § ohne TMDB angelegt, § übersprungen.", job.result.new, job.result.attached, job.result.plain, job.result.skipped) }}{% if job.result.replaced %} {{ _("Davon ersetzt die neue Datei die alte: §.", job.result.replaced) }}{% endif %}</p></div>
 <div class="actions"><a href="{{ base }}/films?view=recent_added">{{ _("Zuletzt hinzugefügt ansehen") }}</a><form method="post" action="{{ base }}/films/files/reset"><button>{{ _("Weiteren Ordner einlesen") }}</button></form></div>
 
 {% elif job.state=='ready' %}
@@ -31,7 +31,10 @@
 <div class="card albumrow">
  <div class="albhead"><strong>{{ it.title or it.name }}</strong>{% if it.year %} <span class="badge">{{ it.year }}</span>{% endif %}{% if it.edition %} <span class="badge">{{ it.edition }}</span>{% endif %}{% if it.disc %} <span class="badge">{{ _('Blu-ray-Ordner') if it.disc=='bluray' else _('DVD-Ordner') }}</span>{% endif %}{% if it.source=='nfo' %} <span class="badge">.nfo</span>{% endif %}</div>
  <p class="muted"><code class="path">{{ host_label(it.path) }}</code>{% if it.note %} · {{ _(it.note) }}{% endif %}</p>
- {% if kind=='known' %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ it.tmdb_id }}" checked> {{ _("Als weiteres Exemplar zu „§“ hinzufügen", it.film_title) }}</label>
+ {% if kind=='known' %}{% if it.old_files %}<div class="resq"><p><strong>{{ _("Schon als Datei vorhanden:") }}</strong>{% for o in it.old_files %} <span class="badge">{{ o.resolution or _('Auflösung unbekannt') }}</span> <code class="path">{{ host_label(o.path) }}</code>{% if o.gone %} <span class="muted">· {{ _("Datei nicht mehr da") }}</span>{% endif %}{% endfor %}</p>
+  <p>{{ _("Neu gefunden:") }} <span class="badge">{{ it.new_res or _('Auflösung unbekannt') }}</span></p></div>
+  <label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="replace:{{ it.tmdb_id }}"{% if it.default.startswith('replace:') %} checked{% endif %}> {{ _("Neue Datei nehmen, Eintrag der alten Datei entfernen") }}</label>{% if it.old_files|rejectattr('gone')|list %}<p class="muted hint">{{ _("Die alte Datei selbst bleibt auf dem NAS. Bitte dort löschen, sonst taucht sie beim nächsten Einlesen wieder auf.") }}</p>{% endif %}{% endif %}
+ <label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ it.tmdb_id }}"{% if it.default.startswith('tmdb:') %} checked{% endif %}> {{ _("Als weiteres Exemplar zu „§“ hinzufügen", it.film_title) }}{% if it.old_files %} {{ _("(alte und neue Datei behalten)") }}{% endif %}</label>
  {% elif kind=='match' %}{% set c0 = (it.cands|selectattr('tmdb_id','equalto',it.tmdb_id)|list or [None])[0] %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ it.tmdb_id }}" checked> {{ _("Übernehmen als:") }} <strong>{{ c0.title if c0 else 'TMDB ' ~ it.tmdb_id }}</strong>{% if c0 and c0.year %} ({{ c0.year }}){% endif %}</label>
   {% for c in it.cands if c.tmdb_id != it.tmdb_id %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ c.tmdb_id }}"> {{ _("Stattdessen:") }} {{ c.title }}{% if c.year %} ({{ c.year }}){% endif %}</label>{% endfor %}
  {% else %}{% for c in it.cands %}<label class="checkbox"><input type="radio" name="d_{{ it.idx }}" value="tmdb:{{ c.tmdb_id }}"{% if it.default == 'tmdb:%s' % c.tmdb_id %} checked{% endif %}> {{ c.title }}{% if c.year %} ({{ c.year }}){% endif %}{% if c.original_title and c.original_title!=c.title %} <span class="sub">{{ c.original_title }}</span>{% endif %}</label>{% endfor %}
@@ -53,7 +56,7 @@
 <form method="post" action="{{ base }}/films/files/reset" id="resetform"></form>
 <script>(function(){var L={{ {'take':_t('§ übernehmen','%N'),'plain':_t('§ ohne TMDB','%N'),'skip':_t('§ überspringen','%N'),'set':_t('Bei § Einträgen geändert.','%N')}|tojson }};
 var T=document.getElementById('tally');
-function tally(extra){var n={take:0,plain:0,skip:0};document.querySelectorAll('.impgroups input[type=radio]:checked').forEach(function(i){var v=i.value;n[v.indexOf('tmdb:')===0?'take':(v==='plain'?'plain':'skip')]++});
+function tally(extra){var n={take:0,plain:0,skip:0};document.querySelectorAll('.impgroups input[type=radio]:checked').forEach(function(i){var v=i.value;n[(v.indexOf('tmdb:')===0||v.indexOf('replace:')===0)?'take':(v==='plain'?'plain':'skip')]++});
 var s=[L.take.replace('%N',n.take)];if(n.plain)s.push(L.plain.replace('%N',n.plain));s.push(L.skip.replace('%N',n.skip));T.innerHTML=(extra?'<b>✓ '+extra+'</b> · ':'')+s.join(' · ')}
 document.querySelector('.impgroups').addEventListener('change',function(){tally()});
 document.querySelectorAll('[data-pick]').forEach(function(b){b.onclick=function(){var c=0;document.querySelectorAll('#grp-unsure .albumrow').forEach(function(r){var i=b.dataset.pick==='first'?r.querySelector('input[value^="tmdb:"]'):r.querySelector('input[value="skip"]');if(i&&!i.checked){i.checked=true;c++}});
