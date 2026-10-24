@@ -232,7 +232,8 @@ def _watched(c, sid, f, raw):
         S.set_watched(c, sid, se, ep, f.get('on') == '1')
     if f.get('on') == '1':
         S.drop_next_if_caught_up(c, sid)
-    return ''
+        return 'Als gesehen eingetragen.'
+    return 'Als ungesehen markiert.'
 
 
 def _next_seen(c, sid, f, raw):
@@ -240,12 +241,13 @@ def _next_seen(c, sid, f, raw):
     if n:
         S.set_watched(c, sid, n['season'], n['episode'], True)
         S.drop_next_if_caught_up(c, sid)
+        return 'Als gesehen eingetragen.'
     return ''
 
 
 def _rating(c, sid, f, raw):
     S.set_rating(c, sid, f.get('rating'))
-    return ''
+    return 'Bewertung gespeichert.' if f.get('rating') else 'Bewertung entfernt.'
 
 
 def _notes(c, sid, f, raw):

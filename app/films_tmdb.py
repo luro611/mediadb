@@ -293,6 +293,8 @@ _FORMAT_WORDS = (r'blu-?ray|bluray|blu ray|dvd|4k|uhd|ultra hd|hd-?dvd|steelbook
                  r'director\'?s cut|extended|uncut|ungeschnitten|remastered|digital|import|region|widescreen|fullscreen|'
                  r'2[- ]disc|3[- ]disc|\d+[- ]?discs?|box ?set|mediabook|digibook|fsk ?\d+|neuauflage|version|exklusiv|exclusive|'
                  r'pal|ntsc|secam|region ?\d|rc ?\d|code ?\d|import|deutsche? (?:fassung|version)|german|deutsch|o-?ton|ov|omu')
+# Haendlerangaben zum Zustand; nur als ganzer Teil weg, sonst wuerde aus 'New York' 'York'
+_SHOP_WORDS = r'condition|used|new|brand new|very good|good|acceptable|like new|neu|neuwertig|gebraucht|wie neu|sehr gut|gut|ovp|zustand'
 
 
 def clean_product_title(t):
@@ -303,7 +305,7 @@ def clean_product_title(t):
     for seg in re.split(r'\s+[-–|/]\s+', s):
         c = re.sub(r'\b(' + _FORMAT_WORDS + r')\b', ' ', seg, flags=re.I)
         c = re.sub(r'\s+', ' ', c).strip(' -–|:,/.+&')
-        if re.search(r'\w', c):
+        if re.search(r'\w', c) and not re.fullmatch(r'(?:' + _SHOP_WORDS + r')(?:\s*[,:]?\s*(?:' + _SHOP_WORDS + r'))*', c, flags=re.I):
             keep.append(c)
     return ' - '.join(keep)
 
@@ -335,6 +337,10 @@ def query_variants(product_title):
         for p in sorted(parts, key=len, reverse=True):  # einzelne Teile, laengster zuerst
             add(p)
         add(' '.join(parts[1:]))
+    for p in parts:  # 'Chocolat By Lasse Hallström' -> 'Chocolat' (Regie hinten); 'Stand by Me' findet TMDB vorher
+        m = re.match(r'(.+?)\s+(?:by|von)\s+\S', p, flags=re.I)
+        if m:
+            add(m.group(1))
     for q in list(out):
         if ':' in q:  # 'Star Wars I: Phantom Menace' -> 'Phantom Menace'
             add(q.split(':', 1)[1])

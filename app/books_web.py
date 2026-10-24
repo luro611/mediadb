@@ -237,7 +237,7 @@ def _status(c, bid, f):
         B.set_status(c, bid, 'read', when)
     else:
         B.set_status(c, bid, s)
-    return ''
+    return 'Gespeichert.'
 
 
 def _read_date(c, bid, f):
@@ -250,7 +250,7 @@ def _read_date(c, bid, f):
 
 def _rating(c, bid, f):
     B.set_rating(c, bid, f.get('rating'))
-    return ''
+    return 'Bewertung gespeichert.' if f.get('rating') else 'Bewertung entfernt.'
 
 
 def _notes(c, bid, f):

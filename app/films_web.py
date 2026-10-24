@@ -292,7 +292,7 @@ def _watched(c, fid, f, raw):
     action = f.get('action')
     if action == 'unseen':
         F.set_watched(c, fid, False)
-        return ''
+        return 'Als ungesehen markiert.'
     when = F.parse_date(f.get('date')) if 'date' in f else None
     if when is None and 'date' in f:
         return 'Datum nicht erkannt. Bitte TT.MM.JJJJ, MM.JJJJ oder JJJJ eingeben.'
@@ -300,12 +300,12 @@ def _watched(c, fid, f, raw):
         F.set_watched_date(c, fid, when)
         return 'Datum gespeichert.'
     F.set_watched(c, fid, True, when or None)
-    return ''
+    return 'Als gesehen eingetragen.'
 
 
 def _rating(c, fid, f, raw):
     F.set_rating(c, fid, f.get('rating'))
-    return ''
+    return 'Bewertung gespeichert.' if f.get('rating') else 'Bewertung entfernt.'
 
 
 def _lists(c, fid, f, raw):

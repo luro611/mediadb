@@ -1,5 +1,11 @@
 # Änderungen
 
+## MediaDB 1.18.1 – Fehler und Rückmeldungen
+- **Barcode findet den richtigen Film:** Liefert der Barcode-Dienst Händlernamen wie „Chocolat By Lasse Hallström | Dvd | Condition“, sucht MediaDB jetzt auch nach dem Titel vor „By …“ und überspringt Händlerangaben zum Zustand (Condition, Used, Neu, OVP …). Vorher kamen dabei falsche Treffer.
+- **Gespeichert ist sichtbar:** Springt die Seite nach dem Speichern an eine Stelle weiter unten (Gesehen, Bewertung, Staffeln), erscheint die Meldung jetzt schwebend unten im Bild und verschwindet nach ein paar Sekunden; der gespeicherte Abschnitt leuchtet kurz auf. Gesehen, ungesehen und Bewertung melden sich bei Filmen, Serien und Büchern nun ausdrücklich.
+- **Sicherheitsfrage beim Neuladen:** „Alles in der Datensprache neu laden“ fragt vorher nach und sagt, was passiert: Inhaltsangaben, Genres, Episodennamen (und auf Wunsch Titel) werden ersetzt, die bisherige Sprache bleibt nicht erhalten. Eigene Notizen, Bewertungen und Gesehen-Angaben bleiben.
+- **Serien:** „Ganze Staffel als gesehen“ steht nur noch bei Staffeln, in denen noch etwas ungesehen ist.
+
 ## MediaDB 1.18.0 – Umzug zu GitHub
 - **Neues Zuhause:** Quellcode, Docker-Image und Releases liegen jetzt auf GitHub: https://github.com/luro611/mediadb. Grund: Codeberg verbietet seit 2026 in seinen Nutzungsbedingungen Projekte, die überwiegend mit KI geschrieben sind, und MediaDB ist mit Claude Code entstanden.
 - **Neues Image:** `ghcr.io/luro611/mediadb:latest` statt `codeberg.org/luro61/mediadb:latest`. **Wer MediaDB schon nutzt, ändert einmalig die Zeile `image:` in der Compose-Datei** (in Dockhand: Stack bearbeiten), dann Pull und Redeploy. Die Daten bleiben, wie sie sind. Anleitung: BETRIEB.md, Abschnitt „Neue Version einspielen“.

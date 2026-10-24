@@ -50,7 +50,7 @@
   <span class="n">{% if se.season == 0 %}{{ _("Specials") }} · {% endif %}{% if se.n_aired %}{{ _("§ / § vorhanden", se.n_have, se.n_aired) }}{% else %}{{ _("§ Folgen", se.episodes|length) }}{% endif %}{% if se.n_missing %} · <b class="miss">{{ _("§ fehlt", se.n_missing) if se.n_missing == 1 else _("§ fehlen", se.n_missing) }}</b>{% elif se.complete %} · <b class="okc">{{ _("komplett") }}</b>{% endif %} · {{ _("§ gesehen", se.n_seen) }}</span></summary>
  <div class="seasonbody">
   <form method="post" action="{{ base }}/series/{{ s.id }}/watched" class="inline-form"><input type="hidden" name="anchor" value="st{{ se.season }}"><input type="hidden" name="season" value="{{ se.season }}">
-   <button name="on" value="1" class="quiet small">{{ _("Ganze Staffel als gesehen") }}</button>{% if se.n_seen %}<button name="on" value="0" class="quiet small">{{ _("Staffel als ungesehen") }}</button>{% endif %}</form>
+   {% if se.n_seen < (se.n_aired or se.episodes|length) %}<button name="on" value="1" class="quiet small">{{ _("Ganze Staffel als gesehen") }}</button>{% endif %}{% if se.n_seen %}<button name="on" value="0" class="quiet small">{{ _("Staffel als ungesehen") }}</button>{% endif %}</form>
   <div class="tablewrap"><table class="eps">
   {% for e in se.episodes %}<tr class="{{ e.state }}{% if e.seen %} isseen{% endif %}">
    <td class="eno">{{ e.episode }}</td>

@@ -14,6 +14,7 @@ Musik und Fundament: CDs und Audiodateien, MusicBrainz, Cover, Genres, Import/Ex
 8. ✅ **1.10–1.17 Alltag und Bedienung (fertig):** Kacheln/Liste/Text, „Als Nächstes“, aufgeräumte Startseite, Italienisch und Spracheinstellungen, eigene Farben, Hilfe in der App mit Bildschirmfotos, Bereiche ein- und ausschalten, Willkommensseite beim ersten Start.
 9. ✅ **1.17.2 Englische Anleitung** (`docs/MANUAL.md`) für alle Oberflächensprachen außer Deutsch.
    ✅ **1.18.0 Umzug zu GitHub** (Code, Image `ghcr.io`, Releases, Update-Hinweis), weil Codeberg seit 2026 überwiegend KI-geschriebene Projekte verbietet.
+   ✅ **1.18.1 Fehler und Rückmeldungen** (Barcode-Suche, sichtbares „Gespeichert“, Sicherheitsfrage beim Neuladen, Staffel-Knopf).
 10. **Offen:** Betrieb und Datenquellen auf Englisch, Anleitung in weiteren Sprachen; gemeinsame Konten für Familien.
 11. **Home-Assistant-Add-on:** eigenes kleines Repository, verweist auf das Docker-Image.
 
@@ -41,6 +42,10 @@ Später: Erinnerung bei überfälligen Rückgaben (z. B. über Home Assistant).
 ## Merkliste (1.4, fertig)
 Neue Staffeln der eigenen Serien, vorgemerkte Filme und Serien, Streamingdienste, tägliche Aktualisierung.
 Später: Streamingdienst auch bei Filmen anzeigen; Benachrichtigung (z. B. Home Assistant) bei neuen Staffeln.
+- **Mehrere Titel auf einmal suchen:** ins Suchfeld der Merkliste eine ganze Liste von Filmen und/oder Serien einfügen (z. B. von einer Webseite kopiert, ein Titel pro Zeile). MediaDB sucht jeden Titel einzeln und zeigt die Treffer untereinander; man hakt an, was auf die Merkliste soll.
+
+## Gesehen gesammelt abhaken (Filme und Serien)
+Nach dem Einscannen der ganzen Sammlung ist alles „ungesehen“. Eine Ansicht zeigt alle ungesehenen Filme und Serien als Liste, dahinter je ein Feld „gesehen“ und die Wertung (1–10). So lässt sich die Sammlung in einem Rutsch abhaken; dazu „alle markieren“ bzw. Auswahl als gesehen speichern. Bei Serien: ganze Serie (alle Folgen) als gesehen.
 
 ## Serien: Nachträge
 - Eigene Listen und Merkliste wie bei den Filmen.
