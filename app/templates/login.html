@@ -1,6 +1,31 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MediaDB / Anmeldung") }}</p><h1>{{ _("*Anmelden*") }}</h1>
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">{{ _("MediaDB / Anmeldung") }}</p>
+{% if mode == 'profiles' and not pick %}
+<h1>{{ _("Wer ist *da*?") }}</h1>
+<p class="intro">{{ _("Wähle dein Profil.") }}</p>
+{% if error %}<div class="warn">{{ _("Falsche PIN oder falsches Passwort.") }}</div>{% endif %}
+<div class="profiles">{% for p in people %}
+ {% if p.needs %}<a class="profile" href="{{ base }}/login?u={{ p.id }}&amp;next={{ next|urlencode }}"><span class="pinit" aria-hidden="true">{{ p.name[:1] }}</span><strong>{{ p.name }}</strong><span class="muted">{{ _(ROLES[p.role]) }} · {{ _("mit PIN") }}</span></a>
+ {% else %}<form method="post" action="{{ base }}/login"><input type="hidden" name="uid" value="{{ p.id }}"><input type="hidden" name="next" value="{{ next }}"><button class="profile"><span class="pinit" aria-hidden="true">{{ p.name[:1] }}</span><strong>{{ p.name }}</strong><span class="muted">{{ _(ROLES[p.role]) }}</span></button></form>{% endif %}
+{% endfor %}</div>
+{% elif mode == 'profiles' %}
+<h1>{{ _("Hallo, *§*", pick.name) }}</h1>
+{% if error %}<div class="warn">{{ _("Falsche PIN oder falsches Passwort.") }}</div>{% endif %}
+<form method="post" action="{{ base }}/login" class="card loginbox"><input type="hidden" name="uid" value="{{ pick.id }}"><input type="hidden" name="next" value="{{ next }}">
+<label>{{ _("PIN oder Passwort") }}<input type="password" name="password" autocomplete="current-password" inputmode="text" autofocus required></label>
+<button>{{ _("Anmelden") }}</button></form>
+<p class="muted"><a href="{{ base }}/login?next={{ next|urlencode }}">{{ _("← Anderes Profil") }}</a></p>
+{% elif mode == 'password' %}
+<h1>{{ _("*Anmelden*") }}</h1>
+{% if error %}<div class="warn">{{ _("Name oder Passwort stimmt nicht.") }}</div>{% endif %}
+<form method="post" action="{{ base }}/login" class="card loginbox"><input type="hidden" name="next" value="{{ next }}">
+<label>{{ _("Name") }}<input name="name" autocomplete="username" autofocus required></label>
+<label>{{ _("Passwort") }}<input type="password" name="password" autocomplete="current-password" required></label>
+<button>{{ _("Anmelden") }}</button></form>
+{% else %}
+<h1>{{ _("*Anmelden*") }}</h1>
 <p class="intro">{{ _("Diese Sammlung ist mit einem Passwort geschützt.") }}</p>
 {% if error %}<div class="warn">{{ _("Falsches Passwort.") }}</div>{% endif %}
 <form method="post" action="{{ base }}/login" class="card"><input type="hidden" name="next" value="{{ next }}">
 <label>{{ _("Passwort") }}<input type="password" name="password" autocomplete="current-password" autofocus required></label>
-<button>{{ _("Anmelden") }}</button></form>{% endblock %}
+<button>{{ _("Anmelden") }}</button></form>
+{% endif %}{% endblock %}

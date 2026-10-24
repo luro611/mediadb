@@ -3,7 +3,7 @@
 <h1>{{ _("Ein*stellungen*") }}</h1>
 <p class="intro">{{ _("Hier stellst du ein, was bisher in der Datei .env stand. Änderungen gelten sofort, ein Neustart ist nicht nötig. Gespeichert wird in data/settings.json.") }}</p>
 <p class="help"><a href="{{ base }}/hilfe#{{ '3-einstellungen' if lang == 'de' else '3-settings' }}" target="mediadb-hilfe">{{ _("Was die einzelnen Einstellungen bedeuten, steht in der Anleitung.") }}</a></p>
-{% if message and part not in ('nas', 'update') %}<div class="ok">{{ _(message) }}</div>{% endif %}
+{% if message and part not in ('nas', 'update', 'users') %}<div class="ok">{{ _(message) }}</div>{% endif %}
 
 <section class="card" id="bereiche">
  <h2>{{ _("Bereiche") }}</h2>
@@ -136,6 +136,54 @@ fetch({{ base|tojson }}+'/settings/nas/test',{method:'POST',body:new FormData(f)
 S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var o=sel.selectedOptions[0],f=sel.form,pw=f.querySelector('[name=password]');if(o.value){f.querySelector('[name=host]').value=o.dataset.host;f.querySelector('[name=user]').value=o.dataset.user;pw.value='';pw.placeholder={{ _t("gespeichert – leer lassen")|tojson }}}else{pw.placeholder=''}}});})()</script>
 </section>
 
+<section class="card settings" id="nutzer">
+ <h2>{{ _("Nutzer und Anmeldung") }}</h2>
+ {% if message and part == 'users' %}<div class="{{ 'ok' if message in ('Gespeichert.', 'Nutzer hinzugefügt.', 'Nutzer entfernt.', 'Konten eingeschaltet. Du bist als Verwalter angemeldet.') else 'warn' }}">{{ _(message) }}</div>{% endif %}
+ {% if not people %}
+ <p class="help">{{ _("Mehrere Personen im Haushalt? Lege dich zuerst selbst als Verwalter an. Danach fügst du weitere Personen hinzu (Mitglied oder Gast) und wählst, wie man sich anmeldet. Die Sammlung bleibt, wie sie ist; alle sehen weiterhin alles.") }}</p>
+ <form method="post" action="{{ base }}/settings/users/setup" class="userform">
+  <div class="row3"><span><label for="un">{{ _("Dein Name") }}</label><input id="un" name="name" required maxlength="40" autocomplete="off"></span>
+  <span><label for="up">{{ _("Dein Passwort (mindestens 4 Zeichen)") }}</label><input id="up" name="password" type="password" required minlength="4" autocomplete="new-password"></span></div>
+  <fieldset class="modepick"><legend>{{ _("Wie meldet man sich an?") }}</legend>
+   <label class="checkbox"><input type="radio" name="mode" value="profiles" checked> <span><strong>{{ _("Profilwahl") }}</strong> · {{ _("auf den eigenen Namen klicken, PIN freiwillig. Bequem im Heimnetz.") }}</span></label>
+   <label class="checkbox"><input type="radio" name="mode" value="password"> <span><strong>{{ _("Name und Passwort") }}</strong> · {{ _("richtige Anmeldung, 30 Tage gültig. Sicherer, auch von unterwegs.") }}</span></label>
+  </fieldset>
+  <button>{{ _("Konten einschalten") }}</button>
+ </form>
+ {% else %}
+ <div class="userlist">
+  <div class="userrow head" aria-hidden="true"><span>{{ _("Name") }}</span><span>{{ _("Rolle") }}</span><span>{{ _("Passwort oder PIN") }}</span><span>{{ _("Zuletzt angemeldet") }}</span><span></span></div>
+  {% for p in people %}<div class="urow{% if me and me.id == p.id %} isme{% endif %}">
+   <form method="post" action="{{ base }}/settings/users/{{ p.id }}/save" class="userrow">
+    <input name="name" value="{{ p.name }}" aria-label="{{ _('Name') }}" maxlength="40" required>
+    <select name="role" aria-label="{{ _('Rolle') }}">{% for r, l in ROLES.items() %}<option value="{{ r }}"{% if r == p.role %} selected{% endif %}>{{ _(l) }}</option>{% endfor %}</select>
+    <input name="password" type="password" placeholder="{{ _('neu setzen') if p.secret else _('keins') }}" aria-label="{{ _('Passwort oder PIN') }}" autocomplete="new-password">
+    <span class="muted">{{ p.last_login|fdate if p.last_login else '–' }}</span>
+    <span class="rowbtns">{% if p.secret and p.role != 'admin' and accounts_mode != 'password' %}<label class="checkbox"><input type="checkbox" name="remove_pw" value="1"> {{ _("PIN entfernen") }}</label>{% endif %}<button class="quiet small">{{ _("Speichern") }}</button></span>
+   </form>
+   <form method="post" action="{{ base }}/settings/users/{{ p.id }}/delete" class="userdel" onsubmit="return confirm({{ _t('§ entfernen? Die Sammlung bleibt unverändert.', p.name)|tojson|forceescape }})"><button class="linkbtn">{{ _("entfernen") }}</button></form>
+  </div>{% endfor %}
+ </div>
+ {% set nopw = people|rejectattr('secret')|map(attribute='name')|list %}
+ {% if accounts_mode == 'password' and nopw %}<div class="warn">{{ _("Ohne Passwort können sich bei „Name und Passwort“ nicht anmelden: §", nopw|join(', ')) }}</div>{% endif %}
+ {% if accounts_mode == 'profiles' and public and nopw %}<p class="hint">{{ _("Zugriff aus dem Internet ist erlaubt: Von dort brauchen alle eine PIN. Profile ohne PIN gehen nur im Heimnetz.") }}</p>{% endif %}
+ <h3>{{ _("Person hinzufügen") }}</h3>
+ <form method="post" action="{{ base }}/settings/users/add" class="userrow addrow">
+  <input name="name" placeholder="{{ _('Name') }}" aria-label="{{ _('Name') }}" maxlength="40" required>
+  <select name="role" aria-label="{{ _('Rolle') }}">{% for r, l in ROLES.items() %}<option value="{{ r }}"{% if r == 'member' %} selected{% endif %}>{{ _(l) }}</option>{% endfor %}</select>
+  <input name="password" type="password" placeholder="{{ _('Passwort oder PIN') }}{% if accounts_mode != 'password' %} {{ _('(freiwillig)') }}{% endif %}" aria-label="{{ _('Passwort oder PIN') }}" autocomplete="new-password">
+  <button>{{ _("Hinzufügen") }}</button>
+ </form>
+ <p class="help">{{ _("Verwalter: alles, auch Einstellungen und Nutzer. Mitglied: alles ansehen, hinzufügen und bearbeiten. Gast: nur ansehen. Verwalter brauchen immer ein Passwort.") }}</p>
+ <h3>{{ _("Wie meldet man sich an?") }}</h3>
+ <form method="post" action="{{ base }}/settings/users/mode" class="modepick">
+  <label class="checkbox"><input type="radio" name="mode" value="profiles"{% if accounts_mode == 'profiles' %} checked{% endif %}> <span><strong>{{ _("Profilwahl") }}</strong> · {{ _("auf den eigenen Namen klicken, PIN freiwillig. Bequem im Heimnetz.") }}</span></label>
+  <label class="checkbox"><input type="radio" name="mode" value="password"{% if accounts_mode == 'password' %} checked{% endif %}> <span><strong>{{ _("Name und Passwort") }}</strong> · {{ _("richtige Anmeldung, 30 Tage gültig. Sicherer, auch von unterwegs.") }}</span></label>
+  <label class="checkbox"><input type="radio" name="mode" value="off"{% if accounts_mode == 'off' %} checked{% endif %}> <span><strong>{{ _("Aus") }}</strong> · {{ _("ohne Konten wie vor 1.20; die Nutzer bleiben gespeichert.") }}</span></label>
+  <button class="quiet">{{ _("Speichern") }}</button>
+ </form>
+ {% endif %}
+</section>
 <div class="grid settingsextra">
 <section class="card" id="update">
  <h3>{{ _("Neue Version?") }}</h3>
@@ -159,7 +207,7 @@ S.querySelectorAll('.nasfrom').forEach(function(sel){sel.onchange=function(){var
 </section>
 <section class="card">
  <h3>{{ _("Zugriff") }}</h3>
- <p>{{ _("Passwort:") }} <strong>{{ _("an") if password_on else _("aus") }}</strong> · {{ _("Zugriff aus dem Internet:") }} <strong>{{ _("erlaubt") if public else _("gesperrt (nur Heimnetz)") }}</strong></p>
+ <p>{{ _("Passwort:") }} <strong>{% if accounts_on %}{{ _("Konten (siehe oben)") }}{% else %}{{ _("an") if password_on else _("aus") }}{% endif %}</strong> · {{ _("Zugriff aus dem Internet:") }} <strong>{{ _("erlaubt") if public else _("gesperrt (nur Heimnetz)") }}</strong></p>
  <p class="help">{{ _("Aus Sicherheitsgründen nur in der Datei .env änderbar (APP_PASSWORD, ALLOW_PUBLIC), danach neu starten.") }}</p>
 </section>
 </div>

@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">MediaDB</p>
+<h1>{{ _("Kein *Zugriff*") }}</h1>
+{% if was == 'gast' %}<p class="intro">{{ _("Als Gast kannst du dir die Sammlung ansehen, aber nichts ändern.") }}</p>
+{% else %}<p class="intro">{{ _("Die Einstellungen kann nur ein Verwalter ändern.") }}</p>{% endif %}
+<div class="actions"><a class="btnlink" href="{{ base }}/">{{ _("Zur Startseite") }}</a>{% if me %}<a class="quietlink" href="{{ base }}/logout">{{ _("Anders anmelden") }}</a>{% endif %}</div>
+{% endblock %}

@@ -53,7 +53,30 @@ def shots(data):
         ('einstellungen-bereiche', '/settings', {}, '#bereiche'),
         ('einstellungen-sprache', '/settings', {}, '#oberflaeche'),
         ('einstellungen-farben', '/settings', {}, '#farben'),
+        # mit eingeschalteten Konten (Profilwahl), siehe accounts(); immer am Ende
+        ('anmelden-profile', '/login', {ACCOUNTS: 'guest'}, 900),
+        ('einstellungen-nutzer', '/settings', {ACCOUNTS: 'admin'}, '#nutzer'),
     ]
+
+
+ACCOUNTS = '_accounts'
+DEMO_PW = 'demo1234'  # nur fuer die erfundenen Konten der Beispiel-Sammlung
+USERS_SETUP = f"""import sys; sys.path.insert(0, '.')
+from app import users as U
+U.init(sys.argv[1])
+U.create('Maren', 'admin', '{DEMO_PW}'); U.create('Jonas', 'member'); U.create('Besuch', 'guest')"""
+
+
+def accounts(browser, base, on, lang):
+    """Konten ein- (Profilwahl) oder ausschalten. Liefert einen Browser-Kontext, der als Verwalterin angemeldet ist."""
+    ctx = browser.new_context(viewport={'width': W, 'height': H}, color_scheme='light')
+    ctx.add_cookies([{'name': 'mediadb_lang', 'value': lang, 'url': base}])
+    if on:
+        ctx.request.post(base + '/settings/users/mode', form={'mode': 'profiles'})
+    ctx.request.post(base + '/login', form={'uid': '1', 'password': DEMO_PW, 'next': '/'})
+    if not on:
+        ctx.request.post(base + '/settings/users/mode', form={'mode': 'off'})
+    return ctx
 
 
 def main(only):
@@ -61,6 +84,7 @@ def main(only):
     data = tmp / 'data'
     try:
         subprocess.run([sys.executable, str(ROOT / 'tools' / 'demo_data.py'), str(data)], check=True, cwd=ROOT)
+        subprocess.run([sys.executable, '-c', USERS_SETUP, str(data / 'nutzer.db')], check=True, cwd=ROOT)  # Konten bleiben vorerst aus
         port = free_port()
         env = dict(os.environ, DATA_DIR=str(data), PORT=str(port), APP_PASSWORD='', ALLOW_PUBLIC='0')
         srv = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'app.main:app', '--port', str(port), '--log-level', 'warning'],
@@ -79,10 +103,16 @@ def main(only):
             # deutsche Bilder fuer ANLEITUNG.md, englische (docs/bilder/en) fuer MANUAL.md
             for lang, out, locale in (('de', OUT, 'de-DE'), ('en', OUT / 'en', 'en-GB')):
                 out.mkdir(parents=True, exist_ok=True)
+                acc_on = False
                 for name, url, layouts, what in shots(data):
                     if only and not any(name.startswith(o) for o in only):
                         continue
-                    ctx = browser.new_context(viewport={'width': W, 'height': H}, locale=locale, color_scheme='light')
+                    who = layouts.pop(ACCOUNTS, None) if ACCOUNTS in layouts else None
+                    if who and not acc_on:
+                        accounts(browser, base, True, lang).close()
+                        acc_on = True
+                    ctx = accounts(browser, base, True, lang) if who == 'admin' else \
+                        browser.new_context(viewport={'width': W, 'height': H}, locale=locale, color_scheme='light')
                     ctx.add_cookies([{'name': f'mediadb_layout_{k}', 'value': v, 'url': base} for k, v in layouts.items()] +
                                     [{'name': 'mediadb_lang', 'value': lang, 'url': base}])
                     page = ctx.new_page()
@@ -101,6 +131,8 @@ def main(only):
                         page.locator(what).screenshot(path=target)
                     print(f'{target.relative_to(ROOT)}  ({target.stat().st_size // 1024} KB)')
                     ctx.close()
+                if acc_on:  # fuer den naechsten Durchgang (andere Sprache) wieder ohne Konten
+                    accounts(browser, base, False, lang).close()
             browser.close()
         srv.terminate()
         srv.wait(10)

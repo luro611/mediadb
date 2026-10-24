@@ -2,7 +2,7 @@
 
 MediaDB is a **private media database for your home network** with four sections: **music, films, TV shows and books**, plus a **watchlist**, **up next** and **lent to …**. You record CDs, DVDs, Blu-rays, books and your files (music, films, episodes, e-books, audiobooks); the app fills in track lists, covers, film data, episode guides and book details from free online sources. Everything runs in the browser, on a computer as well as on a phone. Your data stays with you.
 
-This manual describes MediaDB 1.19.1. The running version is shown at the bottom of every page. You can also open this manual in MediaDB itself: via the **?** in the top bar or the **“Manual”** link at the bottom of every page, matching the installed version and without internet. (This is the English translation of the German manual `ANLEITUNG.md`. The pages “Running in a homelab”, “Data sources and legal” and “Changes” are only available in German so far; your browser’s translate function works well on them.)
+This manual describes MediaDB 1.20.0. The running version is shown at the bottom of every page. You can also open this manual in MediaDB itself: via the **?** in the top bar or the **“Manual”** link at the bottom of every page, matching the installed version and without internet. (This is the English translation of the German manual `ANLEITUNG.md`. The pages “Running in a homelab”, “Data sources and legal” and “Changes” are only available in German so far; your browser’s translate function works well on them.)
 
 **Contents:** [1. Overview](#1-overview) · [2. Installation](#2-installation) · [3. Settings](#3-settings) · [4. General use](#4-general-use) · [5. Music](#5-music) · [6. Films](#6-films) · [7. TV shows](#7-tv-shows) · [8. Watchlist](#8-watchlist) · [9. Books](#9-books) · [10. Lent to …](#10-lent-to) · [11. Media libraries](#11-media-libraries) · [12. Files from a NAS or Mac](#12-files-from-a-nas-or-mac) · [13. Backups and updates](#13-backups-and-updates) · [14. Where does the data come from?](#14-where-does-the-data-come-from) · [15. Limitations](#15-limitations) · [16. Troubleshooting](#16-troubleshooting)
 
@@ -53,6 +53,15 @@ The **gear ⚙** at the top opens the settings. Changes apply immediately, no re
 - **Services and automation** (all can be switched off): look up DVD and Blu-ray barcodes at UPCitemdb · look for missing CD covers on iTunes and Deezer · update shows and watchlist once a day · search the media libraries · check GitHub for a new version every six hours.
 - **NAS shares:** see section 12.
 - **New version?** shows which version is running, which is the latest and when it was last checked; **“Check for a new version now”** checks immediately.
+- **Users and sign-in:** for several people in a household. First add yourself as **administrator** (with a password) and choose how people sign in; you are then signed in right away. Add more people as **member** (view, add and edit everything) or **guest** (view only). Only administrators see the settings. Two ways to sign in:
+  - **Profile picker:** click your own name when opening MediaDB; a PIN is optional (administrators always need one). Convenient at home.
+  - **Name and password:** proper sign-in, valid for 30 days; everyone needs a password.
+  
+  The top bar shows who is signed in; clicking it switches profile or signs out. **“Off”** turns accounts off again; the users stay saved. The collection is the same for everyone; an owner per copy and “watched” per person follow in the next versions.
+
+  ![Profile picker when opening MediaDB](bilder/en/anmelden-profile.png)
+
+  ![Settings: users and sign-in](bilder/en/einstellungen-nutzer.png)
 - **Access:** password and access from the internet are shown here for information only. For security reasons they can only be changed in the compose file (in a homelab: the stack in Dockhand) or in `.env`, followed by a restart. See [BETRIEB.md → Zugriffsschutz](BETRIEB.md#zugriffsschutz) (German).
 
 ![Switching sections on and off](bilder/en/einstellungen-bereiche.png)
@@ -65,7 +74,7 @@ The **gear ⚙** at the top opens the settings. Changes apply immediately, no re
 
 | Entry | Meaning |
 |---|---|
-| `APP_PASSWORD` | password for signing in; empty = no sign-in. |
+| `APP_PASSWORD` | one shared password for signing in; empty = no sign-in. If accounts are turned on (above), they apply instead. |
 | `ALLOW_PUBLIC` | `0` (default): home network only. `1` allows access from the internet (not recommended). |
 | `BASE_PATH` | only behind a reverse proxy with a sub-path, see [BETRIEB.md](BETRIEB.md). |
 | `TZ` | time zone, e.g. `Europe/Berlin`. |

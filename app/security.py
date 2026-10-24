@@ -4,7 +4,9 @@
   steht diese im Kopf X-Ingress-Path bzw. X-Forwarded-Prefix oder fest in BASE_PATH. Der Proxy entfernt den
   Unterpfad vor der Weitergabe; die App setzt ihn nur vor ihre Links (Vorlagen: {{ base }}) und Weiterleitungen.
 - Heimnetz: Ohne ALLOW_PUBLIC=1 werden Anfragen von oeffentlichen IP-Adressen abgewiesen.
-- Passwort: Ist APP_PASSWORD gesetzt, muss man sich anmelden (Cookie, 30 Tage gueltig)."""
+- Passwort: Ist APP_PASSWORD gesetzt, muss man sich anmelden (Cookie, 30 Tage gueltig).
+- Konten (seit 1.20, app/users.py): Sind sie eingeschaltet, gelten sie statt APP_PASSWORD. Der angemeldete Nutzer steht in
+  scope['state']['user']; Gaeste duerfen nur lesen, die Einstellungen nur Verwalter."""
 import hashlib, hmac, ipaddress, os, re, secrets, time
 from pathlib import Path
 from urllib.parse import quote
@@ -12,7 +14,7 @@ from urllib.parse import quote
 _PREFIX_OK = re.compile(r'^(/[A-Za-z0-9._~\-]+)+$')
 COOKIE = 'mediadb_auth'
 MAX_AGE = 60 * 60 * 24 * 30
-OPEN_PATHS = ('/login', '/static/', '/healthz')
+OPEN_PATHS = ('/login', '/static/', '/healthz', '/lang/')
 
 
 def _flag(name):
@@ -124,9 +126,10 @@ _BLOCKED = ('<!doctype html><meta charset="utf-8"><title>MediaDB</title><body st
 class Gate:
     """ASGI-Middleware: Unterpfad bestimmen, Heimnetz pruefen, Anmeldung pruefen, Weiterleitungen anpassen."""
 
-    def __init__(self, app, settings):
+    def __init__(self, app, settings, accounts=None):
         self.app = app
         self.s = settings
+        self.acc = accounts
 
     async def __call__(self, scope, receive, send):
         if scope['type'] != 'http':
@@ -146,12 +149,30 @@ class Gate:
         if not self.s.allow_public and not is_local(client):
             return await _respond(send, 403, _BLOCKED, [(b'content-type', b'text/html; charset=utf-8')])
 
+        scope['state']['public'] = not is_local(client)
+        if self.acc and self.acc.accounts_on():
+            user = self.acc.user_from_token(self.s.secret(), _cookie(headers, self.acc.COOKIE))
+            scope['state']['user'] = user
+            if user and user['role'] != 'admin' and (path == '/settings' or path.startswith('/settings/')):
+                return await _respond(send, 303, b'', [(b'location', f'{base}/kein-zugriff?was=settings'.encode())])
+            if user and user['role'] == 'guest' and scope.get('method') not in ('GET', 'HEAD') and not path.startswith(('/login', '/logout')):
+                return await _respond(send, 303, b'', [(b'location', f'{base}/kein-zugriff?was=gast'.encode())])
+            if user or path.startswith(OPEN_PATHS):
+                return await self.app(scope, receive, self._wrap(send, base))
+            qs = scope.get('query_string', b'').decode('latin-1')
+            nxt = path + ('?' + qs if qs else '')
+            return await _respond(send, 303, b'', [(b'location', f'{base}/login?next={quote(nxt)}'.encode())])
+
         if self.s.auth_on and not path.startswith(OPEN_PATHS) and not self.s.token_ok(_cookie(headers, COOKIE)):
             qs = scope.get('query_string', b'').decode('latin-1')
             nxt = path + ('?' + qs if qs else '')
             loc = f'{base}/login?next={quote(nxt)}'
             return await _respond(send, 303, b'', [(b'location', loc.encode())])
 
+        return await self.app(scope, receive, self._wrap(send, base))
+
+    @staticmethod
+    def _wrap(send, base):
         async def send_wrapped(msg):
             if base and msg['type'] == 'http.response.start':
                 hs = []
@@ -161,8 +182,7 @@ class Gate:
                     hs.append((k, v))
                 msg = dict(msg, headers=hs)
             await send(msg)
-
-        return await self.app(scope, receive, send_wrapped)
+        return send_wrapped
 
 
 async def _respond(send, status, body, headers):

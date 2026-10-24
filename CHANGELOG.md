@@ -1,5 +1,13 @@
 # Änderungen
 
+## MediaDB 1.20.0 – Mehrere Nutzer (Stufe 1: Konten und Anmeldung)
+- **Konten:** In den Einstellungen unter „Nutzer und Anmeldung“ legt man sich selbst als Verwalter an und fügt weitere Personen hinzu, als **Mitglied** (alles ansehen, hinzufügen, bearbeiten) oder **Gast** (nur ansehen). Die Einstellungen sieht nur ein Verwalter. Die Sammlung bleibt für alle dieselbe.
+- **Zwei Arten der Anmeldung, umschaltbar:** **Profilwahl** (auf den eigenen Namen klicken, PIN freiwillig, bequem im Heimnetz) oder **Name und Passwort** (30 Tage gültig). „Aus“ schaltet die Konten wieder ab; ohne Konten bleibt alles wie bisher, `APP_PASSWORD` gilt weiter.
+- Oben in der Leiste steht, wer angemeldet ist („Wechseln“ bzw. „Abmelden“). Gäste sehen keine Knöpfe zum Ändern; versuchen sie es trotzdem, erklärt eine Seite „Kein Zugriff“, warum.
+- Sicherheit: Passwörter und PINs nur als Prüfwert (scrypt) in `data/nutzer.db`; ein neues Passwort meldet diesen Nutzer überall ab; mindestens ein Verwalter bleibt immer; von öffentlichen Adressen ist bei der Profilwahl immer eine PIN nötig.
+- Plan für die nächsten Stufen (Besitzer pro Exemplar, gesehen und Bewertung pro Person): `docs/KONZEPT_NUTZER.md`. Anleitung mit neuen Bildschirmfotos.
+- Die Sprache lässt sich jetzt auch auf der Anmeldeseite umschalten; ein Skriptfehler auf der Willkommensseite ist behoben.
+
 ## MediaDB 1.19.1 – Hinweis auf den TMDB-Schlüssel
 - **Willkommensseite:** Solange kein TMDB-Schlüssel eingetragen ist, erklärt ein Hinweis, dass Filme und Serien erst mit diesem Schlüssel vollständig funktionieren (Suche, Poster, Inhaltsangaben, Episodenführer, Merkliste) und dass es ihn für die private Nutzung kostenlos bei themoviedb.org gibt.
 - **Filme, Serien und Merkliste:** Der Hinweis ist deutlicher und verlinkt direkt zu TMDB („Schlüssel bei TMDB holen“) und zu den Einstellungen.

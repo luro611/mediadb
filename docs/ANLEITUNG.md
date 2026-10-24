@@ -2,7 +2,7 @@
 
 MediaDB ist eine **private Mediendatenbank für das eigene Heimnetz** mit vier Bereichen: **Musik, Filme, Serien und Bücher**, dazu **Merkliste**, **Als Nächstes** und **Verliehen an …**. Du erfasst CDs, DVDs, Blu-rays, Bücher und deine Dateien (Musik, Filme, Serien, E-Books, Hörbücher), die App ergänzt Titellisten, Cover, Filmdaten, Episodenführer und Buchangaben aus freien Internetquellen. Bedient wird alles im Browser, am Rechner wie am Handy. Die Daten bleiben bei dir.
 
-Diese Anleitung beschreibt MediaDB 1.19.1. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet. Eine englische Fassung gibt es in [MANUAL.md](MANUAL.md); die App zeigt sie bei allen Oberflächensprachen außer Deutsch.
+Diese Anleitung beschreibt MediaDB 1.20.0. Welche Version läuft, steht unten auf jeder Seite. Du findest sie auch in MediaDB selbst: über das **?** oben in der Leiste oder den Link **„Anleitung“** unten auf jeder Seite, passend zur installierten Version und ohne Internet. Eine englische Fassung gibt es in [MANUAL.md](MANUAL.md); die App zeigt sie bei allen Oberflächensprachen außer Deutsch.
 
 **Inhalt:** [1. Überblick](#1-überblick) · [2. Installation](#2-installation) · [3. Einstellungen](#3-einstellungen) · [4. Bedienung allgemein](#4-bedienung-allgemein) · [5. Musik](#5-musik) · [6. Filme](#6-filme) · [7. Serien](#7-serien) · [8. Merkliste](#8-merkliste) · [9. Bücher](#9-bücher) · [10. Verliehen an …](#10-verliehen-an) · [11. Mediatheken](#11-mediatheken) · [12. Dateien von NAS und Mac](#12-dateien-von-nas-und-mac) · [13. Sichern und Updates](#13-sichern-und-updates) · [14. Woher kommen die Daten?](#14-woher-kommen-die-daten) · [15. Grenzen](#15-grenzen) · [16. Fehlersuche](#16-fehlersuche)
 
@@ -53,6 +53,15 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
 - **Dienste und Automatik** (alles abschaltbar): Barcodes von DVDs und Blu-rays bei UPCitemdb nachschlagen · fehlende CD-Cover bei iTunes und Deezer suchen · Serien und Merkliste einmal am Tag aktualisieren · in den Mediatheken suchen · alle sechs Stunden bei GitHub nach einer neuen Version sehen.
 - **NAS-Freigaben:** siehe Abschnitt 12.
 - **Neue Version?** zeigt, welche Version läuft, welche die neueste ist und wann zuletzt nachgesehen wurde; mit **„Jetzt nach neuer Version suchen“** sofort prüfen.
+- **Nutzer und Anmeldung:** für mehrere Personen im Haushalt. Zuerst legst du dich selbst als **Verwalter** an (mit Passwort) und wählst, wie man sich anmeldet; danach bist du gleich angemeldet. Weitere Personen fügst du als **Mitglied** (alles ansehen, hinzufügen, bearbeiten) oder **Gast** (nur ansehen) hinzu. Die Einstellungen sieht nur ein Verwalter. Zwei Arten der Anmeldung:
+  - **Profilwahl:** Beim Öffnen auf den eigenen Namen klicken, eine PIN ist freiwillig (Verwalter brauchen immer eine). Bequem im Heimnetz.
+  - **Name und Passwort:** richtige Anmeldung, 30 Tage gültig; jeder braucht ein Passwort.
+  
+  Oben in der Leiste steht, wer angemeldet ist; ein Klick darauf wechselt das Profil bzw. meldet ab. **„Aus“** schaltet die Konten wieder ab, die Nutzer bleiben gespeichert. Die Sammlung ist für alle dieselbe; Besitzer pro Exemplar und „gesehen“ pro Person folgen in den nächsten Versionen (Plan: `docs/KONZEPT_NUTZER.md`).
+
+  ![Profilwahl beim Öffnen](bilder/anmelden-profile.png)
+
+  ![Einstellungen: Nutzer und Anmeldung](bilder/einstellungen-nutzer.png)
 - **Zugriff:** Passwort und Zugriff aus dem Internet stehen hier nur zur Ansicht. Ändern lassen sie sich aus Sicherheitsgründen nur in der Compose-Datei (im Homelab: Stack in Dockhand) bzw. in `.env`, danach neu starten. Siehe [BETRIEB.md → Zugriffsschutz](BETRIEB.md#zugriffsschutz).
 
 ![Bereiche ein- und ausschalten](bilder/einstellungen-bereiche.png)
@@ -65,7 +74,7 @@ Das **Zahnrad ⚙** oben öffnet die Einstellungen. Änderungen gelten sofort, e
 
 | Eintrag | Bedeutung |
 |---|---|
-| `APP_PASSWORD` | Passwort für die Anmeldung; leer = keine Anmeldung. |
+| `APP_PASSWORD` | Ein gemeinsames Passwort für die Anmeldung; leer = keine Anmeldung. Sind Konten eingeschaltet (oben), gelten diese stattdessen. |
 | `ALLOW_PUBLIC` | `0` (Standard): nur Heimnetz. `1` erlaubt Zugriffe aus dem Internet (nicht empfohlen). |
 | `BASE_PATH` | Nur hinter einem Reverse Proxy mit Unteradresse, siehe [BETRIEB.md](BETRIEB.md). |
 | `TZ` | Zeitzone, z. B. `Europe/Berlin`. |

@@ -188,7 +188,9 @@ Diese Einstellungen stehen im Homelab in der Compose-Datei unter `environment:` 
 | `BASE_PATH=/musik` | Nur hinter einem Reverse Proxy unter einer Unteradresse. Der Proxy muss die Unteradresse vor der Weitergabe entfernen (z. B. Traefik *StripPrefix*, der dann auch `X-Forwarded-Prefix` setzt; dann ist `BASE_PATH` gar nicht nötig). |
 | `SECRET_KEY=…` | Optional. Sonst wird beim ersten Start `data/secret.key` angelegt. |
 
-Wichtig: Hinter einem Reverse Proxy sieht die App nur die Adresse des Proxys, nicht die des Besuchers. Die Heimnetz-Sperre greift dann nicht. Wer die App über einen Proxy erreichbar macht, muss `APP_PASSWORD` setzen.
+Wichtig: Hinter einem Reverse Proxy sieht die App nur die Adresse des Proxys, nicht die des Besuchers. Die Heimnetz-Sperre greift dann nicht. Wer die App über einen Proxy erreichbar macht, muss `APP_PASSWORD` setzen oder Konten mit **„Name und Passwort“** nutzen.
+
+**Konten (seit 1.20):** Mehrere Nutzer mit eigener Anmeldung richtet man in der App ein (Einstellungen → Nutzer und Anmeldung, siehe ANLEITUNG). Sind sie eingeschaltet, gelten sie statt `APP_PASSWORD`. Die Nutzer liegen in `data/nutzer.db` (gehört in die Sicherung); Passwörter und PINs nur als Prüfwert (scrypt). Bei der **Profilwahl** brauchen Zugriffe von öffentlichen Adressen immer eine PIN; hinter einem Reverse Proxy erkennt die App das aber nicht, dort deshalb „Name und Passwort“ wählen. Wer sich ausgesperrt hat: `data/nutzer.db` beiseitelegen (umbenennen) und neu starten; dann ist die App wieder ohne Konten erreichbar.
 
 ### Warum nicht ins Internet?
 

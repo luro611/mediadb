@@ -16,6 +16,7 @@ from . import films_web as FW
 from . import i18n
 from . import nas
 from . import updates
+from . import users as U
 
 templates = None
 ctx = None
@@ -43,7 +44,7 @@ def _view():
                 flags={k: C.flag(k) for k in ('BARCODE_LOOKUP', 'COVER_WEB', 'AUTO_UPDATE', 'MEDIATHEK', 'UPDATE_CHECK')}, relang=RELANG,
                 stored_lang=C.stored().get('TMDB_LANGUAGE'),
                 password_on=bool(os.getenv('APP_PASSWORD')), public=os.getenv('ALLOW_PUBLIC', '0') in ('1', 'true', 'yes', 'ja', 'on'),
-                ui_langs=i18n.LANGS,
+                ui_langs=i18n.LANGS, people=list(U.users().values()),
                 nas_shares=[{k: v for k, v in x.items() if k != 'password'} | {'has_password': bool(x.get('password'))} for x in nas.shares()],
                 nas_logins=nas.logins(), upd=updates.STATE, upd_info=updates.info(), app_ver=C.version(),
                 upd_checked=time.strftime('%d.%m.%Y %H:%M', time.localtime(updates.STATE['checked'])) if updates.STATE['checked'] else '')
@@ -97,6 +98,64 @@ async def test_tmdb(request):
         d, err = T.tmdb_get('/configuration')
         return err or 'Der TMDB-Schlüssel funktioniert.'
     return go('/settings#tmdb', await run_in_threadpool(work))
+
+
+# ---------------------------------------------------------------- Nutzer und Anmeldung (seit 1.20)
+def _users_back(msg):
+    return go('/settings?part=users#nutzer', msg)
+
+
+def _login_as(resp, uid):
+    resp.set_cookie(U.COOKIE, U.make_token(U.SECRET(), uid), max_age=U.MAX_AGE, httponly=True, samesite='lax')
+    return resp
+
+
+async def users_setup(request):
+    """Erster Verwalter und Art der Anmeldung in einem Schritt; danach ist man gleich als dieser Verwalter angemeldet."""
+    f, _ = await _form(request)
+    if U.users():
+        return _users_back('Es gibt schon Nutzer.')
+    if len(f.get('password') or '') < 4:
+        return _users_back('Der Verwalter braucht ein Passwort mit mindestens 4 Zeichen.')
+    err, uid = U.create(f.get('name'), 'admin', f.get('password'))
+    if err:
+        return _users_back(err)
+    err = U.set_mode(f.get('mode') if f.get('mode') in ('profiles', 'password') else 'profiles')
+    if err:
+        return _users_back(err)
+    return _login_as(_users_back('Konten eingeschaltet. Du bist als Verwalter angemeldet.'), uid)
+
+
+async def users_add(request):
+    f, _ = await _form(request)
+    if U.mode() == 'password' and not f.get('password'):
+        return _users_back('Bei „Name und Passwort“ braucht jeder ein Passwort.')
+    if f.get('role') == 'admin' and not f.get('password'):
+        return _users_back('Verwalter und alle bei „Name und Passwort“ brauchen ein Passwort.')
+    err, _uid = U.create(f.get('name'), f.get('role'), f.get('password') or '')
+    return _users_back(err or 'Nutzer hinzugefügt.')
+
+
+async def users_save(request):
+    f, _ = await _form(request)
+    uid = int(request.path_params['uid'])
+    role = f.get('role')
+    u = U.get(uid)
+    if u and role == 'admin' and not u['secret'] and not f.get('password'):
+        return _users_back('Verwalter und alle bei „Name und Passwort“ brauchen ein Passwort.')
+    err = U.update(uid, name=f.get('name'), role=role, pw=f.get('password') or None, remove_pw=f.get('remove_pw') == '1')
+    return _users_back(err or 'Gespeichert.')
+
+
+async def users_delete(request):
+    err = U.delete(int(request.path_params['uid']))
+    return _users_back(err or 'Nutzer entfernt.')
+
+
+async def users_mode(request):
+    f, _ = await _form(request)
+    err = U.set_mode(f.get('mode', ''))
+    return _users_back(err or 'Gespeichert.')
 
 
 # ---------------------------------------------------------------- NAS-Freigaben
@@ -222,5 +281,8 @@ routes = [Route('/', page), Route('/save', save, methods=['POST']), Route('/test
           Route('/relang', relang, methods=['POST']), Route('/relang/status', relang_status),
           Route('/nas/save', nas_save, methods=['POST']), Route('/nas/check', nas_check, methods=['POST']),
           Route('/nas/test', nas_test, methods=['POST']), Route('/nas/status', nas_status),
-          Route('/nas/delete', nas_delete, methods=['POST'])]
+          Route('/nas/delete', nas_delete, methods=['POST']),
+          Route('/users/setup', users_setup, methods=['POST']), Route('/users/add', users_add, methods=['POST']),
+          Route('/users/mode', users_mode, methods=['POST']), Route('/users/{uid:int}/save', users_save, methods=['POST']),
+          Route('/users/{uid:int}/delete', users_delete, methods=['POST'])]
 app = Starlette(routes=routes)

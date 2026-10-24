@@ -17,7 +17,8 @@ Musik und Fundament: CDs und Audiodateien, MusicBrainz, Cover, Genres, Import/Ex
    ✅ **1.18.1 Fehler und Rückmeldungen** (Barcode-Suche, sichtbares „Gespeichert“, Sicherheitsfrage beim Neuladen, Staffel-Knopf).
    ✅ **1.19.0 Hinzufügen verbessert** (bessere Auflösung beim Einlesen, „Schon im Archiv“, „Weiteren Film hinzufügen“, Fassung mit Vorschlägen).
    ✅ **1.19.1 Hinweis auf den TMDB-Schlüssel** (Willkommensseite, Filme/Serien/Merkliste, falscher Schlüssel wird erkannt).
-10. **Offen:** Betrieb und Datenquellen auf Englisch, Anleitung in weiteren Sprachen; gemeinsame Konten für Familien.
+   ✅ **1.20.0 Mehrere Nutzer, Stufe 1:** Konten, Profilwahl oder Name und Passwort, Rollen Verwalter/Mitglied/Gast. Als Nächstes Stufe 2 (Besitzer pro Exemplar, auch beim Verleihen) und Stufe 3 (gesehen, Bewertung, gelesen, Als Nächstes, Merkliste pro Person), siehe `docs/KONZEPT_NUTZER.md`.
+10. **Offen:** Betrieb und Datenquellen auf Englisch, Anleitung in weiteren Sprachen; Konten für Familien Stufe 2 und 3 (siehe KONZEPT_NUTZER.md).
 11. **Home-Assistant-Add-on:** eigenes kleines Repository, verweist auf das Docker-Image.
 
 ## NAS-Freigaben (1.9, fertig)
@@ -48,6 +49,9 @@ Später: Streamingdienst auch bei Filmen anzeigen; Benachrichtigung (z. B. Home 
 
 ## Gesehen gesammelt abhaken (Filme und Serien)
 Nach dem Einscannen der ganzen Sammlung ist alles „ungesehen“. Eine Ansicht zeigt alle ungesehenen Filme und Serien als Liste, dahinter je ein Feld „gesehen“ und die Wertung (1–10). So lässt sich die Sammlung in einem Rutsch abhaken; dazu „alle markieren“ bzw. Auswahl als gesehen speichern. Bei Serien: ganze Serie (alle Folgen) als gesehen.
+
+## Ein Feld für alle Barcodes (noch überdenken, nicht umsetzen)
+Idee: ein einziges Eingabefeld (z. B. auf der Startseite), in das man jeden beliebigen Barcode tippt; MediaDB erkennt selbst, ob es Musik, Film, Serie oder Buch ist. ISBNs (978/979) sind eindeutig Bücher. Sonst: erst im eigenen Archiv nachsehen, dann MusicBrainz und den Barcode-Dienst gleichzeitig fragen und die Treffer nach Bereich zeigen. Haken: Der Barcode-Dienst erlaubt nur etwa 100 Abfragen am Tag und unterscheidet Film und Serie nicht; die eigenen Seiten zum Hinzufügen treffen gezielter. Vor einer Umsetzung klären, ob sich das lohnt und wie es aussehen soll.
 
 ## Serien: Nachträge
 - Eigene Listen und Merkliste wie bei den Filmen.

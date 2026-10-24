@@ -46,7 +46,8 @@ def _search_index_update(session,flush_ctx):
  ids.discard(None)
  if ids: search.refresh(session.connection(),ids)
 SEC=sec.Settings(DATA)
-app=FastAPI(title='MediaDB'); app.add_middleware(sec.Gate,settings=SEC); (DATA/'film_images').mkdir(exist_ok=True); app.mount('/film-images',StaticFiles(directory=str(DATA/'film_images')),name='film_images'); app.mount('/static',StaticFiles(directory=str(BASE/'static')),name='static'); app.mount('/covers',StaticFiles(directory=str(DATA/'covers')),name='covers'); templates=Jinja2Templates(directory=str(BASE/'app/templates'))
+from . import users; users.init(DATA/'nutzer.db'); users.SECRET=SEC.secret  # Konten (seit 1.20), siehe docs/KONZEPT_NUTZER.md
+app=FastAPI(title='MediaDB'); app.add_middleware(sec.Gate,settings=SEC,accounts=users); (DATA/'film_images').mkdir(exist_ok=True); app.mount('/film-images',StaticFiles(directory=str(DATA/'film_images')),name='film_images'); app.mount('/static',StaticFiles(directory=str(BASE/'static')),name='static'); app.mount('/covers',StaticFiles(directory=str(DATA/'covers')),name='covers'); templates=Jinja2Templates(directory=str(BASE/'app/templates'))
 lock=threading.Lock(); last_mb=0.0
 templates.env.globals['asset_v']=int((BASE/'static'/'style.css').stat().st_mtime); templates.env.globals['app_version']=config.version()
 from . import updates; templates.env.globals['update_info']=updates.info; updates.scheduler()  # Hinweis auf neue Version (GitHub-Release)
@@ -588,7 +589,7 @@ def nav_langs():
  return [c for c in i18n.LANGS if c in v]
 def ctx(request,**kw):
  lang=get_lang(request)
- return {'request':request,'lang':lang,'langs':i18n.LANGS,'nav_langs':nav_langs(),'custom_css':custom_css(),'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on,'layout':partial(get_layout,request),'layout_cls':partial(layout_cls,request),**kw}
+ return {'request':request,'lang':lang,'langs':i18n.LANGS,'nav_langs':nav_langs(),'custom_css':custom_css(),'_':partial(i18n.tr,lang),'_t':partial(i18n.tr_text,lang),'base':sec.get_base(request),'auth_on':SEC.auth_on or users.accounts_on(),'accounts_on':users.accounts_on(),'accounts_mode':users.mode(),'me':request.scope.get('state',{}).get('user'),'ROLES':users.ROLES,'layout':partial(get_layout,request),'layout_cls':partial(layout_cls,request),**kw}
 @app.get('/layout/{area}/{mode}')
 def set_layout(request:Request,area:str,mode:str,next:str='/'):
  next=sec.strip_base(next,sec.get_base(request))
@@ -681,20 +682,39 @@ def healthz(): return {'ok':True}
 def _safe_next(n):
  n=n or '/'
  return n if n.startswith('/') and not n.startswith('//') and '\\' not in n else '/media'
+def _public(request): return bool(request.scope.get('state',{}).get('public'))
+def _needs_secret(u,request):
+ """Bei der Profilwahl ist die PIN freiwillig, von oeffentlichen Adressen aber immer noetig."""
+ return users.mode()=='password' or bool(u['secret']) or _public(request)
 @app.get('/login',response_class=HTMLResponse)
-def login_page(request:Request,next:str='/media',error:str=''):
+def login_page(request:Request,next:str='/media',error:str='',u:int=0):
+ if users.accounts_on():
+  pick=users.get(u) if users.mode()=='profiles' else None
+  return templates.TemplateResponse(request,'login.html',ctx(request,next=_safe_next(next),error=error,login_page=True,mode=users.mode(),
+   people=[dict(x,needs=_needs_secret(x,request)) for x in users.users().values()],pick=pick and dict(pick,needs=_needs_secret(pick,request))))
  if not SEC.auth_on: return RedirectResponse(_safe_next(next),303)
- return templates.TemplateResponse(request,'login.html',ctx(request,next=_safe_next(next),error=error,login_page=True))
+ return templates.TemplateResponse(request,'login.html',ctx(request,next=_safe_next(next),error=error,login_page=True,mode='app'))
 @app.post('/login')
-def login(request:Request,password:str=Form(''),next:str=Form('/media')):
+def login(request:Request,password:str=Form(''),next:str=Form('/media'),uid:int=Form(0),name:str=Form('')):
  nxt=_safe_next(next)
+ if users.accounts_on():
+  if users.mode()=='profiles': u=users.get(uid)
+  else: u=users.by_name(name)
+  if not u or (_needs_secret(u,request) and not users.secret_ok(u,password)):
+   time.sleep(1.5); return RedirectResponse('/login?'+urlencode({'next':nxt,'error':'1','u':uid or ''}),303)
+  users.touch(u['id'])
+  r=RedirectResponse(nxt,303); r.set_cookie(users.COOKIE,users.make_token(SEC.secret(),u['id']),max_age=users.MAX_AGE,httponly=True,samesite='lax'); return r
  if not SEC.auth_on: return RedirectResponse(nxt,303)
  if not SEC.password_ok(password):
   time.sleep(1.5); return RedirectResponse('/login?'+urlencode({'next':nxt,'error':'1'}),303)
  r=RedirectResponse(nxt,303); r.set_cookie(sec.COOKIE,SEC.make_token(),max_age=sec.MAX_AGE,httponly=True,samesite='lax'); return r
 @app.get('/logout')
 def logout():
- r=RedirectResponse('/login' if SEC.auth_on else '/media',303); r.delete_cookie(sec.COOKIE); return r
+ r=RedirectResponse('/login' if SEC.auth_on or users.accounts_on() else '/media',303); r.delete_cookie(sec.COOKIE); r.delete_cookie(users.COOKIE); return r
+@app.get('/kein-zugriff',response_class=HTMLResponse)
+def denied(request:Request,was:str=''):
+ """Ziel der Middleware, wenn ein Gast etwas aendern will oder ein Mitglied die Einstellungen oeffnet."""
+ return templates.TemplateResponse(request,'denied.html',ctx(request,was=was),status_code=403)
 @app.get('/add',response_class=HTMLResponse)
 def add_page(request:Request): return templates.TemplateResponse(request,'scan.html',ctx(request))
 @app.post('/scan/search',response_class=HTMLResponse)
