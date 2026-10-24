@@ -12,6 +12,7 @@ from . import films_db as F
 from . import series_db as S
 from . import films_tmdb as T
 from . import config as C
+from . import users as U
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS watch(
@@ -32,8 +33,10 @@ _lock = threading.Lock()
 
 def init():
     for m in DBS.values():
-        with m.db() as c:
+        with m.db(plain=True) as c:
             c.executescript(SCHEMA)
+            if 'user_id' not in {r[1] for r in c.execute('PRAGMA table_info(watch)')}:  # seit 1.22: Merkliste pro Person
+                c.execute('ALTER TABLE watch ADD COLUMN user_id INTEGER')
 
 
 def now():
@@ -76,8 +79,8 @@ def add(kind, tmdb_id, title, note='', year=None, poster_path=None, overview=Non
             if r:
                 c.execute('UPDATE watch SET done_at=NULL, note=coalesce(nullif(?,\'\'), note) WHERE id=?', (note, r['id']))
                 return r['id'], False
-        wid = c.execute('INSERT INTO watch(tmdb_id, title, original_title, year, poster_path, overview, note, added_at) VALUES(?,?,?,?,?,?,?,?)',
-                        (tmdb_id, title or 'Ohne Titel', original_title, year, poster_path, overview, note or None, now())).lastrowid
+        wid = c.execute('INSERT INTO main.watch(tmdb_id, title, original_title, year, poster_path, overview, note, added_at, user_id) VALUES(?,?,?,?,?,?,?,?,?)',
+                        (tmdb_id, title or 'Ohne Titel', original_title, year, poster_path, overview, note or None, now(), U.current_id())).lastrowid
     if tmdb_id and T.configured():
         refresh_item(kind, wid)
     return wid, True

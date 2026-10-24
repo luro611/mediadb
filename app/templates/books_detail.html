@@ -14,6 +14,7 @@
   <section class="watch card" id="gelesen" aria-label="{{ _('Gelesen') }}">
    <div class="watchstate">{% if b.status=='read' %}<strong class="isseen">✓ {{ _("Gelesen") }}</strong>{% if b.read_at %} <span class="muted">{{ _("zuletzt am §", b.read_at|fdate) }}</span>{% endif %}{% if b.read_count > 1 %} <span class="badge">{{ _("§ × gelesen", b.read_count) }}</span>{% endif %}
     {% elif b.status=='reading' %}<strong>{{ _("Lese ich gerade") }}</strong>{% else %}<strong>{{ _("Noch nicht gelesen") }}</strong>{% endif %}</div>
+   {% set sb = seen_by('books', b.id) %}{% if sb %}<p class="muted seenby">{{ _("Gelesen von:") }} {% for n, w in sb %}{{ n }}{% if w %} ({{ w|fdate }}){% endif %}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
    <form method="post" action="{{ base }}/books/{{ b.id }}/status" class="actions">
     <input type="hidden" name="anchor" value="gelesen">
     {% if b.status!='reading' %}<button name="status" value="reading" class="quiet">{{ _("Lese ich gerade") }}</button>{% endif %}

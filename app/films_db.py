@@ -91,24 +91,35 @@ def sort_key(title):
 
 
 def init(path):
-    global DB_PATH
-    DB_PATH = Path(path)
+    global DB_PATH, _ready
+    DB_PATH, _ready = Path(path), False
     with _init_lock, db() as c:
         c.executescript(SCHEMA)
         if 'next_at' not in {r[1] for r in c.execute('PRAGMA table_info(films)')}:  # seit 1.11: "Als Naechstes"
             c.execute('ALTER TABLE films ADD COLUMN next_at TEXT')
         U.add_owner_column(c, 'copies')  # seit 1.21: Besitzer
+        U.personal_table(c, 'films', 'film_user', 'film_id', PERSONAL)  # seit 1.22: gesehen und Bewertung pro Person
         c.executescript(TRIGGERS)
         if c.execute(f'SELECT count(*) FROM {FTS}').fetchone()[0] != c.execute('SELECT count(*) FROM films').fetchone()[0]:
             c.execute(f'DELETE FROM {FTS}')
             c.execute(f'INSERT INTO {FTS}(rowid, body) SELECT f.id, {_BODY} FROM films f')
+    _ready = True
+
+
+# seit 1.22: persoenliche Werte (siehe users.personalize); SQL-Ausdruck fuer den Wert ohne Eintrag
+PERSONAL = {'watched': '0', 'watched_at': 'NULL', 'watch_count': '0', 'rating': 'NULL', 'next_at': 'NULL'}
+SPECS = [('personal', 'films', 'film_user', 'film_id', PERSONAL), ('rows', 'watch')]
+_ready = False
 
 
 @contextmanager
-def db():
+def db(plain=False):
+    """plain=True: ohne persoenliche Sichten (Aufbau der Tabellen beim Start)."""
     c = sqlite3.connect(DB_PATH, timeout=15)
     c.row_factory = sqlite3.Row
     c.execute('PRAGMA foreign_keys=ON')
+    if _ready and not plain:
+        U.personalize(c, 'films', SPECS)
     try:
         yield c
         c.commit()
@@ -134,7 +145,7 @@ def insert_film(c, data):
     d['sort_title'] = sort_key(d['title'])
     d['created_at'] = d['updated_at'] = now()
     cols = ','.join(d)
-    cur = c.execute(f'INSERT INTO films({cols}) VALUES({",".join("?" * len(d))})', tuple(d.values()))
+    cur = c.execute(f'INSERT INTO main.films({cols}) VALUES({",".join("?" * len(d))})', tuple(d.values()))
     return cur.lastrowid
 
 

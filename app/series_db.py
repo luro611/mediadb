@@ -88,8 +88,8 @@ FILE_FIELDS = ['season', 'episode', 'episode_end', 'title_hint', 'path', 'contai
 
 
 def init(path):
-    global DB_PATH
-    DB_PATH = Path(path)
+    global DB_PATH, _ready
+    DB_PATH, _ready = Path(path), False
     with _init_lock, db() as c:
         c.executescript(SCHEMA)
         have = {r[1] for r in c.execute('PRAGMA table_info(series)')}
@@ -97,6 +97,9 @@ def init(path):
             if col not in have:
                 c.execute(f'ALTER TABLE series ADD COLUMN {col} {typ}')
         U.add_owner_column(c, 'copies')  # seit 1.21: Besitzer
+        U.personal_table(c, 'series', 'series_user', 'series_id', PERSONAL)  # seit 1.22: Bewertung, Als Naechstes und gesehene Folgen pro Person
+        c.execute('CREATE TABLE IF NOT EXISTS watched_user(user_id INTEGER NOT NULL, series_id INTEGER NOT NULL, season INTEGER NOT NULL, '
+                  'episode INTEGER NOT NULL, watched_at TEXT, PRIMARY KEY(user_id, series_id, season, episode))')
         old = c.execute('PRAGMA user_version').fetchone()[0]
         if old < SCHEMA_VERSION:  # Suchtext hat sich geaendert: Trigger neu anlegen, Index neu fuellen
             for (name,) in c.execute("SELECT name FROM sqlite_master WHERE type='trigger'").fetchall():
@@ -107,13 +110,24 @@ def init(path):
         if c.execute(f'SELECT count(*) FROM {FTS}').fetchone()[0] != c.execute('SELECT count(*) FROM series').fetchone()[0]:
             c.execute(f'DELETE FROM {FTS}')
             c.execute(f'INSERT INTO {FTS}(rowid, body) SELECT s.id, {_BODY} FROM series s')
+    _ready = True
+
+
+# seit 1.22: persoenliche Werte (siehe users.personalize)
+PERSONAL = {'rating': 'NULL', 'next_at': 'NULL'}
+SPECS = [('personal', 'series', 'series_user', 'series_id', PERSONAL, [('watched_user', 'series_id')]),
+         ('set', 'watched', 'watched_user', ['series_id', 'season', 'episode'], ['watched_at']), ('rows', 'watch')]
+_ready = False
 
 
 @contextmanager
-def db():
+def db(plain=False):
+    """plain=True: ohne persoenliche Sichten (Aufbau der Tabellen beim Start)."""
     c = sqlite3.connect(DB_PATH, timeout=15)
     c.row_factory = sqlite3.Row
     c.execute('PRAGMA foreign_keys=ON')
+    if _ready and not plain:
+        U.personalize(c, 'series', SPECS)
     try:
         yield c
         c.commit()
@@ -142,7 +156,7 @@ def insert(c, data):
     d['title'] = (data.get('title') or 'Ohne Titel').strip()
     d['sort_title'] = sort_key(d['title'])
     d['created_at'] = d['updated_at'] = now()
-    return c.execute(f'INSERT INTO series({",".join(d)}) VALUES({",".join("?" * len(d))})', tuple(d.values())).lastrowid
+    return c.execute(f'INSERT INTO main.series({",".join(d)}) VALUES({",".join("?" * len(d))})', tuple(d.values())).lastrowid
 
 
 def update(c, sid, data, only_empty=False):

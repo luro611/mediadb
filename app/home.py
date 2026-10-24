@@ -12,6 +12,7 @@ from . import series_db as S
 from . import books_db as BK
 from . import search as music_search
 from . import config as C
+from . import users as U
 
 templates = None
 ctx = None
@@ -52,8 +53,13 @@ def _music():
             latest = [dict(r) for r in c.execute("""SELECT id, title, artist, cover_path, created_at FROM media
                                                     ORDER BY created_at DESC, id DESC LIMIT 12""")]
             cols = {r[1] for r in c.execute('PRAGMA table_info(media)')}
-            upnext = [dict(r) for r in c.execute("""SELECT id, title, artist, cover_path, next_at FROM media
-                                                    WHERE next_at IS NOT NULL ORDER BY next_at""")] if 'next_at' in cols else []
+            uid = U.current_id()  # seit 1.22: "Als Naechstes" pro Person (Tabelle media_next)
+            if uid is not None and c.execute("SELECT 1 FROM sqlite_master WHERE name='media_next'").fetchone():
+                upnext = [dict(r) for r in c.execute("""SELECT m.id, m.title, m.artist, m.cover_path, x.next_at FROM media m
+                                                        JOIN media_next x ON x.media_id=m.id AND x.user_id=? ORDER BY x.next_at""", (uid,))]
+            else:
+                upnext = [dict(r) for r in c.execute("""SELECT id, title, artist, cover_path, next_at FROM media
+                                                        WHERE next_at IS NOT NULL ORDER BY next_at""")] if 'next_at' in cols else []
             return {'n': n, 'cd': own.get('cd', 0) + own.get('cd_digital', 0), 'digital': own.get('digital', 0) + own.get('cd_digital', 0),
                     'artists': artists, 'songs': songs, 'latest': latest, 'upnext': upnext}
     except Exception:

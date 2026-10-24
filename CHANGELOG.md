@@ -1,5 +1,13 @@
 # Änderungen
 
+## MediaDB 1.22.0 – Mehrere Nutzer, Stufe 3: jede Person hat ihre eigenen Angaben
+- **Pro Person:** gesehen (mit Datum und Anzahl), gesehene Folgen, eigene Bewertung, gelesen, „Als Nächstes“ (auch bei Musik) und die Merkliste. Anna kann einen Film mit 3 bewerten, Lutz behält seine 7.
+- Listen wie „Noch nicht gesehen“, „Top 10: Muss ich sehen“, „Lieblingsfilme“, „Gelesen“ und die Zahlen auf der Startseite gelten für die angemeldete Person.
+- **Gesehen von …:** Auf Film- und Buchseiten steht, wer den Titel schon gesehen bzw. gelesen hat (mit Datum), bei Serien, wie viele Folgen jede Person gesehen hat.
+- **Gemeinsam** bleiben die Sammlung selbst, Besitzer, eigene Listen und Notizen.
+- **Übernahme:** Die bisherigen Angaben werden einmalig die des ersten Verwalters. Ohne Konten ändert sich nichts; schaltet man die Konten wieder aus, gelten die Angaben von vor den Konten.
+- Technik: Die Angaben liegen in eigenen Tabellen (`film_user`, `series_user`, `watched_user`, `book_user`, `media_next`, Merkliste mit `user_id`). Damit ist das Konzept der drei Stufen (`docs/KONZEPT_NUTZER.md`) umgesetzt.
+
 ## MediaDB 1.21.0 – Mehrere Nutzer, Stufe 2: Besitzer
 - **Jedes Exemplar hat einen Besitzer:** DVDs, Blu-rays, Dateien, Bücher und Serienboxen, bei Musik das Album. Wer etwas einträgt (auch per Barcode, Ordner-Import oder Tabelle), wird Besitzer. Leer heißt **Haushalt** (gemeinsam).
 - **Ändern** auf der Seite des Eintrags: In der Exemplar-Tabelle steht eine Auswahl mit allen Personen und „Haushalt“. Gäste sehen nur den Namen.

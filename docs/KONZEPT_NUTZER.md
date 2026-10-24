@@ -25,7 +25,7 @@ Eine gemeinsame Sammlung für den ganzen Haushalt. Alle sehen alles. Dazu kommen
 - Filter in den Listen: „Alle · Meins · von …“.
 - **Verleihen:** zeigt, wem das verliehene Exemplar gehört; Filter „meine verliehenen“.
 
-## Stufe 3: persönliche Angaben
+## Stufe 3: persönliche Angaben (fertig, 1.22.0)
 - **Pro Person:** gesehen (Datum, Anzahl), gesehene Folgen, eigene Bewertung, gelesen, „Als Nächstes“, Merkliste.
 - **Gemeinsam:** eigene Listen und Notizen.
 - Anzeige z. B. „Gesehen von: Lutz (12.09.), Anna“. Die bisherigen Werte gehören dem ersten Verwalter.

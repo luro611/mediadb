@@ -14,6 +14,7 @@
 
   {{ next_btn('series', s.id, s.next_at) }}
   <section class="watch card" id="fortschritt" aria-label="{{ _('Fortschritt') }}">
+   {% set sb = seen_by('series', s.id) %}{% if sb %}<p class="muted seenby">{{ _("Folgen gesehen:") }} {% for n, w in sb %}{{ n }} {{ w }}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
    <div class="sumgrid">
     <div><span class="big">{{ tot.have }}</span><span class="muted">{{ _("von § Folgen vorhanden", tot.aired) }}</span></div>
     <div><span class="big{% if tot.missing %} accent{% endif %}">{{ tot.missing }}</span><span class="muted">{{ _("fehlt") if tot.missing == 1 else _("fehlen") }}{% if tot.missing %} · <a href="#staffeln">{{ _("anzeigen") }}</a>{% endif %}</span></div>

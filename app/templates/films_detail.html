@@ -15,6 +15,7 @@
   <section class="watch card" id="gesehen" aria-label="{{ _('Gesehen') }}">
    <div class="watchstate">{% if f.watched %}<strong class="isseen">✓ {{ _("Gesehen") }}</strong>{% if f.watched_at %} <span class="muted">{{ _("zuletzt am §", f.watched_at|fdate) }}</span>{% endif %}{% if f.watch_count > 1 %} <span class="badge">{{ _("§ × gesehen", f.watch_count) }}</span>{% endif %}
     {% else %}<strong>{{ _("Noch nicht gesehen") }}</strong>{% endif %}</div>
+   {% set sb = seen_by('films', f.id) %}{% if sb %}<p class="muted seenby">{{ _("Gesehen von:") }} {% for n, w in sb %}{{ n }}{% if w %} ({{ w|fdate }}){% endif %}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
    <form method="post" action="{{ base }}/films/{{ f.id }}/watched" class="actions">
     <input type="hidden" name="anchor" value="gesehen">
     {% if f.watched %}<button name="action" value="seen">{{ _("Heute nochmal gesehen") }}</button><button name="action" value="unseen" class="quiet">{{ _("Als ungesehen markieren") }}</button>

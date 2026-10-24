@@ -19,7 +19,8 @@ Musik und Fundament: CDs und Audiodateien, MusicBrainz, Cover, Genres, Import/Ex
    ✅ **1.19.1 Hinweis auf den TMDB-Schlüssel** (Willkommensseite, Filme/Serien/Merkliste, falscher Schlüssel wird erkannt).
    ✅ **1.20.0 Mehrere Nutzer, Stufe 1:** Konten, Profilwahl oder Name und Passwort, Rollen Verwalter/Mitglied/Gast. Als Nächstes Stufe 2 (Besitzer pro Exemplar, auch beim Verleihen) und Stufe 3 (gesehen, Bewertung, gelesen, Als Nächstes, Merkliste pro Person), siehe `docs/KONZEPT_NUTZER.md`.
    ✅ **1.21.0 Mehrere Nutzer, Stufe 2:** Besitzer pro Exemplar bzw. Album, Filter, Verleih mit Besitzer. Als Nächstes Stufe 3 (gesehen, Bewertung, gelesen, Als Nächstes, Merkliste pro Person).
-10. **Offen:** Betrieb und Datenquellen auf Englisch, Anleitung in weiteren Sprachen; Konten für Familien Stufe 3 (siehe KONZEPT_NUTZER.md).
+   ✅ **1.22.0 Mehrere Nutzer, Stufe 3:** gesehen, Bewertung, gelesen, Als Nächstes und Merkliste pro Person; „Gesehen von …“.
+10. **Offen:** Betrieb und Datenquellen auf Englisch, Anleitung in weiteren Sprachen.
 11. **Home-Assistant-Add-on:** eigenes kleines Repository, verweist auf das Docker-Image.
 
 ## NAS-Freigaben (1.9, fertig)
@@ -64,7 +65,6 @@ Idee: ein einziges Eingabefeld (z. B. auf der Startseite), in das man jeden beli
 ## Filme: Nachträge
 - Zweite Barcode-Quelle (z. B. Disq), sobald dokumentiert; bisher UPCitemdb.
 - Export/Sicherung der Filmliste als Tabelle (Datenbankdatei `filme.db` ist bis dahin die Sicherung).
-- Gesehen und Bewertung pro Person, sobald es Konten gibt.
 - Aufräumen gelöschter oder verschobener Filmdateien.
 
 ## Weitere Ideen

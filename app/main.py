@@ -368,6 +368,7 @@ def migrate_schema():
   conn.execute(text("UPDATE media SET ownership='digital' WHERE ownership='mp3'"))
   conn.execute(text("UPDATE media SET ownership='cd_digital' WHERE ownership='cd_mp3'"))
   for name,tbl,cols in INDEXES: conn.execute(text(f'CREATE INDEX IF NOT EXISTS {name} ON {tbl} ({cols})'))
+  conn.execute(text('CREATE TABLE IF NOT EXISTS media_next(media_id INTEGER NOT NULL, user_id INTEGER NOT NULL, next_at TEXT, PRIMARY KEY(media_id, user_id))'))  # seit 1.22: "Als Naechstes" pro Person
   if IS_SQLITE: search.setup(conn)
  if 'release_date' in added:
   s=Session()
@@ -755,6 +756,25 @@ def create(request:Request, ownership:str=Form('cd'), file_formats:str=Form(''),
   try: fetch_release_date_for(item,s)
   except Exception: logging.exception('Erscheinungsdatum konnte nicht geladen werden')
  return RedirectResponse(f'/media/{item.id}',303)
+# ---------------- Musik: "Als Naechstes" pro Person (seit 1.22); ohne angemeldete Person gilt media.next_at wie bisher ----------------
+def music_next_cond():
+ uid=users.current_id()
+ if uid is None: return Medium.next_at.isnot(None)
+ return Medium.id.in_(select(literal_column('media_id')).select_from(text('media_next')).where(literal_column('user_id')==uid))
+def music_next_at(item):
+ uid=users.current_id()
+ if uid is None: return item.next_at
+ with engine.connect() as conn: return conn.execute(text('SELECT next_at FROM media_next WHERE media_id=:m AND user_id=:u'),{'m':item.id,'u':uid}).scalar()
+def set_music_next(mid,on):
+ uid=users.current_id(); when=datetime.now().isoformat(timespec='seconds')
+ if uid is None:
+  s=Session(); x=s.get(Medium,mid)
+  if x: x.next_at=when if on else None; s.commit()
+  s.close(); return
+ with engine.begin() as conn:
+  if on: conn.execute(text('INSERT OR REPLACE INTO media_next(media_id,user_id,next_at) VALUES(:m,:u,:w)'),{'m':mid,'u':uid,'w':when})
+  else: conn.execute(text('DELETE FROM media_next WHERE media_id=:m AND user_id=:u'),{'m':mid,'u':uid})
+templates.env.globals['music_next_at']=music_next_at
 SORTS={'genre':('genre','artist','release_date'),'artist':('artist','release_date','title'),'title':('title','artist'),'year':('year','artist','title'),'release_date':('release_date','artist','title')}
 def qs(**kw): return urlencode({k:v for k,v in kw.items() if v})
 @app.get('/media',response_class=HTMLResponse)
@@ -770,10 +790,10 @@ def media(request:Request,q:str='',artist:str='',genre:str='',year:str='',sort:s
   like=f'%{tok}%'; stmt=stmt.where(or_(*[getattr(Medium,c).ilike(like) for c in ('title','artist','barcode','genre','tags','styles','label','catalog_number','notes','year','release_date','file_formats')],Medium.tracks.any(or_(Track.title.ilike(like),Track.artist.ilike(like)))))
  if view=='cd': stmt=stmt.where(Medium.ownership.in_(['cd','cd_digital']))
  elif view=='digital': stmt=stmt.where(Medium.ownership=='digital')
- elif view=='next': stmt=stmt.where(Medium.next_at.isnot(None))
+ elif view=='next': stmt=stmt.where(music_next_cond())
  own_on,own_id=users.owner_filter(owner); owner=owner if own_on else ''  # Besitzer (seit 1.21)
  if own_on: stmt=stmt.where(Medium.owner_id.is_(None) if own_id is None else Medium.owner_id==own_id)
- tabs={'all':0,'cd':0,'digital':0,'next':s.scalar(select(func.count()).select_from(Medium).where(Medium.next_at.isnot(None)))}
+ tabs={'all':0,'cd':0,'digital':0,'next':s.scalar(select(func.count()).select_from(Medium).where(music_next_cond()))}
  for o,n in s.execute(select(Medium.ownership,func.count()).group_by(Medium.ownership)).all():
   o=o or 'cd'; tabs['all']+=n; tabs['cd']+=(n if o in ('cd','cd_digital') else 0); tabs['digital']+=(n if o=='digital' else 0)
  datekey=func.coalesce(func.nullif(Medium.release_date,''),func.nullif(Medium.year,''),'')
@@ -1030,9 +1050,7 @@ def set_next(request:Request,area:str,item_id:int,on:str=Form(''),back:str=Form(
  """Knopf "Als Naechstes" auf den Detailseiten aller Bereiche: vormerken (on=1) oder wieder herunternehmen."""
  on=on=='1'
  if area=='music':
-  s=Session(); x=s.get(Medium,item_id)
-  if x: x.next_at=datetime.now().isoformat(timespec='seconds') if on else None; s.commit()
-  s.close()
+  set_music_next(item_id,on)
  elif area in ('films','series','books'):
   from . import films_db as _F, series_db as _S, books_db as _B
   m={'films':_F,'series':_S,'books':_B}[area]
@@ -1390,6 +1408,32 @@ def _claim_owners(uid):
   with m.db() as c: c.execute('UPDATE copies SET owner_id=? WHERE owner_id IS NULL',(uid,))
  with _L.db() as c: c.execute('UPDATE loans SET owner_id=? WHERE owner_id IS NULL',(uid,))
  with engine.begin() as conn: conn.execute(text('UPDATE media SET owner_id=:u WHERE owner_id IS NULL'),{'u':uid})
-users.ON_FIRST_ADMIN.append(_claim_owners)
+def _claim_personal(uid):
+ """Seit 1.22: bisherige Werte (gesehen, Bewertung, gelesen, Als Naechstes, Merkliste) werden die des ersten Verwalters."""
+ from . import films_db as _F, series_db as _S, books_db as _B
+ with _F.db(plain=True) as c:
+  c.execute('''INSERT OR IGNORE INTO film_user(film_id,user_id,watched,watched_at,watch_count,rating,next_at)
+               SELECT id,?,watched,watched_at,watch_count,rating,next_at FROM films WHERE watched OR rating IS NOT NULL OR next_at IS NOT NULL''',(uid,))
+  c.execute('UPDATE watch SET user_id=? WHERE user_id IS NULL',(uid,))
+ with _S.db(plain=True) as c:
+  c.execute('INSERT OR IGNORE INTO series_user(series_id,user_id,rating,next_at) SELECT id,?,rating,next_at FROM series WHERE rating IS NOT NULL OR next_at IS NOT NULL',(uid,))
+  c.execute('INSERT OR IGNORE INTO watched_user(user_id,series_id,season,episode,watched_at) SELECT ?,series_id,season,episode,watched_at FROM watched',(uid,))
+  c.execute('UPDATE watch SET user_id=? WHERE user_id IS NULL',(uid,))
+ with _B.db(plain=True) as c:
+  c.execute('''INSERT OR IGNORE INTO book_user(book_id,user_id,status,read_at,read_count,rating,next_at)
+               SELECT id,?,status,read_at,read_count,rating,next_at FROM books WHERE status<>'' OR read_count>0 OR rating IS NOT NULL OR next_at IS NOT NULL''',(uid,))
+ with engine.begin() as conn: conn.execute(text('INSERT OR IGNORE INTO media_next(media_id,user_id,next_at) SELECT id,:u,next_at FROM media WHERE next_at IS NOT NULL'),{'u':uid})
+def seen_by(area,item_id):
+ """Wer hat gesehen bzw. gelesen (seit 1.22, nur mit Konten): [(Name, Datum oder Anzahl Folgen)]."""
+ if not users.accounts_on(): return []
+ from . import films_db as _F, series_db as _S, books_db as _B
+ m,sql={'films':(_F,'SELECT user_id, watched_at FROM film_user WHERE film_id=? AND watched'),
+        'books':(_B,"SELECT user_id, read_at FROM book_user WHERE book_id=? AND status='read'"),
+        'series':(_S,'SELECT user_id, count(*) FROM watched_user WHERE series_id=? AND season>0 GROUP BY user_id')}.get(area,(None,None))
+ if not m: return []
+ with m.db(plain=True) as c: rows=c.execute(sql,(item_id,)).fetchall()
+ return sorted(((users.owner_name(u),w) for u,w in rows if users.owner_name(u)),key=lambda x:x[0].lower())
+templates.env.globals['seen_by']=seen_by
+users.ON_FIRST_ADMIN+=[('owners_claimed',_claim_owners),('personal_claimed',_claim_personal)]
 try: users.claim_unowned()  # Installationen, die schon Konten haben (1.20)
 except Exception: logging.exception('Besitzer konnten nicht uebernommen werden')

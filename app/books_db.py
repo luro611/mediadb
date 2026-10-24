@@ -74,8 +74,8 @@ LANG_NAMES = {'ger': 'Deutsch', 'deu': 'Deutsch', 'de': 'Deutsch', 'eng': 'Engli
 
 
 def init(path):
-    global DB_PATH
-    DB_PATH = Path(path)
+    global DB_PATH, _ready
+    DB_PATH, _ready = Path(path), False
     with _init_lock, db() as c:
         c.executescript(SCHEMA)
         have = {r[1] for r in c.execute('PRAGMA table_info(books)')}
@@ -83,17 +83,28 @@ def init(path):
             if col not in have:
                 c.execute(f'ALTER TABLE books ADD COLUMN {col} {typ}')
         U.add_owner_column(c, 'copies')  # seit 1.21: Besitzer
+        U.personal_table(c, 'books', 'book_user', 'book_id', PERSONAL)  # seit 1.22: gelesen und Bewertung pro Person
         c.executescript(TRIGGERS)
         if c.execute(f'SELECT count(*) FROM {FTS}').fetchone()[0] != c.execute('SELECT count(*) FROM books').fetchone()[0]:
             c.execute(f'DELETE FROM {FTS}')
             c.execute(f'INSERT INTO {FTS}(rowid, body) SELECT b.id, {_BODY} FROM books b')
+    _ready = True
+
+
+# seit 1.22: persoenliche Werte (siehe users.personalize)
+PERSONAL = {'status': "''", 'read_at': 'NULL', 'read_count': '0', 'rating': 'NULL', 'next_at': 'NULL'}
+SPECS = [('personal', 'books', 'book_user', 'book_id', PERSONAL)]
+_ready = False
 
 
 @contextmanager
-def db():
+def db(plain=False):
+    """plain=True: ohne persoenliche Sichten (Aufbau der Tabellen beim Start)."""
     c = sqlite3.connect(DB_PATH, timeout=15)
     c.row_factory = sqlite3.Row
     c.execute('PRAGMA foreign_keys=ON')
+    if _ready and not plain:
+        U.personalize(c, 'books', SPECS)
     try:
         yield c
         c.commit()
@@ -185,7 +196,7 @@ def insert(c, data):
     d['sort_author'] = author_sort(d.get('authors'))
     d['series_sort'] = series_sort(d.get('series_no'))
     d['created_at'] = d['updated_at'] = now()
-    bid = c.execute(f'INSERT INTO books({",".join(d)}) VALUES({",".join("?" * len(d))})', tuple(d.values())).lastrowid
+    bid = c.execute(f'INSERT INTO main.books({",".join(d)}) VALUES({",".join("?" * len(d))})', tuple(d.values())).lastrowid
     if data.get('_people'):
         set_people(c, bid, data['_people'])
     return bid
