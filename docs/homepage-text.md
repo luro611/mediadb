@@ -1,6 +1,6 @@
 # Texte für lurohome.de/mediadb
 
-Stand: MediaDB 1.22.2 (24.10.2026). Für den Homepage-Chat (Projekt `Webseiten/lurohome`): was sich auf der Projektseite `src/mediadb.html` und auf der Karte der Startseite (`PROJEKTE` in `src/build.py`) ändern soll. Die Version liest `build.py` selbst aus `VERSION`.
+Stand: MediaDB 1.22.3 (25.10.2026). Für den Homepage-Chat (Projekt `Webseiten/lurohome`): was sich auf der Projektseite `src/mediadb.html` und auf der Karte der Startseite (`PROJEKTE` in `src/build.py`) ändern soll. Die Version liest `build.py` selbst aus `VERSION`.
 
 ## Karte auf der Startseite
 
@@ -14,8 +14,8 @@ Im Raster „Erfassen, ergänzen, wiederfinden“, gleicher Aufbau wie die vorha
 
 1. **Kicker:** Haushalt / Household
    **Überschrift:** Wer ist da? / Who’s there?
-   **DE:** Mehrere Personen, eine Sammlung. Beim Öffnen auf den eigenen Namen klicken (PIN freiwillig) oder richtig mit Name und Passwort anmelden. Verwalter dürfen alles, Mitglieder ansehen und eintragen, Gäste stöbern ohne Passwort, ändern aber nichts. Die Konten liegen auf deinem Server, nicht in einer Cloud.
-   **EN:** Several people, one collection. Click your own name when opening MediaDB (PIN optional) or sign in properly with name and password. Administrators may do everything, members view and add, guests browse without a password but change nothing. Accounts live on your server, not in a cloud.
+   **DE:** Mehrere Personen, eine Sammlung. Beim Öffnen auf den eigenen Namen klicken (PIN freiwillig) oder richtig mit Name und Passwort anmelden. Verwalter dürfen alles, Mitglieder ansehen und eintragen. Für Besuch steht „Gast“ schon bereit: stöbern ohne Passwort, aber nichts ändern. Die Konten liegen auf deinem Server, nicht in einer Cloud.
+   **EN:** Several people, one collection. Click your own name when opening MediaDB (PIN optional) or sign in properly with name and password. Administrators may do everything, members view and add. For visitors, “Guest” is ready to go: browse without a password, but change nothing. Accounts live on your server, not in a cloud.
 
 2. **Kicker:** Jeder für sich / Everyone their own
    **Überschrift:** Gesehen von … / Watched by …
@@ -71,7 +71,7 @@ Falls dort oder bei der Installation der Zugriffsschutz erwähnt wird:
 
 ## Bildschirmfotos (optional)
 
-Erfundene Beispiel-Sammlung, erfundene Namen (Maren, Jonas, Besuch). Deutsch in `docs/bilder/`, Englisch in `docs/bilder/en/`, gleicher Dateiname:
+Erfundene Beispiel-Sammlung, erfundene Namen (Maren, Jonas) und die eingebaute Kachel „Gast“. Deutsch in `docs/bilder/`, Englisch in `docs/bilder/en/`, gleicher Dateiname:
 
 - `anmelden-profile.png`: Profilwahl „Wer ist da?“ / “Who’s there?”, passt zur Kachel „Haushalt“
 - `gesehen-von.png`: gesehen und Bewertung mit „Gesehen von“, passt zu „Jeder für sich“
