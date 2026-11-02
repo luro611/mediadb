@@ -12,3 +12,4 @@ tools
 *.pyc
 .DS_Store
 *.zip
+static/fonts/otf
