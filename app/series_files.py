@@ -335,7 +335,21 @@ def refresh_guide(c, sid):
     S.update(c, sid, {k: v for k, v in d.items() if not k.startswith('_') and k not in ('title',)}, only_empty=False)
     S.set_people(c, sid, d.get('_people'))
     S.set_guide(c, sid, d['_seasons'], T.tv_guide(s['tmdb_id'], d['_seasons']))
+    renumber_files(c, sid)
     return None
+
+
+def renumber_files(c, sid):
+    """Schon eingelesene Dateien auf die TMDB-Zaehlung bringen (siehe season_map). Gibt die Zahl der geaenderten zurueck."""
+    rows = [dict(r) for r in c.execute('SELECT id, season, episode, episode_end FROM ep_files WHERE series_id=?', (sid,))]
+    remap = season_map(c, sid, [(r['season'], r['episode']) for r in rows])
+    n = 0
+    for r in rows:
+        f = renumber(r, remap)
+        if (f['season'], f['episode']) != (r['season'], r['episode']):
+            c.execute('UPDATE ep_files SET season=?, episode=?, episode_end=? WHERE id=?', (f['season'], f['episode'], f['episode_end'], r['id']))
+            n += 1
+    return n
 
 
 def image_name(sid, kind, ext):
@@ -397,6 +411,51 @@ def place_file(c, sid, f):
     return season, ep
 
 
+def season_map(c, sid, keys):
+    """Dateien anders gezaehlt als TMDB (Lupin: Netflix-Teile 1-4 als S01-S04, bei TMDB Teil 1+2 = Staffel 1)?
+    keys: (staffel, folge) der Dateien. Gibt {(staffel, folge): (staffel, folge) laut TMDB} zurueck, sonst {}.
+    Umgerechnet wird nur, wenn die Nummern nicht in den Episodenfuehrer passen und die Staffelgrenzen der Dateien
+    und von TMDB fortlaufend gezaehlt zusammenfallen (Staffeln zusammengelegt oder geteilt)."""
+    guide = {r[0]: r[1] for r in c.execute('SELECT season, max(episode) FROM episodes WHERE series_id=? AND season>0 GROUP BY season', (sid,))}
+    keys = {(s, e) for s, e in keys if s and e}
+    if not guide or not keys or all(s in guide and e <= guide[s] for s, e in keys):
+        return {}
+    size = {}
+    for s, e in keys:
+        size[s] = max(size.get(s, 0), e)
+    fs_, gs = sorted(size), sorted(guide)
+    if fs_ != list(range(1, len(fs_) + 1)) or gs != list(range(1, len(gs) + 1)):
+        return {}
+
+    def starts(seasons, n):
+        out, acc = {}, 0
+        for s in seasons:
+            out[s] = acc
+            acc += n[s]
+        return out, acc
+    fstart, ftotal = starts(fs_, size)
+    gstart, gtotal = starts(gs, guide)
+    fb = {fstart[s] for s in fs_ if s != fs_[-1]} | {fstart[fs_[-1]]}  # letzte Staffel darf unvollstaendig sein
+    gb = {v for v in gstart.values() if v < ftotal}
+    if ftotal > gtotal or not (fb <= set(gstart.values()) or gb <= fb):
+        return {}
+    out = {}
+    for s, e in keys:
+        a = fstart[s] + e - 1
+        g = max(x for x in gs if gstart[x] <= a)
+        out[(s, e)] = (g, a - gstart[g] + 1)
+    return out
+
+
+def renumber(f, remap):
+    """Datei-Eintrag mit Staffel/Folge laut season_map (Doppelfolgen wandern mit)."""
+    new = remap.get((f.get('season'), f.get('episode')))
+    if not new:
+        return f
+    end = f.get('episode_end')
+    return dict(f, season=new[0], episode=new[1], episode_end=end + new[1] - f['episode'] if end else None)
+
+
 def file_data(f, season, ep):
     data = {'season': season, 'episode': ep, 'episode_end': f.get('episode_end'), 'title_hint': f.get('title_hint'), 'path': f['path']}
     data.update({k: v for k, v in FF.probe(f['path']).items() if v not in (None, '')})
@@ -428,7 +487,9 @@ def apply_worker(choices, images_dir):
                     else:
                         sid = S.insert(c, {'title': it['name'], 'year': it.get('year'), 'source': 'file'})
                         res['plain'] += 1
+                    remap = season_map(c, sid, [(f['season'], f['episode']) for f in it['files']])
                 for f in it['files']:
+                    f = renumber(f, remap)
                     with S.db() as c:
                         if c.execute('SELECT 1 FROM ep_files WHERE path=?', (f['path'],)).fetchone():
                             JOB['done'] += 1

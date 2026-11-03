@@ -1,5 +1,9 @@
 # Änderungen
 
+## MediaDB 1.22.4 – Korrektur: Serien, die anders gezählt werden als bei TMDB
+- **Behoben:** Manche Serien sind in den Dateien anders in Staffeln geteilt als bei TMDB. Beispiel Lupin: Die Dateien zählen die Netflix-Teile 1 bis 4 als S01 bis S04, TMDB fasst Teil 1 und 2 zu Staffel 1 mit 10 Folgen zusammen. MediaDB zeigte dann in Staffel 1 fünf Folgen als fehlend und eine Staffel, die es bei TMDB nicht gibt. Jetzt rechnet MediaDB die Nummern beim Einlesen selbst um, wenn sie nicht zum Episodenführer passen und die Staffelgrenzen fortlaufend gezählt zusammenfallen (Staffeln zusammengelegt oder geteilt).
+- **Schon eingelesene Serien** bringt „Episodenführer aktualisieren“ auf der Serienseite in Ordnung; Löschen und neu Einlesen ist nicht nötig.
+
 ## MediaDB 1.22.3 – Gastzugang eingebaut
 - **„Gast“ ist von selbst da:** Mit Konten zeigt die Anmeldeseite immer die Kachel „Gast“ (bzw. bei „Name und Passwort“ den Knopf „Als Gast ansehen, ohne Passwort“). Man muss dafür keine eigene Person mehr anlegen. Gäste können alles ansehen, aber nichts hinzufügen, ändern oder bewerten.
 - **Schalter** unter Einstellungen → Nutzer und Anmeldung → Gastzugang. Abgeschaltet verschwindet die Kachel, und ein angemeldeter Gast ist sofort abgemeldet. Von außerhalb des Heimnetzes gibt es keinen Gastzugang.
